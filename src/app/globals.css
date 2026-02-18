@@ -1,0 +1,93 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Semantic color tokens */
+    --background: #faf6f5; /* rose-50 */
+    --foreground: #241b19; /* rose-900 */
+    --muted: #f3f0ed; /* sand-100 */
+    --muted-foreground: #76664e; /* sand-700 */
+    --border: #e7e2db; /* sand-200 */
+    --ring: #b5877e; /* rose-500 */
+  }
+
+  * {
+    border-color: var(--border);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply font-sans antialiased;
+    background-color: var(--background);
+    color: var(--foreground);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-serif;
+  }
+
+  /* Custom selection color */
+  ::selection {
+    @apply bg-rose-200 text-rose-900;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-sand-50;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-sand-300 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-sand-400;
+  }
+
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer utilities {
+  /* Container query utilities */
+  .container-query {
+    container-type: inline-size;
+  }
+
+  .container-query-normal {
+    container-type: normal;
+  }
+
+  /* Touch target utility - ensures minimum 44x44px for accessibility */
+  .touch-target {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}

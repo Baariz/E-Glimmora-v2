@@ -1,0 +1,19 @@
+# Font Files
+
+Place licensed font files here:
+
+## Miller Display (Serif)
+- MillerDisplay-Light.woff2 (weight: 300)
+- MillerDisplay-LightItalic.woff2 (weight: 300, italic)
+- MillerDisplay-Roman.woff2 (weight: 400)
+- MillerDisplay-Italic.woff2 (weight: 400, italic)
+- MillerDisplay-Bold.woff2 (weight: 700)
+
+## Avenir LT Std (Sans)
+- AvenirLTStd-Book.woff2 (weight: 400)
+- AvenirLTStd-BookOblique.woff2 (weight: 400, italic)
+- AvenirLTStd-Medium.woff2 (weight: 500)
+- AvenirLTStd-Heavy.woff2 (weight: 700)
+
+These are licensed fonts to be provided by the client.
+

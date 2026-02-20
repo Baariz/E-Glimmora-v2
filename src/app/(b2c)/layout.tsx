@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Menu, X } from 'lucide-react'
+import { Menu, X, LogOut } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { PageTransition } from '@/components/providers/PageTransition'
 import { ContextSwitcher } from '@/components/auth/ContextSwitcher'
@@ -18,7 +18,7 @@ import { B2CRole } from '@/lib/types/roles'
  * Mobile-responsive with hamburger menu and touch-friendly targets
  */
 function B2CNav() {
-  const { currentRole, user } = useAuth();
+  const { currentRole, user, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Get nav links based on current B2C role
@@ -70,13 +70,20 @@ function B2CNav() {
             {/* Context Switcher - UHNI only */}
             {role === B2CRole.UHNI && <ContextSwitcher />}
 
-            {/* User menu placeholder */}
-            <div className="ml-4 pl-4 border-l border-sand-300">
+            {/* User menu */}
+            <div className="ml-4 pl-4 border-l border-sand-300 flex items-center gap-3">
               <div className="w-8 h-8 bg-rose-100 rounded-full flex items-center justify-center">
                 <span className="text-xs font-sans text-rose-700">
                   {user?.name?.split(' ').map(n => n[0]).join('') || 'U'}
                 </span>
               </div>
+              <button
+                onClick={logout}
+                className="flex items-center gap-1.5 font-sans text-sm text-sand-500 hover:text-rose-700 transition-colors"
+              >
+                <LogOut size={14} />
+                <span>Sign Out</span>
+              </button>
             </div>
           </div>
 
@@ -137,6 +144,17 @@ function B2CNav() {
                   <ContextSwitcher />
                 </div>
               )}
+
+              {/* Sign Out */}
+              <div className="pt-3 border-t border-sand-200">
+                <button
+                  onClick={logout}
+                  className="flex items-center gap-2 font-sans text-sm text-sand-500 hover:text-rose-700 transition-colors py-2 touch-target"
+                >
+                  <LogOut size={16} />
+                  <span>Sign Out</span>
+                </button>
+              </div>
             </div>
           </motion.div>
         )}

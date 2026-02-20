@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Menu, X } from 'lucide-react'
+import { Menu, X, LogOut } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { PageTransition } from '@/components/providers/PageTransition'
 import { ContextSwitcher } from '@/components/auth/ContextSwitcher'
@@ -48,7 +48,7 @@ function Breadcrumb() {
  * Dynamically filters navigation based on current role
  */
 function B2BSidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () => void }) {
-  const { currentRole, user } = useAuth();
+  const { currentRole, user, logout } = useAuth();
   const pathname = usePathname();
 
   // Get nav items for current role
@@ -148,6 +148,13 @@ function B2BSidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () => voi
             </p>
             <p className="text-xs font-sans text-slate-500">{roleDisplayName}</p>
           </div>
+          <button
+            onClick={logout}
+            className="p-2 text-slate-400 hover:text-slate-700 transition-colors rounded-md hover:bg-slate-200"
+            title="Sign Out"
+          >
+            <LogOut size={16} />
+          </button>
         </div>
       </div>
     </>
@@ -198,6 +205,7 @@ function B2BSidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () => voi
  */
 export default function B2BLayout({ children }: { children: React.ReactNode }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const { logout } = useAuth();
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -227,6 +235,13 @@ export default function B2BLayout({ children }: { children: React.ReactNode }) {
               </button>
               <button className="text-sm font-sans text-slate-600 hover:text-slate-900">
                 Settings
+              </button>
+              <button
+                onClick={logout}
+                className="flex items-center gap-1.5 text-sm font-sans text-slate-500 hover:text-slate-900 transition-colors ml-2 pl-4 border-l border-slate-200"
+              >
+                <LogOut size={14} />
+                <span>Sign Out</span>
               </button>
             </div>
           </div>

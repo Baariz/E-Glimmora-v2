@@ -44,7 +44,7 @@ export class MockUserService extends BaseMockService implements IUserService {
     const institutionId2 = 'inst-002-uuid';
 
     // Shared test password hash for "Test1234!" (bcrypt, 12 rounds)
-    const testPasswordHash = '$2b$12$uZtf9uSnHaXq7EDk1a3K../qj.yND8N1h4xt2PllNJLUbgLurTHk2';
+    const testPasswordHash = '$2b$12$.2/6MKfWqbW4P.S1Cs6sJe5nhDLjK9GT4K70ktJMv9Q6wiE8DIXbi';
 
     const seedUsers: User[] = [
       // B2C - UHNI members (3 active, 2 pending, 1 suspended)

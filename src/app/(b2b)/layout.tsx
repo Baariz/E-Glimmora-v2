@@ -88,9 +88,9 @@ function B2BSidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () => voi
   };
 
   const sidebarContent = (
-    <>
-      {/* Brand */}
-      <div className="p-6 border-b border-slate-200">
+    <div className="flex flex-col h-full">
+      {/* Brand — fixed top */}
+      <div className="shrink-0 px-5 py-4 border-b border-slate-200">
         <Link
           href="/"
           onClick={handleLinkClick}
@@ -99,13 +99,13 @@ function B2BSidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () => voi
           Élan
         </Link>
         <p className="text-xs font-sans text-slate-500 mt-1">Partner Portal</p>
-        <div className="mt-4">
+        <div className="mt-3">
           <ContextSwitcher />
         </div>
       </div>
 
-      {/* Navigation sections */}
-      <nav className="p-4 space-y-6 pb-24" aria-label="B2B sidebar navigation">
+      {/* Navigation sections — scrollable middle */}
+      <nav className="flex-1 overflow-y-auto p-4 space-y-6" aria-label="B2B sidebar navigation">
         {navSections.map((section) => (
           <div key={section.label}>
             <h3 className="px-3 mb-2 text-xs font-sans font-semibold text-slate-500 uppercase tracking-wider">
@@ -139,8 +139,8 @@ function B2BSidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () => voi
         ))}
       </nav>
 
-      {/* User section at bottom */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-200 bg-slate-50">
+      {/* User section — fixed bottom */}
+      <div className="shrink-0 p-4 border-t border-slate-200 bg-slate-50">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-rose-100 rounded-full flex items-center justify-center">
             <span className="text-sm font-sans text-rose-700">
@@ -162,7 +162,7 @@ function B2BSidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () => voi
           </button>
         </div>
       </div>
-    </>
+    </div>
   );
 
   return (

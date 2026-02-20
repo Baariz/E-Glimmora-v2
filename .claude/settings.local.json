@@ -6,7 +6,9 @@
       "Bash(npm install:*)",
       "Bash(wc:*)",
       "Bash(ls:*)",
-      "Bash(pnpm build:*)"
+      "Bash(pnpm build:*)",
+      "Bash(npx next dev --turbopack)",
+      "Bash(npx next build:*)"
     ]
   }
 }

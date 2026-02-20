@@ -83,12 +83,12 @@ export default function AdminDashboardPage() {
       <div className="space-y-8">
         {/* Skeleton loading state */}
         <div className="space-y-2">
-          <div className="h-8 w-64 bg-gray-200 rounded animate-pulse" />
-          <div className="h-4 w-96 bg-gray-200 rounded animate-pulse" />
+          <div className="h-8 w-64 bg-sand-200 rounded animate-pulse" />
+          <div className="h-4 w-96 bg-sand-200 rounded animate-pulse" />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-32 bg-gray-200 rounded-lg animate-pulse" />
+            <div key={i} className="h-32 bg-sand-200 rounded-lg animate-pulse" />
           ))}
         </div>
       </div>
@@ -99,51 +99,51 @@ export default function AdminDashboardPage() {
     <div className="space-y-8">
       {/* Page header */}
       <div className="space-y-2">
-        <h1 className="text-3xl font-serif font-light text-gray-900">
+        <h1 className="text-3xl font-serif font-light text-rose-900">
           Platform Administration
         </h1>
-        <p className="text-base font-sans text-gray-600">
+        <p className="text-base font-sans text-sand-600">
           System overview, invites, members, and operational controls
         </p>
       </div>
 
       {/* Quick stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="bg-white">
+        <Card className="bg-gradient-to-br from-white to-rose-50 border-rose-100">
           <div className="space-y-2">
-            <p className="text-sm font-sans text-gray-600">Invite Codes</p>
-            <p className="text-3xl font-serif text-gray-900">{inviteStats.total}</p>
-            <p className="text-xs font-sans text-gray-500">
+            <p className="text-sm font-sans text-sand-600">Invite Codes</p>
+            <p className="text-3xl font-serif text-rose-900">{inviteStats.total}</p>
+            <p className="text-xs font-sans text-sand-500">
               {inviteStats.active} active, {inviteStats.used} used, {inviteStats.expired} expired
             </p>
           </div>
         </Card>
 
-        <Card className="bg-white">
+        <Card className="bg-gradient-to-br from-white to-sand-50 border-sand-200">
           <div className="space-y-2">
-            <p className="text-sm font-sans text-gray-600">Active Members</p>
-            <p className="text-3xl font-serif text-gray-900">{activeMembers}</p>
-            <p className="text-xs font-sans text-gray-500">
+            <p className="text-sm font-sans text-sand-600">Active Members</p>
+            <p className="text-3xl font-serif text-rose-900">{activeMembers}</p>
+            <p className="text-xs font-sans text-sand-500">
               {users.length} total users
             </p>
           </div>
         </Card>
 
-        <Card className="bg-white">
+        <Card className="bg-gradient-to-br from-white to-olive-50 border-olive-100">
           <div className="space-y-2">
-            <p className="text-sm font-sans text-gray-600">Institutions</p>
-            <p className="text-3xl font-serif text-gray-900">{institutionStats.total}</p>
-            <p className="text-xs font-sans text-gray-500">
+            <p className="text-sm font-sans text-sand-600">Institutions</p>
+            <p className="text-3xl font-serif text-rose-900">{institutionStats.total}</p>
+            <p className="text-xs font-sans text-sand-500">
               {institutionStats.active} active, {institutionStats.pending} pending, {institutionStats.suspended} suspended
             </p>
           </div>
         </Card>
 
-        <Card className="bg-white">
+        <Card className="bg-gradient-to-br from-white to-teal-50 border-teal-100">
           <div className="space-y-2">
-            <p className="text-sm font-sans text-gray-600">System Health</p>
-            <p className="text-3xl font-serif text-green-700">✓</p>
-            <p className="text-xs font-sans text-gray-500">All systems operational</p>
+            <p className="text-sm font-sans text-sand-600">System Health</p>
+            <p className="text-3xl font-serif text-teal-700">✓</p>
+            <p className="text-xs font-sans text-sand-500">All systems operational</p>
           </div>
         </Card>
       </div>
@@ -152,21 +152,21 @@ export default function AdminDashboardPage() {
       <Card header="Recent Activity">
         <div className="space-y-3">
           {recentEvents.length === 0 ? (
-            <p className="text-sm font-sans text-gray-500">No recent activity</p>
+            <p className="text-sm font-sans text-sand-500">No recent activity</p>
           ) : (
             recentEvents.map((event, index) => (
               <div
                 key={event.id}
                 className={`flex items-start gap-3 ${
-                  index < recentEvents.length - 1 ? 'pb-3 border-b border-gray-200' : ''
+                  index < recentEvents.length - 1 ? 'pb-3 border-b border-sand-200' : ''
                 }`}
               >
                 <div className={`w-2 h-2 mt-2 rounded-full ${getActionColor(event.action)}`} />
                 <div className="flex-1">
-                  <p className="text-sm font-sans text-gray-900">
+                  <p className="text-sm font-sans text-rose-900">
                     {event.event.replace('.', ' ')}
                   </p>
-                  <p className="text-xs font-sans text-gray-500">
+                  <p className="text-xs font-sans text-sand-500">
                     User {event.userId.substring(0, 8)}... • {formatDistanceToNow(new Date(event.timestamp), { addSuffix: true })}
                   </p>
                 </div>
@@ -179,43 +179,43 @@ export default function AdminDashboardPage() {
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Link href="/invites">
-          <Card className="bg-white hover:bg-gray-50 transition-colors cursor-pointer">
+          <Card className="bg-white hover:bg-rose-50/50 transition-colors cursor-pointer">
             <div className="flex items-center justify-between">
               <div className="space-y-2">
-                <p className="text-lg font-serif text-gray-900">Generate Invite</p>
-                <p className="text-sm font-sans text-gray-600">
+                <p className="text-lg font-serif text-rose-900">Generate Invite</p>
+                <p className="text-sm font-sans text-sand-600">
                   Create new invite codes for B2C, B2B, or Admin users
                 </p>
               </div>
-              <ArrowRight className="w-5 h-5 text-gray-400" />
+              <ArrowRight className="w-5 h-5 text-sand-400" />
             </div>
           </Card>
         </Link>
 
         <Link href="/members">
-          <Card className="bg-white hover:bg-gray-50 transition-colors cursor-pointer">
+          <Card className="bg-white hover:bg-rose-50/50 transition-colors cursor-pointer">
             <div className="flex items-center justify-between">
               <div className="space-y-2">
-                <p className="text-lg font-serif text-gray-900">Manage Members</p>
-                <p className="text-sm font-sans text-gray-600">
+                <p className="text-lg font-serif text-rose-900">Manage Members</p>
+                <p className="text-sm font-sans text-sand-600">
                   View and manage all platform users
                 </p>
               </div>
-              <ArrowRight className="w-5 h-5 text-gray-400" />
+              <ArrowRight className="w-5 h-5 text-sand-400" />
             </div>
           </Card>
         </Link>
 
         <Link href="/institutions">
-          <Card className="bg-white hover:bg-gray-50 transition-colors cursor-pointer">
+          <Card className="bg-white hover:bg-rose-50/50 transition-colors cursor-pointer">
             <div className="flex items-center justify-between">
               <div className="space-y-2">
-                <p className="text-lg font-serif text-gray-900">Onboard Institution</p>
-                <p className="text-sm font-sans text-gray-600">
+                <p className="text-lg font-serif text-rose-900">Onboard Institution</p>
+                <p className="text-sm font-sans text-sand-600">
                   Add new B2B institutions to the platform
                 </p>
               </div>
-              <ArrowRight className="w-5 h-5 text-gray-400" />
+              <ArrowRight className="w-5 h-5 text-sand-400" />
             </div>
           </Card>
         </Link>

@@ -2,6 +2,7 @@
 
 import { useRef } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { ChevronDown } from 'lucide-react'
 import { useReducedMotion } from '@/lib/hooks/useReducedMotion'
@@ -51,14 +52,24 @@ export default function MarketingHomePage() {
 
   return (
     <div className="bg-white">
-      {/* Section 1: Hero - Full viewport with parallax */}
+      {/* Section 1: Hero - Full viewport with parallax + luxury background + entry animation */}
       <section
         ref={heroRef}
-        className="relative h-screen flex flex-col items-center justify-center"
-        style={{
-          background: 'radial-gradient(circle at 50% 50%, rgb(254 252 243) 0%, rgb(255 255 255) 100%)',
-        }}
+        className="relative h-screen flex flex-col items-center justify-center overflow-hidden"
       >
+        {/* Background image - luxury resort aerial */}
+        <Image
+          src="https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=1920&q=80&auto=format&fit=crop"
+          alt=""
+          fill
+          className="object-cover scale-105"
+          sizes="100vw"
+          priority
+        />
+        {/* Warm gradient overlay — shows image at edges, clean center for text */}
+        <div className="absolute inset-0 bg-gradient-to-b from-white/70 via-white/60 to-white/80" />
+        <div className="absolute inset-0 bg-gradient-to-r from-white/50 via-transparent to-white/50" />
+
         <motion.div
           style={
             prefersReducedMotion
@@ -68,36 +79,83 @@ export default function MarketingHomePage() {
                   opacity: heroOpacity,
                 }
           }
-          className="text-center space-y-8 px-4"
+          className="relative z-10 text-center space-y-8 px-4"
         >
-          {/* Brand name */}
-          <h1 className="font-serif font-light text-7xl md:text-8xl lg:text-9xl text-rose-900 tracking-tight">
-            Élan Glimmora
+          {/* Top gold line — expands from center */}
+          <motion.div
+            initial={prefersReducedMotion ? {} : { scaleX: 0, opacity: 0 }}
+            animate={{ scaleX: 1, opacity: 1 }}
+            transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
+            className="mx-auto w-20 h-[1px] bg-gradient-to-r from-transparent via-gold-400 to-transparent origin-center"
+          />
+
+          {/* Brand name — word reveal mask style */}
+          <h1 className="font-serif font-light text-7xl md:text-8xl lg:text-9xl text-rose-900 tracking-tight flex items-center justify-center gap-[0.3em]">
+            {['Élan', 'Glimmora'].map((word, i) => (
+              <span key={word} className="inline-block overflow-hidden">
+                <motion.span
+                  initial={prefersReducedMotion ? {} : { y: '120%', opacity: 0 }}
+                  animate={{ y: '0%', opacity: 1 }}
+                  transition={{
+                    duration: 1.2,
+                    delay: 0.5 + i * 0.25,
+                    ease: [0.16, 1, 0.3, 1],
+                  }}
+                  className="inline-block"
+                >
+                  {word}
+                </motion.span>
+              </span>
+            ))}
           </h1>
 
-          {/* Tagline */}
-          <p className="font-sans text-lg md:text-xl text-sand-500 tracking-[0.3em] uppercase">
-            Sovereign Lifestyle Intelligence
-          </p>
+          {/* Tagline — word reveal mask, staggered per word */}
+          <div className="flex items-center justify-center gap-[0.5em]">
+            {['Sovereign', 'Lifestyle', 'Intelligence'].map((word, i) => (
+              <span key={word} className="inline-block overflow-hidden">
+                <motion.span
+                  initial={prefersReducedMotion ? {} : { y: '100%', opacity: 0 }}
+                  animate={{ y: '0%', opacity: 1 }}
+                  transition={{
+                    duration: 0.9,
+                    delay: 1.3 + i * 0.15,
+                    ease: [0.16, 1, 0.3, 1],
+                  }}
+                  className="inline-block font-sans text-lg md:text-xl text-sand-600 tracking-[0.3em] uppercase"
+                >
+                  {word}
+                </motion.span>
+              </span>
+            ))}
+          </div>
+
+          {/* Bottom gold line — expands from center */}
+          <motion.div
+            initial={prefersReducedMotion ? {} : { scaleX: 0, opacity: 0 }}
+            animate={{ scaleX: 1, opacity: 1 }}
+            transition={{ duration: 1.4, delay: 2, ease: [0.22, 1, 0.36, 1] }}
+            className="mx-auto w-20 h-[1px] bg-gradient-to-r from-transparent via-gold-400 to-transparent origin-center"
+          />
         </motion.div>
 
-        {/* Scroll indicator */}
+        {/* Scroll indicator — fades in last */}
         <motion.div
           className="absolute bottom-12 left-1/2 -translate-x-1/2"
+          initial={prefersReducedMotion ? {} : { opacity: 0 }}
           animate={
             prefersReducedMotion
               ? {}
               : {
+                  opacity: 1,
                   y: [0, 12, 0],
                 }
           }
           transition={{
-            duration: 2,
-            repeat: Infinity,
-            ease: 'easeInOut',
+            opacity: { duration: 0.6, delay: 2.6 },
+            y: { duration: 2, repeat: Infinity, ease: 'easeInOut', delay: 2.6 },
           }}
         >
-          <ChevronDown className="w-8 h-8 text-sand-400" strokeWidth={1} />
+          <ChevronDown className="w-8 h-8 text-sand-500" strokeWidth={1} />
         </motion.div>
       </section>
 
@@ -176,19 +234,30 @@ export default function MarketingHomePage() {
         </div>
       </section>
 
-      {/* Section 4: Visual Break - Dark cinematic section with opacity fade */}
+      {/* Section 4: Visual Break - Dark cinematic section with luxury background */}
       <section
         ref={section4Ref}
-        className="relative h-[60vh] flex items-center justify-center bg-rose-950 px-6"
+        className="relative h-[60vh] flex items-center justify-center overflow-hidden"
       >
+        {/* Background image - luxury overwater villa */}
+        <Image
+          src="https://images.unsplash.com/photo-1573843981267-be1999ff37cd?w=1920&q=80&auto=format&fit=crop"
+          alt=""
+          fill
+          className="object-cover"
+          sizes="100vw"
+          priority={false}
+        />
+        {/* Dark overlay */}
+        <div className="absolute inset-0 bg-rose-950/75" />
         <motion.div
           style={{ opacity: section4Opacity }}
-          className="text-center space-y-6"
+          className="relative z-10 text-center space-y-6"
         >
           <h2 className="font-serif text-4xl md:text-6xl text-white">
             By invitation only
           </h2>
-          <p className="font-sans text-base md:text-lg text-rose-300 max-w-2xl mx-auto">
+          <p className="font-sans text-base md:text-lg text-rose-200 max-w-2xl mx-auto">
             A membership as exclusive as the experiences we curate
           </p>
         </motion.div>
@@ -227,24 +296,35 @@ export default function MarketingHomePage() {
               </div>
             </ScrollReveal>
 
-            {/* Right column: Visual placeholder */}
+            {/* Right column: Luxury travel image */}
             <ScrollReveal variant={fadeUp} delay={0.2}>
-              <div
-                className="w-full aspect-[3/4] rounded-2xl"
-                style={{
-                  background:
-                    'linear-gradient(135deg, rgb(207 250 254) 0%, rgb(237 246 236) 100%)',
-                }}
-                aria-hidden="true"
-              />
+              <div className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden shadow-2xl">
+                <Image
+                  src="https://images.unsplash.com/photo-1582719508461-905c673771fd?w=800&q=80&auto=format&fit=crop"
+                  alt="Luxury villa with infinity pool overlooking the ocean"
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                />
+              </div>
             </ScrollReveal>
           </div>
         </div>
       </section>
 
       {/* Section 6: Final CTA - Invitation to begin */}
-      <section className="h-[80vh] flex items-center justify-center bg-white px-6">
-        <ScrollReveal variant={fadeUp} className="text-center space-y-8 max-w-3xl">
+      <section className="relative h-[80vh] flex items-center justify-center overflow-hidden">
+        {/* Background image - luxury yacht on calm waters */}
+        <Image
+          src="https://images.unsplash.com/photo-1567899378494-47b22a2ae96a?w=1920&q=80&auto=format&fit=crop"
+          alt=""
+          fill
+          className="object-cover"
+          sizes="100vw"
+        />
+        {/* Light overlay for readability */}
+        <div className="absolute inset-0 bg-white/90" />
+        <ScrollReveal variant={fadeUp} className="relative z-10 text-center space-y-8 max-w-3xl px-6">
           {/* Pre-heading */}
           <p className="font-sans text-xs tracking-[0.5em] text-sand-400 uppercase">
             Ready?

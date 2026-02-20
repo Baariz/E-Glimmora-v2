@@ -47,9 +47,14 @@ const B2B_PERMISSIONS: Partial<Record<B2BRole, Partial<Record<Resource, Permissi
     client: [Permission.READ, Permission.WRITE, Permission.ASSIGN],
     journey: [Permission.READ, Permission.WRITE],
     risk: [Permission.READ, Permission.WRITE],
-    vault: [Permission.READ], // Governed access
+    vault: [Permission.READ],
     audit: [Permission.READ],
     message: [Permission.READ, Permission.WRITE],
+    predictive: [Permission.READ, Permission.WRITE],
+    crisis: [Permission.READ, Permission.WRITE, Permission.APPROVE],
+    vendor: [Permission.READ],
+    conflict: [Permission.READ, Permission.WRITE],
+    integration: [Permission.READ],
   },
 
   [B2BRole.PrivateBanker]: {
@@ -58,6 +63,10 @@ const B2B_PERMISSIONS: Partial<Record<B2BRole, Partial<Record<Resource, Permissi
     risk: [Permission.READ],
     audit: [Permission.READ],
     revenue: [Permission.READ],
+    predictive: [Permission.READ],
+    crisis: [Permission.READ],
+    vendor: [Permission.READ],
+    conflict: [Permission.READ],
   },
 
   [B2BRole.FamilyOfficeDirector]: {
@@ -66,7 +75,12 @@ const B2B_PERMISSIONS: Partial<Record<B2BRole, Partial<Record<Resource, Permissi
     risk: [Permission.READ],
     audit: [Permission.READ],
     revenue: [Permission.READ],
-    institution: [Permission.CONFIGURE], // Settings only
+    institution: [Permission.CONFIGURE],
+    predictive: [Permission.READ, Permission.CONFIGURE],
+    crisis: [Permission.READ, Permission.WRITE, Permission.APPROVE],
+    vendor: [Permission.READ, Permission.WRITE, Permission.APPROVE],
+    conflict: [Permission.READ],
+    integration: [Permission.READ],
   },
 
   [B2BRole.ComplianceOfficer]: {
@@ -74,6 +88,11 @@ const B2B_PERMISSIONS: Partial<Record<B2BRole, Partial<Record<Resource, Permissi
     client: [Permission.READ],
     risk: [Permission.READ],
     audit: [Permission.READ, Permission.EXPORT],
+    predictive: [Permission.READ],
+    crisis: [Permission.READ, Permission.APPROVE],
+    vendor: [Permission.READ, Permission.APPROVE, Permission.EXPORT],
+    conflict: [Permission.READ, Permission.APPROVE],
+    integration: [Permission.READ],
   },
 
   [B2BRole.InstitutionalAdmin]: {
@@ -81,12 +100,16 @@ const B2B_PERMISSIONS: Partial<Record<B2BRole, Partial<Record<Resource, Permissi
     user: [Permission.READ, Permission.WRITE, Permission.ASSIGN],
     contract: [Permission.READ, Permission.WRITE],
     audit: [Permission.READ],
-    privacy: [Permission.CONFIGURE], // Retention policy
+    privacy: [Permission.CONFIGURE],
+    crisis: [Permission.READ, Permission.CONFIGURE],
+    vendor: [Permission.READ, Permission.WRITE, Permission.DELETE, Permission.CONFIGURE],
+    conflict: [Permission.READ, Permission.CONFIGURE],
+    integration: [Permission.READ, Permission.WRITE, Permission.CONFIGURE],
   },
 
   [B2BRole.UHNIPortal]: {
-    journey: [Permission.READ], // Own journeys only
-    client: [Permission.READ], // Own profile only
+    journey: [Permission.READ],
+    client: [Permission.READ],
   },
 };
 
@@ -98,10 +121,11 @@ const ADMIN_PERMISSIONS: Partial<Record<AdminRole, Partial<Record<Resource, Perm
   [AdminRole.SuperAdmin]: {
     invite: [Permission.READ, Permission.WRITE, Permission.DELETE],
     institution: [Permission.READ, Permission.WRITE, Permission.CONFIGURE],
-    user: [Permission.READ, Permission.CONFIGURE], // Approve/suspend
+    user: [Permission.READ, Permission.CONFIGURE],
     audit: [Permission.READ, Permission.EXPORT],
     revenue: [Permission.READ],
     contract: [Permission.READ],
+    integration: [Permission.READ, Permission.CONFIGURE],
   },
 };
 

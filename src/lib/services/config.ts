@@ -16,6 +16,11 @@ import { IRiskService } from './interfaces/IRiskService';
 import { IContractService } from './interfaces/IContractService';
 import { IAuditService } from './interfaces/IAuditService';
 import { ISystemHealthService } from './interfaces/ISystemHealthService';
+import { IPredictiveService } from './interfaces/IPredictiveService';
+import { ICrisisService } from './interfaces/ICrisisService';
+import { IVendorService } from './interfaces/IVendorService';
+import { IConflictService } from './interfaces/IConflictService';
+import { IIntegrationService } from './interfaces/IIntegrationService';
 
 import { MockJourneyService } from './mock/journey.mock';
 import { MockMemoryService } from './mock/memory.mock';
@@ -30,6 +35,11 @@ import { MockRiskService } from './mock/risk.mock';
 import { MockContractService } from './mock/contract.mock';
 import { MockAuditService } from './mock/audit.mock';
 import { MockSystemHealthService } from './mock/system-health.mock';
+import { MockPredictiveService } from './mock/predictive.mock';
+import { MockCrisisService } from './mock/crisis.mock';
+import { MockVendorService } from './mock/vendor.mock';
+import { MockConflictService } from './mock/conflict.mock';
+import { MockIntegrationService } from './mock/integration.mock';
 
 /**
  * Environment variable to control mock vs real API usage
@@ -94,6 +104,26 @@ export const services = {
 
   systemHealth: USE_MOCK_SERVICES
     ? new MockSystemHealthService()
+    : null, // TODO: Implement real API service
+
+  predictive: USE_MOCK_SERVICES
+    ? new MockPredictiveService()
+    : null, // TODO: Implement real API service
+
+  crisis: USE_MOCK_SERVICES
+    ? new MockCrisisService()
+    : null, // TODO: Implement real API service
+
+  vendor: USE_MOCK_SERVICES
+    ? new MockVendorService()
+    : null, // TODO: Implement real API service
+
+  conflict: USE_MOCK_SERVICES
+    ? new MockConflictService()
+    : null, // TODO: Implement real API service
+
+  integration: USE_MOCK_SERVICES
+    ? new MockIntegrationService()
     : null // TODO: Implement real API service
 } as {
   journey: IJourneyService;
@@ -109,6 +139,11 @@ export const services = {
   contract: IContractService;
   audit: IAuditService;
   systemHealth: ISystemHealthService;
+  predictive: IPredictiveService;
+  crisis: ICrisisService;
+  vendor: IVendorService;
+  conflict: IConflictService;
+  integration: IIntegrationService;
 };
 
 /**

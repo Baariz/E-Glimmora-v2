@@ -25,7 +25,12 @@ export type Resource =
   | 'message'
   | 'contract'
   | 'revenue'
-  | 'user';
+  | 'user'
+  | 'predictive'
+  | 'crisis'
+  | 'vendor'
+  | 'conflict'
+  | 'integration';
 
 export interface PermissionCheck {
   action: Permission;

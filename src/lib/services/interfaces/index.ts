@@ -16,3 +16,8 @@ export * from './IInviteCodeService';
 export * from './IDeviceService';
 export * from './IClientService';
 export * from './ISystemHealthService';
+export * from './IPredictiveService';
+export * from './ICrisisService';
+export * from './IVendorService';
+export * from './IConflictService';
+export * from './IIntegrationService';

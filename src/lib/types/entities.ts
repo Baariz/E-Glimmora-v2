@@ -423,3 +423,392 @@ export interface TrustedDevice {
   createdAt: string;
   status: 'active' | 'revoked';
 }
+
+// ============================================================================
+// Predictive Intelligence
+// ============================================================================
+
+export type FatigueLevel = 'Minimal' | 'Low' | 'Moderate' | 'High' | 'Critical';
+export type DriftSeverity = 'Aligned' | 'Minor' | 'Moderate' | 'Significant' | 'Critical';
+export type PredictionConfidence = 'Low' | 'Medium' | 'High';
+
+export interface TravelSegment {
+  id: string;
+  clientId: string;
+  origin: string;
+  destination: string;
+  departureDate: string;
+  returnDate: string;
+  timezonesCrossed: number;
+  tripDurationDays: number;
+  purpose: 'Business' | 'Leisure' | 'Medical' | 'Family' | 'Philanthropy';
+}
+
+export interface TravelFatigueAssessment {
+  id: string;
+  clientId: string;
+  clientName: string;
+  institutionId: string;
+  fatigueScore: number;
+  fatigueLevel: FatigueLevel;
+  tripsLast30Days: number;
+  tripsLast90Days: number;
+  averageTimezonesCrossed: number;
+  totalFlightHoursLast90Days: number;
+  restDaysBetweenTrips: number;
+  burnoutRiskPercent: number;
+  recommendations: string[];
+  trendDirection: 'improving' | 'stable' | 'worsening';
+  assessedAt: string;
+  nextAssessmentDate: string;
+}
+
+export interface FamilyMemberPreference {
+  memberId: string;
+  memberName: string;
+  relationship: 'Spouse' | 'Child' | 'Parent' | 'Sibling' | 'Other';
+  travelPreferences: string[];
+  investmentStyle: RiskTolerance;
+  lifestyleValues: string[];
+  philanthropicInterests: string[];
+  lastUpdated: string;
+}
+
+export interface FamilyAlignmentAssessment {
+  id: string;
+  clientId: string;
+  clientName: string;
+  institutionId: string;
+  overallAlignmentScore: number;
+  driftSeverity: DriftSeverity;
+  familyMembers: FamilyMemberPreference[];
+  driftAreas: {
+    area: string;
+    currentDriftPercent: number;
+    previousDriftPercent: number;
+    trendDirection: 'converging' | 'stable' | 'diverging';
+  }[];
+  alerts: {
+    id: string;
+    severity: DriftSeverity;
+    message: string;
+    area: string;
+    triggeredAt: string;
+    acknowledged: boolean;
+  }[];
+  recommendations: string[];
+  assessedAt: string;
+  nextReviewDate: string;
+}
+
+export interface PredictiveAlert {
+  id: string;
+  clientId: string;
+  clientName: string;
+  institutionId: string;
+  type: 'travel_fatigue' | 'family_drift';
+  severity: 'info' | 'warning' | 'critical';
+  title: string;
+  message: string;
+  confidence: PredictionConfidence;
+  actionRequired: boolean;
+  acknowledged: boolean;
+  createdAt: string;
+  expiresAt?: string;
+}
+
+// ============================================================================
+// Crisis Response
+// ============================================================================
+
+export type CrisisStatus = 'Monitoring' | 'Active' | 'Escalated' | 'Resolved' | 'Archived';
+export type DisruptionType = 'Weather' | 'Strike' | 'Geopolitical' | 'Infrastructure' | 'Health' | 'Security';
+export type ProtocolStatus = 'Standby' | 'Activated' | 'In Progress' | 'Completed' | 'Aborted';
+export type ExtractionPriority = 'Routine' | 'Urgent' | 'Emergency' | 'Critical';
+
+export interface AviationDisruption {
+  id: string;
+  institutionId: string;
+  type: DisruptionType;
+  title: string;
+  description: string;
+  affectedRegions: string[];
+  affectedAirports: string[];
+  affectedClients: string[];
+  threatLevel: ThreatLevel;
+  probabilityPercent: number;
+  estimatedImpactHours: number;
+  forecastSource: string;
+  status: CrisisStatus;
+  startedAt?: string;
+  resolvedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ExtractionStep {
+  id: string;
+  order: number;
+  title: string;
+  description: string;
+  status: 'pending' | 'in_progress' | 'completed' | 'skipped';
+  assignedTo?: string;
+  estimatedDurationMinutes: number;
+  completedAt?: string;
+  notes?: string;
+}
+
+export interface SafeHouse {
+  id: string;
+  name: string;
+  city: string;
+  country: string;
+  address: string;
+  contactName: string;
+  contactPhone: string;
+  capacity: number;
+  securityLevel: 'Standard' | 'Enhanced' | 'Maximum';
+  availableNow: boolean;
+  lastVerified: string;
+}
+
+export interface EmergencyContact {
+  id: string;
+  name: string;
+  role: string;
+  phone: string;
+  email?: string;
+  region: string;
+  available24h: boolean;
+}
+
+export interface CrisisTimelineEvent {
+  id: string;
+  timestamp: string;
+  event: string;
+  type: 'info' | 'action' | 'escalation' | 'resolution';
+  actor?: string;
+}
+
+export interface ExtractionProtocol {
+  id: string;
+  institutionId: string;
+  clientId: string;
+  clientName: string;
+  priority: ExtractionPriority;
+  status: ProtocolStatus;
+  currentLocation: string;
+  destinationLocation: string;
+  crisisId?: string;
+  steps: ExtractionStep[];
+  safeHouses: SafeHouse[];
+  emergencyContacts: EmergencyContact[];
+  timeline: CrisisTimelineEvent[];
+  activatedBy?: string;
+  activatedAt?: string;
+  completedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ============================================================================
+// Vendor Governance
+// ============================================================================
+
+export type VendorStatus = 'Active' | 'Under Review' | 'Suspended' | 'Approved' | 'Rejected';
+export type VendorCategory = 'Travel & Aviation' | 'Security' | 'Legal' | 'Concierge' | 'Financial' | 'Medical' | 'Hospitality' | 'Technology';
+export type ScreeningStatus = 'Not Started' | 'In Progress' | 'Passed' | 'Failed' | 'Expired';
+export type ScorecardRating = 'Exceptional' | 'Good' | 'Satisfactory' | 'Below Expectations' | 'Unacceptable';
+
+export interface Vendor {
+  id: string;
+  institutionId: string;
+  name: string;
+  category: VendorCategory;
+  status: VendorStatus;
+  contactName: string;
+  contactEmail: string;
+  contactPhone: string;
+  website?: string;
+  headquartersCountry: string;
+  operatingRegions: string[];
+  contractValue: number;
+  contractStart: string;
+  contractEnd?: string;
+  ndaSigned: boolean;
+  ndaExpiresAt?: string;
+  onboardedAt: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface VendorScreening {
+  id: string;
+  vendorId: string;
+  vendorName: string;
+  institutionId: string;
+  financialHealthScore: number;
+  financialHealthDetails: {
+    creditRating: string;
+    revenueStability: number;
+    debtRatio: number;
+    liquidityScore: number;
+    bankruptcyRisk: 'Negligible' | 'Low' | 'Moderate' | 'Elevated' | 'High';
+  };
+  securityAssessmentScore: number;
+  securityAssessmentDetails: {
+    dataProtectionCompliance: boolean;
+    encryptionStandards: string;
+    incidentHistory: number;
+    lastPenTestDate?: string;
+    certifications: string[];
+  };
+  overallScreeningStatus: ScreeningStatus;
+  screenedBy: string;
+  screenedAt: string;
+  expiresAt: string;
+  notes?: string;
+}
+
+export interface VendorScorecard {
+  id: string;
+  vendorId: string;
+  vendorName: string;
+  institutionId: string;
+  period: string;
+  overallRating: ScorecardRating;
+  overallScore: number;
+  metrics: {
+    category: string;
+    score: number;
+    weight: number;
+    target: number;
+    notes?: string;
+  }[];
+  slaCompliance: number;
+  qualityRating: number;
+  responseTime: number;
+  clientSatisfaction: number;
+  incidentCount: number;
+  reviewedBy: string;
+  reviewedAt: string;
+  createdAt: string;
+}
+
+export interface VendorAlert {
+  id: string;
+  vendorId: string;
+  vendorName: string;
+  institutionId: string;
+  type: 'screening_expiry' | 'sla_breach' | 'financial_deterioration' | 'security_incident' | 'contract_expiry';
+  severity: 'info' | 'warning' | 'critical';
+  title: string;
+  message: string;
+  acknowledged: boolean;
+  createdAt: string;
+}
+
+// ============================================================================
+// Cross-UHNI Conflict Detection
+// ============================================================================
+
+export type ConflictType = 'scheduling' | 'venue' | 'relationship' | 'business' | 'social_circle';
+export type ConflictSeverity = 'Low' | 'Medium' | 'High' | 'Critical';
+export type ConflictStatus = 'Active' | 'Acknowledged' | 'Resolved' | 'Dismissed';
+
+export interface ConflictAlert {
+  id: string;
+  institutionId: string;
+  conflictType: ConflictType;
+  severity: ConflictSeverity;
+  status: ConflictStatus;
+  partyAClientId: string;
+  partyBClientId: string;
+  partyALabel: string;
+  partyBLabel: string;
+  title: string;
+  description: string;
+  detectedAt: string;
+  venue?: string;
+  eventDate?: string;
+  recommendedActions: string[];
+  resolvedBy?: string;
+  resolvedAt?: string;
+  resolutionNotes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ConflictResolution {
+  id: string;
+  conflictId: string;
+  resolvedBy: string;
+  action: string;
+  notes: string;
+  createdAt: string;
+}
+
+export interface ConflictMatrixEntry {
+  clientId: string;
+  clientLabel: string;
+  conflictCount: number;
+  highSeverityCount: number;
+  activeConflicts: number;
+}
+
+// ============================================================================
+// External Integrations
+// ============================================================================
+
+export type IntegrationType = 'government_advisory' | 'aviation' | 'insurance_provider' | 'security' | 'financial_data';
+export type IntegrationStatus = 'Connected' | 'Degraded' | 'Disconnected' | 'Configuring' | 'Maintenance';
+export type SyncFrequency = 'Real-time' | 'Hourly' | 'Daily' | 'Weekly' | 'Manual';
+
+export interface ExternalIntegration {
+  id: string;
+  institutionId: string;
+  name: string;
+  provider: string;
+  type: IntegrationType;
+  status: IntegrationStatus;
+  endpoint: string;
+  apiKeyConfigured: boolean;
+  syncFrequency: SyncFrequency;
+  lastSyncAt?: string;
+  lastSyncStatus: 'Success' | 'Partial' | 'Failed' | 'Never';
+  recordsSynced: number;
+  errorCount: number;
+  healthScore: number;
+  configuredBy: string;
+  configuredAt: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IntegrationHealthCheck {
+  id: string;
+  integrationId: string;
+  timestamp: string;
+  latencyMs: number;
+  statusCode: number;
+  isHealthy: boolean;
+  errorMessage?: string;
+}
+
+export interface DataFlowMetric {
+  integrationId: string;
+  period: string;
+  recordsIngested: number;
+  recordsFailed: number;
+  avgLatencyMs: number;
+  peakLatencyMs: number;
+}
+
+export interface IntegrationConfig {
+  id: string;
+  integrationId: string;
+  key: string;
+  value: string;
+  updatedBy: string;
+  updatedAt: string;
+}

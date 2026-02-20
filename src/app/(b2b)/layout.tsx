@@ -19,8 +19,13 @@ const routeLabels: Record<string, string> = {
   '/governance': 'Governance',
   '/risk': 'Risk & Compliance',
   '/access': 'Access Control',
+  '/predictive': 'Predictive Intelligence',
+  '/crisis': 'Crisis Response',
+  '/conflicts': 'Conflict Detection',
   '/vault': 'Document Vault',
   '/revenue': 'Revenue',
+  '/vendors': 'Vendor Governance',
+  '/integrations': 'External Integrations',
 }
 
 function Breadcrumb() {
@@ -61,10 +66,10 @@ function B2BSidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () => voi
     ['/portfolio', '/clients'].includes(item.path)
   );
   const operationsItems = navItems.filter(item =>
-    ['/governance', '/risk', '/access'].includes(item.path)
+    ['/governance', '/risk', '/access', '/predictive', '/crisis', '/conflicts'].includes(item.path)
   );
   const resourcesItems = navItems.filter(item =>
-    ['/vault', '/revenue'].includes(item.path)
+    ['/vault', '/revenue', '/vendors', '/integrations'].includes(item.path)
   );
 
   const navSections = [

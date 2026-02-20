@@ -24,8 +24,13 @@ export const B2B_ROUTES: RouteAccess[] = [
   { path: '/governance', label: 'Journeys', icon: '✈', requiredResource: 'journey', requiredAction: Permission.READ },
   { path: '/risk', label: 'Risk', icon: '⚠', requiredResource: 'risk', requiredAction: Permission.READ },
   { path: '/access', label: 'Access', icon: '⊕', requiredResource: 'institution', requiredAction: Permission.CONFIGURE },
+  { path: '/predictive', label: 'Intelligence', icon: '◈', requiredResource: 'predictive', requiredAction: Permission.READ },
+  { path: '/crisis', label: 'Crisis', icon: '⚡', requiredResource: 'crisis', requiredAction: Permission.READ },
+  { path: '/conflicts', label: 'Conflicts', icon: '⊗', requiredResource: 'conflict', requiredAction: Permission.READ },
   { path: '/vault', label: 'Vault', icon: '⊠', requiredResource: 'vault', requiredAction: Permission.READ },
   { path: '/revenue', label: 'Revenue', icon: '$', requiredResource: 'contract', requiredAction: Permission.READ },
+  { path: '/vendors', label: 'Vendors', icon: '⊡', requiredResource: 'vendor', requiredAction: Permission.READ },
+  { path: '/integrations', label: 'Integrations', icon: '⊘', requiredResource: 'integration', requiredAction: Permission.READ },
 ];
 
 /**

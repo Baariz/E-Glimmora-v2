@@ -20,6 +20,11 @@ import { MockContractService } from '@/lib/services/mock/contract.mock';
 import { MockInstitutionService } from '@/lib/services/mock/institution.mock';
 import { MockAuditService } from '@/lib/services/mock/audit.mock';
 import { MockSystemHealthService } from '@/lib/services/mock/system-health.mock';
+import { MockPredictiveService } from '@/lib/services/mock/predictive.mock';
+import { MockCrisisService } from '@/lib/services/mock/crisis.mock';
+import { MockVendorService } from '@/lib/services/mock/vendor.mock';
+import { MockConflictService } from '@/lib/services/mock/conflict.mock';
+import { MockIntegrationService } from '@/lib/services/mock/integration.mock';
 
 export function useServices() {
   return useMemo(
@@ -37,6 +42,11 @@ export function useServices() {
       institution: new MockInstitutionService(),
       audit: new MockAuditService(),
       systemHealth: new MockSystemHealthService(),
+      predictive: new MockPredictiveService(),
+      crisis: new MockCrisisService(),
+      vendor: new MockVendorService(),
+      conflict: new MockConflictService(),
+      integration: new MockIntegrationService(),
     }),
     []
   );

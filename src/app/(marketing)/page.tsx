@@ -57,9 +57,9 @@ export default function MarketingHomePage() {
         ref={heroRef}
         className="relative h-screen flex flex-col items-center justify-center overflow-hidden"
       >
-        {/* Background image - luxury resort aerial */}
+        {/* Background image - luxury marble & gold interior */}
         <Image
-          src="https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=1920&q=80&auto=format&fit=crop"
+          src="https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=1920&q=80&auto=format&fit=crop"
           alt=""
           fill
           className="object-cover scale-105"
@@ -67,8 +67,8 @@ export default function MarketingHomePage() {
           priority
         />
         {/* Warm gradient overlay — shows image at edges, clean center for text */}
-        <div className="absolute inset-0 bg-gradient-to-b from-white/70 via-white/60 to-white/80" />
-        <div className="absolute inset-0 bg-gradient-to-r from-white/50 via-transparent to-white/50" />
+        <div className="absolute inset-0 bg-gradient-to-b from-white/60 via-white/50 to-white/70" />
+        <div className="absolute inset-0 bg-gradient-to-r from-white/40 via-transparent to-white/40" />
 
         <motion.div
           style={
@@ -81,50 +81,65 @@ export default function MarketingHomePage() {
           }
           className="relative z-10 text-center space-y-8 px-4"
         >
-          {/* Top gold line — expands from center */}
+          {/* Top gold line — expands outward from center */}
           <motion.div
             initial={prefersReducedMotion ? {} : { scaleX: 0, opacity: 0 }}
             animate={{ scaleX: 1, opacity: 1 }}
-            transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
-            className="mx-auto w-20 h-[1px] bg-gradient-to-r from-transparent via-gold-400 to-transparent origin-center"
+            transition={{ duration: 1.6, ease: [0.22, 1, 0.36, 1] }}
+            className="mx-auto w-24 h-[1px] bg-gradient-to-r from-transparent via-gold-400 to-transparent origin-center"
           />
 
-          {/* Brand name — word reveal mask style */}
+          {/* Brand name — letter-by-letter stagger reveal */}
           <h1 className="font-serif font-light text-7xl md:text-8xl lg:text-9xl text-rose-900 tracking-tight flex items-center justify-center gap-[0.3em]">
-            {['Élan', 'Glimmora'].map((word, i) => (
-              <span key={word} className="inline-block overflow-hidden">
-                <motion.span
-                  initial={prefersReducedMotion ? {} : { y: '120%', opacity: 0 }}
-                  animate={{ y: '0%', opacity: 1 }}
-                  transition={{
-                    duration: 1.2,
-                    delay: 0.5 + i * 0.25,
-                    ease: [0.16, 1, 0.3, 1],
-                  }}
-                  className="inline-block"
-                >
-                  {word}
-                </motion.span>
+            {['Élan', 'Glimmora'].map((word, wordIdx) => (
+              <span key={word} className="inline-flex">
+                {word.split('').map((char, charIdx) => (
+                  <span key={`${word}-${charIdx}`} className="inline-block overflow-hidden">
+                    <motion.span
+                      initial={prefersReducedMotion ? {} : { y: '100%', opacity: 0 }}
+                      animate={{ y: '0%', opacity: 1 }}
+                      transition={{
+                        duration: 0.8,
+                        delay: 0.6 + wordIdx * 0.4 + charIdx * 0.05,
+                        ease: [0.16, 1, 0.3, 1],
+                      }}
+                      className="inline-block"
+                    >
+                      {char}
+                    </motion.span>
+                  </span>
+                ))}
               </span>
             ))}
           </h1>
 
-          {/* Tagline — word reveal mask, staggered per word */}
-          <div className="flex items-center justify-center gap-[0.5em]">
-            {['Sovereign', 'Lifestyle', 'Intelligence'].map((word, i) => (
-              <span key={word} className="inline-block overflow-hidden">
-                <motion.span
-                  initial={prefersReducedMotion ? {} : { y: '100%', opacity: 0 }}
-                  animate={{ y: '0%', opacity: 1 }}
-                  transition={{
-                    duration: 0.9,
-                    delay: 1.3 + i * 0.15,
-                    ease: [0.16, 1, 0.3, 1],
-                  }}
-                  className="inline-block font-sans text-lg md:text-xl text-sand-600 tracking-[0.3em] uppercase"
-                >
-                  {word}
-                </motion.span>
+          {/* Thin separator line between brand and tagline */}
+          <motion.div
+            initial={prefersReducedMotion ? {} : { scaleX: 0, opacity: 0 }}
+            animate={{ scaleX: 1, opacity: 0.4 }}
+            transition={{ duration: 1.2, delay: 1.8, ease: [0.22, 1, 0.36, 1] }}
+            className="mx-auto w-12 h-[1px] bg-sand-400 origin-center"
+          />
+
+          {/* Tagline — each letter fades in individually */}
+          <div className="flex items-center justify-center gap-[0.4em]">
+            {['Sovereign', 'Lifestyle', 'Intelligence'].map((word, wordIdx) => (
+              <span key={word} className="inline-flex">
+                {word.split('').map((char, charIdx) => (
+                  <motion.span
+                    key={`tag-${word}-${charIdx}`}
+                    initial={prefersReducedMotion ? {} : { opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{
+                      duration: 0.4,
+                      delay: 2.0 + wordIdx * 0.3 + charIdx * 0.03,
+                      ease: [0.16, 1, 0.3, 1],
+                    }}
+                    className="inline-block font-sans text-lg md:text-xl text-sand-600 tracking-[0.3em] uppercase"
+                  >
+                    {char}
+                  </motion.span>
+                ))}
               </span>
             ))}
           </div>
@@ -133,8 +148,8 @@ export default function MarketingHomePage() {
           <motion.div
             initial={prefersReducedMotion ? {} : { scaleX: 0, opacity: 0 }}
             animate={{ scaleX: 1, opacity: 1 }}
-            transition={{ duration: 1.4, delay: 2, ease: [0.22, 1, 0.36, 1] }}
-            className="mx-auto w-20 h-[1px] bg-gradient-to-r from-transparent via-gold-400 to-transparent origin-center"
+            transition={{ duration: 1.4, delay: 3, ease: [0.22, 1, 0.36, 1] }}
+            className="mx-auto w-24 h-[1px] bg-gradient-to-r from-transparent via-gold-400 to-transparent origin-center"
           />
         </motion.div>
 
@@ -151,8 +166,8 @@ export default function MarketingHomePage() {
                 }
           }
           transition={{
-            opacity: { duration: 0.6, delay: 2.6 },
-            y: { duration: 2, repeat: Infinity, ease: 'easeInOut', delay: 2.6 },
+            opacity: { duration: 0.6, delay: 3.4 },
+            y: { duration: 2, repeat: Infinity, ease: 'easeInOut', delay: 3.4 },
           }}
         >
           <ChevronDown className="w-8 h-8 text-sand-500" strokeWidth={1} />

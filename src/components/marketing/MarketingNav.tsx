@@ -65,10 +65,7 @@ export function MarketingNav() {
             {/* Brand wordmark */}
             <Link
               href="/"
-              className={cn(
-                'font-serif text-sm uppercase tracking-widest transition-colors duration-300',
-                isScrolled ? 'text-rose-900' : 'text-white'
-              )}
+              className="font-serif text-sm uppercase tracking-widest text-rose-900 transition-colors duration-300"
             >
               Élan Glimmora
             </Link>
@@ -80,19 +77,13 @@ export function MarketingNav() {
                   key={link.href}
                   href={link.href}
                   className={cn(
-                    'relative font-sans text-xs uppercase tracking-[0.2em] transition-opacity duration-300',
-                    isScrolled ? 'text-rose-900' : 'text-white',
+                    'relative font-sans text-xs uppercase tracking-[0.2em] text-rose-900 transition-opacity duration-300',
                     isActive(link.href) ? 'opacity-100' : 'opacity-70 hover:opacity-100'
                   )}
                 >
                   {link.label}
                   {isActive(link.href) && (
-                    <span
-                      className={cn(
-                        'absolute -bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full',
-                        isScrolled ? 'bg-rose-900' : 'bg-white'
-                      )}
-                    />
+                    <span className="absolute -bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-rose-900" />
                   )}
                 </Link>
               ))}
@@ -102,11 +93,7 @@ export function MarketingNav() {
             <div className="hidden items-center gap-4 md:flex">
               <Link
                 href="/invite/login"
-                className={cn(
-                  'font-sans text-xs uppercase tracking-[0.2em] transition-opacity duration-300',
-                  isScrolled ? 'text-rose-900' : 'text-white',
-                  'opacity-70 hover:opacity-100'
-                )}
+                className="font-sans text-xs uppercase tracking-[0.2em] text-rose-900 opacity-70 hover:opacity-100 transition-opacity duration-300"
               >
                 Sign In
               </Link>
@@ -114,12 +101,7 @@ export function MarketingNav() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className={cn(
-                    'border transition-all duration-300',
-                    isScrolled
-                      ? 'border-rose-200 text-rose-900 hover:border-rose-300 hover:bg-rose-50'
-                      : 'border-white/30 text-white hover:border-white/50 hover:bg-white/10'
-                  )}
+                  className="border border-rose-200 text-rose-900 hover:border-rose-300 hover:bg-rose-50 transition-all duration-300"
                 >
                   Request Access
                 </Button>
@@ -129,10 +111,7 @@ export function MarketingNav() {
             {/* Mobile hamburger */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className={cn(
-                'md:hidden p-2 transition-colors duration-300 touch-target',
-                isScrolled ? 'text-rose-900' : 'text-white'
-              )}
+              className="md:hidden p-2 text-rose-900 transition-colors duration-300 touch-target"
               aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
             >
               {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -175,7 +154,11 @@ export function MarketingNav() {
               Sign In
             </Link>
             <Link href="/invite" onClick={handleLinkClick} className="mt-4">
-              <Button variant="primary" size="lg">
+              <Button
+                variant="primary"
+                size="lg"
+                className="bg-rose-900 text-white hover:bg-rose-800 active:bg-rose-950"
+              >
                 Request Access
               </Button>
             </Link>

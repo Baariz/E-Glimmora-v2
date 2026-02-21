@@ -62,7 +62,7 @@ export function ScreeningDashboard({ screenings }: ScreeningDashboardProps) {
                 <p className="font-sans text-[10px] text-slate-400">Screened: {new Date(s.screenedAt).toLocaleDateString()}</p>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <p className="font-sans text-[10px] text-slate-500 mb-1">Financial Health ({s.financialHealthScore}/100)</p>
                   <div className="w-full bg-slate-200 rounded-full h-1.5">

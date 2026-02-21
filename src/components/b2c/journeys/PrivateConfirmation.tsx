@@ -2,28 +2,49 @@
 
 /**
  * Private Confirmation Screen
- * Shown when journey reaches APPROVED status
+ * Shown when journey reaches PRESENTED status
  * Payment / confirmation step — no itemized costs, no retail checkout
+ * On confirm: updates journey status to EXECUTED
  */
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Shield, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
+import { useServices } from '@/lib/hooks/useServices';
+import { JourneyStatus } from '@/lib/types/entities';
 
 type ConfirmationMethod = 'wealth_account' | 'secure_link' | null;
 
 interface PrivateConfirmationProps {
   journeyTitle: string;
+  journeyId: string;
   onConfirmed?: () => void;
 }
 
-export function PrivateConfirmation({ journeyTitle, onConfirmed }: PrivateConfirmationProps) {
+export function PrivateConfirmation({ journeyTitle, journeyId, onConfirmed }: PrivateConfirmationProps) {
+  const services = useServices();
   const [method, setMethod] = useState<ConfirmationMethod>(null);
   const [confirmed, setConfirmed] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (!method) return;
+    setIsProcessing(true);
+
+    // Simulate payment processing delay — 1.5 seconds for demo feel
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    try {
+      // Move journey to EXECUTED after payment confirmed
+      await services.journey.updateJourney(journeyId, {
+        status: JourneyStatus.EXECUTED,
+      });
+    } catch (error) {
+      console.error('Failed to update journey status:', error);
+    }
+
+    setIsProcessing(false);
     setConfirmed(true);
     onConfirmed?.();
   };
@@ -38,9 +59,11 @@ export function PrivateConfirmation({ journeyTitle, onConfirmed }: PrivateConfir
         <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <Shield className="w-6 h-6 text-emerald-600" />
         </div>
-        <h3 className="font-serif text-xl text-emerald-900 mb-2">Your experience is confirmed.</h3>
+        <h3 className="font-serif text-xl text-emerald-900 mb-2">
+          Your experience is confirmed.
+        </h3>
         <p className="text-emerald-700 font-sans text-sm">
-          Your Élan team will prepare your pre-departure brief. Expect to hear from your advisor within 48 hours.
+          Your journey has begun. Your Élan team will be in touch with your pre-departure brief shortly.
         </p>
       </motion.div>
     );
@@ -48,7 +71,7 @@ export function PrivateConfirmation({ journeyTitle, onConfirmed }: PrivateConfir
 
   return (
     <div className="bg-white border border-sand-200 rounded-2xl overflow-hidden">
-      <div className="bg-gradient-to-r from-rose-900 to-rose-800 px-8 py-6">
+      <div className="bg-gradient-to-r from-rose-900 to-rose-800 px-4 sm:px-8 py-4 sm:py-6">
         <div className="flex items-center gap-3 mb-2">
           <Lock className="w-4 h-4 text-rose-300" />
           <p className="text-rose-300 text-xs font-sans uppercase tracking-widest">Private Confirmation Required</p>
@@ -59,7 +82,7 @@ export function PrivateConfirmation({ journeyTitle, onConfirmed }: PrivateConfir
         </p>
       </div>
 
-      <div className="px-8 py-6">
+      <div className="px-4 sm:px-8 py-4 sm:py-6">
         <p className="text-sand-600 font-sans text-sm mb-5">
           Select your preferred confirmation method. No card details are required —
           all transactions are handled through your pre-established arrangement.
@@ -73,9 +96,11 @@ export function PrivateConfirmation({ journeyTitle, onConfirmed }: PrivateConfir
             <button
               key={opt.value}
               onClick={() => setMethod(opt.value)}
+              disabled={isProcessing}
               className={cn(
                 'w-full text-left p-4 rounded-xl border-2 transition-all',
-                method === opt.value ? 'border-rose-400 bg-rose-50' : 'border-sand-200 hover:border-sand-300'
+                method === opt.value ? 'border-rose-400 bg-rose-50' : 'border-sand-200 hover:border-sand-300',
+                isProcessing && 'opacity-50 cursor-not-allowed'
               )}
             >
               <div className="flex items-start gap-3">
@@ -91,13 +116,15 @@ export function PrivateConfirmation({ journeyTitle, onConfirmed }: PrivateConfir
 
         <button
           onClick={handleConfirm}
-          disabled={!method}
+          disabled={!method || isProcessing}
           className={cn(
             'w-full py-3 rounded-xl font-sans font-medium text-sm transition-all',
-            method ? 'bg-rose-900 text-white hover:bg-rose-800' : 'bg-sand-100 text-sand-400 cursor-not-allowed'
+            method && !isProcessing
+              ? 'bg-rose-900 text-white hover:bg-rose-800'
+              : 'bg-sand-100 text-sand-400 cursor-not-allowed'
           )}
         >
-          Approve This Experience
+          {isProcessing ? 'Processing your confirmation...' : 'Approve This Experience'}
         </button>
 
         <p className="text-center text-xs text-sand-400 font-sans mt-3">

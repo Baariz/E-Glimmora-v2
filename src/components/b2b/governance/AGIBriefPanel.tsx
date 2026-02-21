@@ -81,7 +81,7 @@ export function AGIBriefPanel({ journeyId, clientName }: AGIBriefPanelProps) {
                     </div>
                     <span className={cn('text-xs px-2 py-0.5 rounded-full', riskColor(hotel.riskLevel))}>{hotel.riskLevel} Risk</span>
                   </div>
-                  <div className="grid grid-cols-2 gap-3 mb-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-2">
                     <div>
                       <p className="text-slate-500 text-xs mb-1">Privacy Score</p>
                       <div className="flex items-center gap-2">
@@ -143,7 +143,7 @@ export function AGIBriefPanel({ journeyId, clientName }: AGIBriefPanelProps) {
           </button>
           {openSection === 'risk' && (
             <div className="p-4 space-y-3">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="p-3 rounded-lg bg-emerald-900/30 border border-emerald-700/40">
                   <p className="text-emerald-400 text-xs font-sans uppercase tracking-wider mb-1">Overall Risk</p>
                   <p className="text-emerald-300 font-sans font-medium">Low</p>

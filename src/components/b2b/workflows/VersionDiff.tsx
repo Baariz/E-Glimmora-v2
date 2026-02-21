@@ -28,7 +28,7 @@ export function VersionDiff({ oldVersion, newVersion, onClose }: VersionDiffProp
     >
       <div className="space-y-6">
         {/* Version metadata */}
-        <div className="grid grid-cols-2 gap-4 pb-4 border-b border-slate-200">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-4 border-b border-slate-200">
           <div>
             <h4 className="font-sans text-xs font-semibold text-slate-700 mb-2">
               Version {oldVersion.versionNumber}
@@ -79,7 +79,7 @@ export function VersionDiff({ oldVersion, newVersion, onClose }: VersionDiffProp
         </div>
 
         {/* Legend */}
-        <div className="flex items-center gap-6 pt-4 border-t border-slate-200 font-sans text-xs">
+        <div className="flex items-center gap-4 sm:gap-6 pt-4 border-t border-slate-200 font-sans text-xs flex-wrap">
           <div className="flex items-center gap-2">
             <span className="inline-block w-4 h-4 bg-rose-100 border border-rose-300 rounded" />
             <span className="text-slate-600">Removed</span>

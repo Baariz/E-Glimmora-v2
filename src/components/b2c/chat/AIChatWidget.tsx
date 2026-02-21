@@ -85,7 +85,7 @@ export function AIChatWidget() {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 flex flex-col items-end gap-3">
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -93,7 +93,7 @@ export function AIChatWidget() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.97 }}
             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-            className="w-80 bg-white rounded-2xl shadow-2xl border border-sand-200 overflow-hidden"
+            className="w-[calc(100vw-2rem)] sm:w-80 bg-white rounded-2xl shadow-2xl border border-sand-200 overflow-hidden"
           >
             <div className="bg-rose-900 px-4 py-3 flex items-center justify-between">
               <div>

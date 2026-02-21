@@ -59,21 +59,21 @@ export function PostJourneyFeedback({ journeyTitle, onSubmitted }: PostJourneyFe
         <p className="text-sand-600 font-sans text-sm mt-1">There are no wrong answers. This is only for you.</p>
       </div>
 
-      <div className="flex items-center justify-between gap-3 mb-8">
+      <div className="grid grid-cols-5 gap-2 sm:gap-3 mb-8">
         {MOODS.map((mood) => (
           <button
             key={mood.value}
             onClick={() => setSelectedMood(mood.value)}
             className={cn(
-              'flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all duration-200',
+              'flex flex-col items-center gap-1 sm:gap-2 p-2 sm:p-4 rounded-xl border-2 transition-all duration-200',
               selectedMood === mood.value
                 ? 'border-rose-400 bg-rose-50 scale-105 shadow-sm'
                 : 'border-sand-200 bg-white hover:border-sand-300'
             )}
           >
-            <span className="text-3xl">{mood.emoji}</span>
+            <span className="text-xl sm:text-3xl">{mood.emoji}</span>
             <span className={cn(
-              'text-xs font-sans text-center leading-tight',
+              'text-xs font-sans text-center leading-tight hidden sm:block',
               selectedMood === mood.value ? 'text-rose-700' : 'text-sand-500'
             )}>{mood.label}</span>
           </button>

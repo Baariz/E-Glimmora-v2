@@ -88,6 +88,12 @@ export default function JourneyDetailPage() {
     setJourney(updatedJourney);
   };
 
+  // Re-fetch journey (used after status changes from PrivateConfirmation)
+  const handleRefreshJourney = async () => {
+    const refreshed = await services.journey.getJourneyById(journeyId);
+    if (refreshed) setJourney(refreshed);
+  };
+
   // Handle archive
   const handleArchive = async () => {
     if (!journey) return;
@@ -190,11 +196,15 @@ export default function JourneyDetailPage() {
       )}
 
       {/* ------------------------------------------------------------------ */}
-      {/* Private Confirmation — only when APPROVED                          */}
+      {/* Private Confirmation — only when PRESENTED                         */}
       {/* ------------------------------------------------------------------ */}
-      {journey.status === JourneyStatus.APPROVED && (
+      {journey.status === JourneyStatus.PRESENTED && (
         <motion.div variants={fadeUp} className="mb-10">
-          <PrivateConfirmation journeyTitle={journey.title} />
+          <PrivateConfirmation
+            journeyTitle={journey.title}
+            journeyId={journey.id}
+            onConfirmed={handleRefreshJourney}
+          />
         </motion.div>
       )}
 

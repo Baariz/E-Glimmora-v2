@@ -113,7 +113,7 @@ export function IntelligenceHistory({ clientId, userId }: IntelligenceHistoryPro
       <h3 className="font-serif text-xl text-slate-900">Intelligence & Trends</h3>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="p-4">
           <div className="flex items-center gap-2 mb-2">
             <Clock className="w-4 h-4 text-slate-500" />

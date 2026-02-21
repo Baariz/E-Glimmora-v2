@@ -28,7 +28,7 @@ function ScoreDots({ score }: { score: number }) {
 export function NextJourneyPanel() {
   return (
     <div>
-      <div className="flex items-center gap-3 mb-5">
+      <div className="flex items-start gap-3 mb-4 sm:mb-5">
         <div className="w-1 h-6 bg-rose-900 rounded-full" />
         <div>
           <p className="text-sand-500 text-xs font-sans uppercase tracking-widest">{'\u25C8'} AGI Anticipates</p>

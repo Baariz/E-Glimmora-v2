@@ -145,7 +145,7 @@ export default function RevenuePage() {
 
       {/* Tabs */}
       <div className="border-b border-slate-200">
-        <nav className="flex gap-6">
+        <nav className="flex gap-3 sm:gap-6 flex-wrap">
           {tabs.map(tab => (
             <button
               key={tab.id}

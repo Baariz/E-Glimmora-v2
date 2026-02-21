@@ -152,7 +152,7 @@ export function RMIntakeWizard({
               <p className="font-sans text-sm text-slate-600">
                 Where is the client in their wealth journey?
               </p>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {[
                   { value: 'Building', label: 'Building', desc: 'Accumulating wealth' },
                   { value: 'Preserving', label: 'Preserving', desc: 'Protecting assets' },
@@ -191,7 +191,7 @@ export function RMIntakeWizard({
               <p className="font-sans text-sm text-slate-600">
                 What does the client want to feel? (Select 2-3)
               </p>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {[
                   'Security',
                   'Adventure',
@@ -265,7 +265,7 @@ export function RMIntakeWizard({
               <p className="font-sans text-sm text-slate-600">
                 What matters most to the client? (Select top 3)
               </p>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {[
                   'Family Time',
                   'Personal Growth',

@@ -56,7 +56,7 @@ export function JourneyStatusTimeline({ status, journeyTitle }: JourneyStatusTim
 
   return (
     <div className="bg-white border border-sand-200 rounded-2xl overflow-hidden">
-      <div className="bg-gradient-to-r from-rose-900 to-rose-800 px-8 py-6">
+      <div className="bg-gradient-to-r from-rose-900 to-rose-800 px-4 sm:px-8 py-4 sm:py-6">
         <p className="text-rose-200 text-xs font-sans uppercase tracking-widest mb-1">Your Experience</p>
         <h3 className="font-serif text-xl text-white mb-3">{journeyTitle}</h3>
         <div className="flex items-center gap-3">
@@ -65,7 +65,7 @@ export function JourneyStatusTimeline({ status, journeyTitle }: JourneyStatusTim
         </div>
       </div>
 
-      <div className="px-8 py-6">
+      <div className="px-4 sm:px-8 py-4 sm:py-6">
         <div className="relative">
           <div className="absolute left-4 top-2 bottom-2 w-px bg-sand-200" />
           <div className="space-y-0">
@@ -95,7 +95,7 @@ export function JourneyStatusTimeline({ status, journeyTitle }: JourneyStatusTim
                     {isFuture && <span className="text-xs text-sand-400 font-sans">{step.number}</span>}
                   </div>
                   <div className="flex-1 pt-1">
-                    <div className="flex items-center justify-between gap-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4">
                       <p className={cn(
                         'font-sans text-sm font-medium',
                         isCompleted && 'text-emerald-700',

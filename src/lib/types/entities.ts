@@ -66,6 +66,8 @@ export interface IntentProfile {
   lifeStage: LifeStage;
   travelMode?: TravelMode;
   preferredSeason?: 'Summer' | 'Autumn' | 'Winter' | 'Spring' | 'Timeless';
+  travelDateFrom?: string; // ISO date string e.g. "2026-04-15"
+  travelDateTo?: string;   // ISO date string e.g. "2026-04-22" — optional return date
   priorities?: string[];
   discretionPreference?: string;
   createdAt: string;

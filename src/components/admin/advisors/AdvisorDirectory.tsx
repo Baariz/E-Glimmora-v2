@@ -74,7 +74,7 @@ export function AdvisorDirectory({ onAssign, highlightMatchFor }: AdvisorDirecto
                 </div>
                 <p className="text-slate-500 text-xs font-sans mb-2">{advisor.specialization}</p>
 
-                <div className="flex items-center gap-4 flex-wrap">
+                <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
                   <div className="flex items-center gap-1">
                     <span className="text-xs text-slate-400">Clients:</span>
                     <span className="text-xs text-slate-600 font-medium">{advisor.clientLoad}/{advisor.maxClients}</span>

@@ -34,7 +34,7 @@ export const Step2Schema = z.object({
 export type Step2Data = z.infer<typeof Step2Schema>;
 
 // ============================================================================
-// Step 3: Travel Style (Travel Mode + Season — merged into one step)
+// Step 3: Travel Style (Travel Mode + Season + Travel Dates — one screen)
 // ============================================================================
 
 export const Step3Schema = z.object({
@@ -44,6 +44,8 @@ export const Step3Schema = z.object({
   preferredSeason: z.enum(['Summer', 'Autumn', 'Winter', 'Spring', 'Timeless'], {
     required_error: 'Please share your seasonal preference',
   }),
+  travelDateFrom: z.string().min(1, 'Please select a departure date'),
+  travelDateTo: z.string().optional(),
 });
 
 export type Step3Data = z.infer<typeof Step3Schema>;
@@ -86,6 +88,8 @@ export const IntentProfileMasterSchema = z.object({
   emotionalDrivers: Step2Schema.shape.emotionalDrivers,
   travelMode: Step3Schema.shape.travelMode,
   preferredSeason: Step3Schema.shape.preferredSeason,
+  travelDateFrom: Step3Schema.shape.travelDateFrom,
+  travelDateTo: Step3Schema.shape.travelDateTo,
   priorities: Step4Schema.shape.priorities,
   values: Step4Schema.shape.values,
   discretionPreference: Step5Schema.shape.discretionPreference,

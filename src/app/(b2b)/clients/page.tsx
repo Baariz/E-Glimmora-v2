@@ -165,9 +165,9 @@ export default function ClientsPage() {
   ];
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="p-4 sm:p-8 space-y-6 sm:space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="font-serif text-4xl text-slate-900 mb-2">Client Portfolio</h1>
           <p className="font-sans text-slate-600">

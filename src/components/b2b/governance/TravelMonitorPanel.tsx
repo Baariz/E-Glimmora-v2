@@ -49,7 +49,7 @@ export function TravelMonitorPanel() {
                 {statusIcon(flight.status)} {flight.status}
               </span>
             </div>
-            <div className="flex gap-4 text-slate-400 text-xs">
+            <div className="flex gap-2 sm:gap-4 text-slate-400 text-xs flex-wrap">
               <span>Dep: {flight.departure}</span>
               <span>Arr: {flight.arrival}</span>
               <span>{flight.terminal}</span>

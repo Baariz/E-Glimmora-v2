@@ -94,6 +94,8 @@ export const CreateIntentProfileSchema = z.object({
   lifeStage: z.enum(['Building', 'Preserving', 'Transitioning', 'Legacy Planning']),
   travelMode: z.enum(['Luxury', 'Adventure', 'Wellness', 'Cultural', 'Exclusive Access']).optional(),
   preferredSeason: z.enum(['Summer', 'Autumn', 'Winter', 'Spring', 'Timeless']).optional(),
+  travelDateFrom: z.string().optional(),
+  travelDateTo: z.string().optional(),
   priorities: z.array(z.string()).optional(),
   discretionPreference: z.enum(['High', 'Medium', 'Standard']).optional()
 });

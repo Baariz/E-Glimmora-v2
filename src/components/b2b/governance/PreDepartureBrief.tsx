@@ -76,7 +76,7 @@ export function PreDepartureBrief({ clientName, journeyTitle }: PreDepartureBrie
               <label className="block text-xs font-sans font-medium text-slate-500 uppercase tracking-wider mb-1.5">Arrival Summary</label>
               <textarea value={arrivalSummary} onChange={(e) => setArrivalSummary(e.target.value)} rows={3} placeholder="Describe the arrival arrangement..." className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 text-sm font-sans placeholder-slate-400 resize-none focus:outline-none focus:border-blue-300" />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-sans font-medium text-slate-500 uppercase tracking-wider mb-1.5">Key Contact</label>
                 <input value={keyContact} onChange={(e) => setKeyContact(e.target.value)} placeholder="Name" className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 text-sm font-sans placeholder-slate-400 focus:outline-none focus:border-blue-300" />

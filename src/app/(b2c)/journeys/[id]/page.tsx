@@ -18,6 +18,11 @@ import { ConfirmJourneyFlow } from '@/components/b2c/journeys/ConfirmJourneyFlow
 import { RefineJourneyModal } from '@/components/b2c/journeys/RefineJourneyModal';
 import { InvisibleItineraryToggle } from '@/components/b2c/journeys/InvisibleItineraryToggle';
 import { JourneyActions } from '@/components/b2c/journeys/JourneyActions';
+import { JourneyStatusTimeline } from '@/components/b2c/journeys/JourneyStatusTimeline';
+import { LiveJourneyCard } from '@/components/b2c/journeys/LiveJourneyCard';
+import { PrivateConfirmation } from '@/components/b2c/journeys/PrivateConfirmation';
+import { PostJourneyFeedback } from '@/components/b2c/journeys/PostJourneyFeedback';
+import { NextJourneyPanel } from '@/components/b2c/journeys/NextJourneyPanel';
 
 import type { Journey } from '@/lib/types/entities';
 import { JourneyStatus } from '@/lib/types/entities';
@@ -169,6 +174,31 @@ export default function JourneyDetailPage() {
       </motion.div>
 
       {/* ------------------------------------------------------------------ */}
+      {/* Journey Status Timeline — always show                              */}
+      {/* ------------------------------------------------------------------ */}
+      <motion.div variants={fadeUp} className="mb-10">
+        <JourneyStatusTimeline status={journey.status} journeyTitle={journey.title} />
+      </motion.div>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* Live Journey Card — only when EXECUTED                             */}
+      {/* ------------------------------------------------------------------ */}
+      {journey.status === JourneyStatus.EXECUTED && (
+        <motion.div variants={fadeUp} className="mb-10">
+          <LiveJourneyCard />
+        </motion.div>
+      )}
+
+      {/* ------------------------------------------------------------------ */}
+      {/* Private Confirmation — only when APPROVED                          */}
+      {/* ------------------------------------------------------------------ */}
+      {journey.status === JourneyStatus.APPROVED && (
+        <motion.div variants={fadeUp} className="mb-10">
+          <PrivateConfirmation journeyTitle={journey.title} />
+        </motion.div>
+      )}
+
+      {/* ------------------------------------------------------------------ */}
       {/* Journey Detail                                                     */}
       {/* ------------------------------------------------------------------ */}
       <motion.div variants={fadeUp}>
@@ -235,6 +265,24 @@ export default function JourneyDetailPage() {
           )}
         </div>
       </motion.div>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* Post-Journey Feedback — only when EXECUTED or ARCHIVED             */}
+      {/* ------------------------------------------------------------------ */}
+      {(journey.status === JourneyStatus.EXECUTED || journey.status === JourneyStatus.ARCHIVED) && (
+        <motion.div variants={fadeUp} className="mb-10">
+          <PostJourneyFeedback journeyTitle={journey.title} />
+        </motion.div>
+      )}
+
+      {/* ------------------------------------------------------------------ */}
+      {/* Next Journey Suggestions — only when EXECUTED or ARCHIVED          */}
+      {/* ------------------------------------------------------------------ */}
+      {(journey.status === JourneyStatus.EXECUTED || journey.status === JourneyStatus.ARCHIVED) && (
+        <motion.div variants={fadeUp} className="mb-16">
+          <NextJourneyPanel />
+        </motion.div>
+      )}
     </motion.div>
   );
 }

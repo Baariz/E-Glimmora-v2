@@ -10,6 +10,47 @@ import { IntentProfile, CreateIntentProfileInput } from '@/lib/types';
 export class MockIntentService extends BaseMockService implements IIntentService {
   private readonly STORAGE_KEY = 'intent_profiles';
 
+  constructor() {
+    super();
+    this.seedIfEmpty();
+  }
+
+  /**
+   * Seed a realistic UHNI intent profile (idempotent)
+   */
+  private seedIfEmpty(): void {
+    const existing = this.getFromStorage<IntentProfile>(this.STORAGE_KEY);
+    if (existing.length > 0) {
+      return;
+    }
+
+    const now = new Date().toISOString();
+    const seedProfiles: IntentProfile[] = [
+      {
+        id: 'intent-seed-001',
+        userId: 'c7e1f2a0-4b3d-4e5f-8a9b-1c2d3e4f5a6b', // MOCK_UHNI_USER_ID
+        emotionalDrivers: {
+          security: 72,
+          adventure: 58,
+          legacy: 85,
+          recognition: 35,
+          autonomy: 68,
+        },
+        riskTolerance: 'Moderate',
+        values: ['Privacy', 'Family Legacy', 'Cultural Immersion', 'Wellness'],
+        lifeStage: 'Preserving',
+        travelMode: 'Luxury',
+        preferredSeason: 'Autumn',
+        priorities: ['Privacy', 'Family Legacy', 'Wellness', 'Cultural Immersion'],
+        discretionPreference: 'High',
+        createdAt: new Date(Date.now() - 60 * 86400000).toISOString(),
+        updatedAt: now,
+      },
+    ];
+
+    this.setInStorage(this.STORAGE_KEY, seedProfiles);
+  }
+
   async getIntentProfile(userId: string): Promise<IntentProfile | null> {
     await this.delay();
     const profiles = this.getFromStorage<IntentProfile>(this.STORAGE_KEY);

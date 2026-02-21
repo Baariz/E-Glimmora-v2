@@ -12,6 +12,7 @@ import { useAuth } from '@/lib/hooks/useAuth'
 import { B2BRole } from '@/lib/types/roles'
 import { getB2BNavItems } from '@/lib/rbac/b2b-role-guards'
 import { B2BRoleGuard } from '@/components/b2b/layouts/B2BRoleGuard'
+import { RMChatWidget } from '@/components/b2b/chat/RMChatWidget'
 
 const routeLabels: Record<string, string> = {
   '/portfolio': 'Portfolio',
@@ -258,6 +259,7 @@ export default function B2BLayout({ children }: { children: React.ReactNode }) {
           </B2BRoleGuard>
         </main>
       </div>
+      <RMChatWidget />
     </div>
   )
 }

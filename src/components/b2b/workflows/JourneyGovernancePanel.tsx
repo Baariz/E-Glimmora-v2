@@ -126,47 +126,49 @@ export function JourneyGovernancePanel({ journey, onStateChange }: JourneyGovern
     <>
       <Card>
         <CardHeader>
-          <h3 className="font-sans text-sm font-semibold text-slate-700">Governance Actions</h3>
+          <h3 className="font-sans text-sm font-semibold text-slate-800">Governance Actions</h3>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {/* Current State Indicator */}
-            <div className="text-center py-4 border-b border-slate-200">
-              <p className="font-sans text-xs text-slate-600 mb-2">Current Status</p>
+          <div className="space-y-3">
+            {/* Current State Badge */}
+            <div className="pb-3 border-b border-slate-200">
+              <p className="font-sans text-xs text-slate-500 mb-2">Current Status</p>
               <span
-                className={`inline-block px-4 py-2 rounded-full bg-${stateColor}-100 text-${stateColor}-800 font-sans text-sm font-medium`}
+                className={`inline-block px-3 py-1.5 rounded-md bg-${stateColor}-100 text-${stateColor}-800 font-sans text-sm font-medium`}
               >
                 {getStateLabel(journey.status)}
               </span>
             </div>
 
-            {/* State Flow Visualization */}
+            {/* Vertical State Flow */}
             <StateFlowIndicator currentStatus={journey.status} />
 
             {/* Available Actions */}
             {availableTransitions.length > 0 ? (
-              <div className="space-y-2">
-                <p className="font-sans text-xs font-semibold text-slate-700 mb-2">Available Actions:</p>
+              <div className="pt-1 space-y-2">
+                <p className="font-sans text-xs text-slate-500 mb-1">Available Actions</p>
                 {availableTransitions.map((event) => {
                   const label = getTransitionLabel(event);
                   const isDestructive = event === 'REJECT' || event === 'REQUEST_CHANGES';
 
                   return (
-                    <Button
+                    <button
                       key={event}
-                      variant={isDestructive ? 'secondary' : 'primary'}
-                      size="sm"
                       onClick={() => handleTransition(event)}
                       disabled={processing}
-                      className="w-full"
+                      className={`w-full px-4 py-2.5 rounded-lg font-sans text-sm font-medium transition-colors disabled:opacity-50 ${
+                        isDestructive
+                          ? 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                          : 'bg-rose-900 text-white hover:bg-rose-800'
+                      }`}
                     >
                       {label}
-                    </Button>
+                    </button>
                   );
                 })}
               </div>
             ) : (
-              <p className="font-sans text-xs text-slate-500 text-center py-4">
+              <p className="font-sans text-xs text-slate-400 text-center py-3">
                 {can(Permission.APPROVE, 'journey')
                   ? 'No actions available at current state'
                   : 'You do not have permission to modify this journey'}
@@ -205,56 +207,58 @@ export function JourneyGovernancePanel({ journey, onStateChange }: JourneyGovern
   );
 }
 
-// State Flow Visualization Component
+// State Flow Visualization — vertical stepper for sidebar
 function StateFlowIndicator({ currentStatus }: { currentStatus: JourneyStatus }) {
   const allStates = [
-    JourneyStatus.DRAFT,
-    JourneyStatus.RM_REVIEW,
-    JourneyStatus.COMPLIANCE_REVIEW,
-    JourneyStatus.APPROVED,
-    JourneyStatus.PRESENTED,
-    JourneyStatus.EXECUTED,
+    { key: JourneyStatus.DRAFT, label: 'Draft' },
+    { key: JourneyStatus.RM_REVIEW, label: 'RM Review' },
+    { key: JourneyStatus.COMPLIANCE_REVIEW, label: 'Compliance' },
+    { key: JourneyStatus.APPROVED, label: 'Approved' },
+    { key: JourneyStatus.PRESENTED, label: 'Presented' },
+    { key: JourneyStatus.EXECUTED, label: 'Executed' },
   ];
 
-  const currentIndex = allStates.indexOf(currentStatus);
+  const currentIndex = allStates.findIndex(s => s.key === currentStatus);
 
   return (
-    <div className="py-4">
-      <p className="font-sans text-xs text-slate-600 mb-3 text-center">Workflow Progress</p>
-      <div className="flex items-center justify-between">
+    <div className="py-3 border-b border-slate-200">
+      <p className="font-sans text-xs text-slate-500 mb-3">Workflow Progress</p>
+      <div className="space-y-0">
         {allStates.map((state, index) => {
           const isPast = index < currentIndex;
           const isCurrent = index === currentIndex;
-          const isFuture = index > currentIndex;
-          const color = getStateColor(state);
 
           return (
-            <div key={state} className="flex items-center">
+            <div key={state.key} className="flex items-start gap-3">
+              {/* Dot + vertical line */}
               <div className="flex flex-col items-center">
                 <div
-                  className={`w-3 h-3 rounded-full ${
+                  className={`w-2.5 h-2.5 rounded-full shrink-0 mt-0.5 ${
                     isCurrent
-                      ? `bg-${color}-500`
+                      ? 'bg-rose-600 ring-2 ring-rose-200'
                       : isPast
                         ? 'bg-teal-500'
                         : 'bg-slate-300'
                   }`}
                 />
-                <p
-                  className={`mt-1 font-sans text-[10px] text-center max-w-[60px] ${
-                    isCurrent ? 'text-slate-900 font-semibold' : 'text-slate-500'
-                  }`}
-                >
-                  {getStateLabel(state).split(' ')[0]}
-                </p>
+                {index < allStates.length - 1 && (
+                  <div
+                    className={`w-px h-5 ${isPast ? 'bg-teal-400' : 'bg-slate-200'}`}
+                  />
+                )}
               </div>
-              {index < allStates.length - 1 && (
-                <div
-                  className={`w-8 h-0.5 mx-1 ${
-                    isPast ? 'bg-teal-500' : 'bg-slate-300'
-                  }`}
-                />
-              )}
+              {/* Label */}
+              <p
+                className={`font-sans text-xs leading-tight ${
+                  isCurrent
+                    ? 'text-rose-900 font-semibold'
+                    : isPast
+                      ? 'text-teal-700'
+                      : 'text-slate-400'
+                }`}
+              >
+                {state.label}
+              </p>
             </div>
           );
         })}

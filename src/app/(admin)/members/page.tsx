@@ -13,9 +13,11 @@ import { DataTable } from '@/components/b2b/tables/DataTable';
 import { StatsRow, StatCard } from '@/components/b2b/layouts/StatsRow';
 import { StatusBadge } from '@/components/b2b/layouts/StatusBadge';
 import { MemberActions } from '@/components/admin/members/MemberActions';
+import { AdvisorDirectory } from '@/components/admin/advisors/AdvisorDirectory';
 import { useServices } from '@/lib/hooks/useServices';
 import type { User } from '@/lib/types';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils/cn';
 
 /**
  * Member Management Page
@@ -26,6 +28,7 @@ export default function MembersPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<User[]>([]);
+  const [activeTab, setActiveTab] = useState<'members' | 'advisors'>('members');
 
   const loadUsers = async () => {
     setLoading(true);
@@ -176,19 +179,46 @@ export default function MembersPage() {
         </p>
       </div>
 
-      {/* Stats row */}
-      <StatsRow stats={stats} />
-
-      {/* DataTable */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <DataTable
-          columns={columns}
-          data={users}
-          searchColumn="name"
-          searchPlaceholder="Search by name..."
-          emptyMessage="No members found"
-        />
+      {/* Tab Navigation */}
+      <div className="flex gap-1 border-b border-gray-200">
+        {(['members', 'advisors'] as const).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={cn(
+              'px-4 py-2.5 font-sans text-sm font-medium transition-colors border-b-2 -mb-px',
+              activeTab === tab
+                ? 'border-rose-600 text-rose-900'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            )}
+          >
+            {tab === 'members' ? 'Members' : 'Advisors'}
+          </button>
+        ))}
       </div>
+
+      {/* Tab Content */}
+      {activeTab === 'members' ? (
+        <>
+          {/* Stats row */}
+          <StatsRow stats={stats} />
+
+          {/* DataTable */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <DataTable
+              columns={columns}
+              data={users}
+              searchColumn="name"
+              searchPlaceholder="Search by name..."
+              emptyMessage="No members found"
+            />
+          </div>
+        </>
+      ) : (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <AdvisorDirectory highlightMatchFor="Client" />
+        </div>
+      )}
     </div>
   );
 }

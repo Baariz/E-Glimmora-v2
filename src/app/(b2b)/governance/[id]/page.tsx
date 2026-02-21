@@ -18,6 +18,9 @@ import { Card, CardHeader, CardContent } from '@/components/shared/Card';
 import { Button } from '@/components/shared/Button';
 import { JourneyGovernancePanel } from '@/components/b2b/workflows/JourneyGovernancePanel';
 import { VersionHistory } from '@/components/b2b/workflows/VersionHistory';
+import { AGIBriefPanel } from '@/components/b2b/governance/AGIBriefPanel';
+import { TravelMonitorPanel } from '@/components/b2b/governance/TravelMonitorPanel';
+import { PreDepartureBrief } from '@/components/b2b/governance/PreDepartureBrief';
 import { ExecutionTracker } from '@/components/b2b/workflows/ExecutionTracker';
 import { PresentationExport } from '@/components/b2b/workflows/PresentationExport';
 import { JourneyStatus } from '@/lib/types/entities';
@@ -237,6 +240,19 @@ export default function GovernanceDetailPage() {
             JourneyStatus.EXECUTED,
             JourneyStatus.ARCHIVED,
           ].includes(journey.status) && <ExecutionTracker journey={journey} />}
+
+          {/* AGI Brief Panel — gated on READ journey permission */}
+          {can(Permission.READ, 'journey') && (
+            <AGIBriefPanel journeyId={journey.id} clientName={client?.name || 'Client'} />
+          )}
+
+          {/* Travel Monitor — only when EXECUTED */}
+          {journey.status === JourneyStatus.EXECUTED && <TravelMonitorPanel />}
+
+          {/* Pre-Departure Brief — only when APPROVED or PRESENTED */}
+          {(journey.status === JourneyStatus.APPROVED || journey.status === JourneyStatus.PRESENTED) && (
+            <PreDepartureBrief clientName={client?.name || 'Client'} journeyTitle={journey.title} />
+          )}
         </div>
 
         {/* Governance Sidebar - 1/3 width */}

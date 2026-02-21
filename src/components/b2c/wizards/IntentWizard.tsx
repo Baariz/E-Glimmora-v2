@@ -117,6 +117,7 @@ export function IntentWizard() {
           values: validatedData.values,
           lifeStage: validatedData.lifeStage,
           travelMode: validatedData.travelMode,
+          preferredSeason: validatedData.preferredSeason,
           priorities: validatedData.priorities,
           discretionPreference: validatedData.discretionPreference,
         });

@@ -6,6 +6,7 @@ import { Menu, X, LogOut } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { PageTransition } from '@/components/providers/PageTransition'
 import { ContextSwitcher } from '@/components/auth/ContextSwitcher'
+import { AIChatWidget } from '@/components/b2c/chat/AIChatWidget'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { getNavLinksForRole, getRoleBadge } from '@/lib/rbac/b2c-role-filters'
 import { B2CRole } from '@/lib/types/roles'
@@ -175,6 +176,7 @@ export default function B2CLayout({ children }: { children: React.ReactNode }) {
       <main className="max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-8" aria-label="B2C content">
         <PageTransition>{children}</PageTransition>
       </main>
+      <AIChatWidget />
     </div>
   )
 }

@@ -65,6 +65,7 @@ export interface IntentProfile {
   values: string[];
   lifeStage: LifeStage;
   travelMode?: TravelMode;
+  preferredSeason?: 'Summer' | 'Autumn' | 'Winter' | 'Spring' | 'Timeless';
   priorities?: string[];
   discretionPreference?: string;
   createdAt: string;

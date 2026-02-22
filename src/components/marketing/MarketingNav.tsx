@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { motion, useScroll, useMotionValueEvent } from 'framer-motion'
 import { Menu, X } from 'lucide-react'
@@ -71,15 +72,19 @@ export function MarketingNav() {
       >
         <div className="mx-auto max-w-7xl px-6 lg:px-16">
           <div className="flex h-20 items-center justify-between">
-            {/* Brand wordmark */}
-            <Link
-              href="/"
-              className={cn(
-                'font-serif text-sm uppercase tracking-widest transition-colors duration-300',
-                textColor
-              )}
-            >
-              Élan Glimmora
+            {/* Brand logo */}
+            <Link href="/" className="flex-shrink-0">
+              <Image
+                src="/Logo/elan-glimmora.png"
+                alt="Élan Glimmora"
+                width={200}
+                height={54}
+                className={cn(
+                  'h-12 w-auto transition-all duration-300',
+                  useLightText && 'brightness-0 invert'
+                )}
+                priority
+              />
             </Link>
 
             {/* Desktop navigation - center */}

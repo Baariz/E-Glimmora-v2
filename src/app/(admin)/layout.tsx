@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { signOut } from 'next-auth/react'
 import { useState } from 'react'
@@ -38,11 +39,16 @@ function AdminNav() {
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex items-center justify-between h-14">
           {/* Brand */}
-          <Link
-            href="/"
-            className="font-serif text-lg font-medium text-rose-900 hover:text-rose-700 transition-colors"
-          >
-            Élan Admin
+          <Link href="/" className="flex items-center gap-2 flex-shrink-0">
+            <Image
+              src="/Logo/elan-glimmora.png"
+              alt="Élan Glimmora"
+              width={120}
+              height={34}
+              className="h-8 w-auto"
+              priority
+            />
+            <span className="font-sans text-xs text-sand-500 font-medium uppercase tracking-wider">Admin</span>
           </Link>
 
           {/* Desktop Navigation links */}

@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 
 export function MarketingFooter() {
   const currentYear = new Date().getFullYear()
@@ -10,9 +11,13 @@ export function MarketingFooter() {
         <div className="grid grid-cols-1 gap-12 md:grid-cols-3 md:gap-8">
           {/* Brand column */}
           <div className="space-y-4">
-            <h2 className="font-serif text-xl tracking-widest text-white">
-              Élan Glimmora
-            </h2>
+            <Image
+              src="/Logo/elan-glimmora.png"
+              alt="Élan Glimmora"
+              width={160}
+              height={44}
+              className="h-10 w-auto brightness-0 invert"
+            />
             <p className="font-serif text-sm italic text-white/60">
               Sovereign Lifestyle Intelligence
             </p>

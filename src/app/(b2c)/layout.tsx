@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Menu, X, LogOut } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { PageTransition } from '@/components/providers/PageTransition'
@@ -32,11 +33,15 @@ function B2CNav() {
       <div className="max-w-7xl mx-auto px-4 md:px-6">
         <div className="flex items-center justify-between h-16">
           {/* Brand */}
-          <Link
-            href="/"
-            className="font-serif text-xl font-light text-rose-900 hover:text-rose-700 transition-colors touch-target"
-          >
-            Élan
+          <Link href="/" className="touch-target flex-shrink-0">
+            <Image
+              src="/Logo/elan-glimmora.png"
+              alt="Élan Glimmora"
+              width={140}
+              height={40}
+              className="h-9 w-auto"
+              priority
+            />
           </Link>
 
           {/* Desktop Navigation links */}

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { Menu, X, LogOut } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -92,14 +93,17 @@ function B2BSidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () => voi
     <div className="flex flex-col h-full">
       {/* Brand — fixed top */}
       <div className="shrink-0 px-5 py-4 border-b border-slate-200">
-        <Link
-          href="/"
-          onClick={handleLinkClick}
-          className="font-serif text-2xl font-light text-rose-900 hover:text-rose-700 transition-colors"
-        >
-          Élan
+        <Link href="/" onClick={handleLinkClick} className="block">
+          <Image
+            src="/Logo/elan-glimmora.png"
+            alt="Élan Glimmora"
+            width={160}
+            height={44}
+            className="h-10 w-auto"
+            priority
+          />
         </Link>
-        <p className="text-xs font-sans text-slate-500 mt-1">Partner Portal</p>
+        <p ></p>
         <div className="mt-3">
           <ContextSwitcher />
         </div>

@@ -8,6 +8,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { MFAVerify } from '@/components/auth/MFAVerify';
 import { fadeUp } from '@/styles/variants/scroll-reveal';
@@ -38,7 +39,13 @@ export default function VerifyMFAPage() {
       {/* Header */}
       <header className="border-b border-sand-200 bg-white">
         <div className="max-w-7xl mx-auto px-6 py-4">
-          <h1 className="font-serif text-lg text-charcoal-900">Elan Glimmora</h1>
+          <Image
+            src="/Logo/elan-glimmora.png"
+            alt="Élan Glimmora"
+            width={140}
+            height={40}
+            className="h-9 w-auto"
+          />
         </div>
       </header>
 

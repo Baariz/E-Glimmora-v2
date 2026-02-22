@@ -7,6 +7,7 @@
  */
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils/cn';
 import { Wand2, Send } from 'lucide-react';
@@ -113,7 +114,7 @@ export function PreDepartureBrief({ clientName, journeyTitle }: PreDepartureBrie
             <p className="text-xs font-sans font-medium text-slate-400 uppercase tracking-wider mb-4">Client Preview</p>
             {hasContent ? (
               <div className="bg-white rounded-xl border border-sand-200 p-5">
-                <p className="text-xs text-sand-400 font-sans uppercase tracking-widest mb-1">Élan Glimmora</p>
+                <Image src="/Logo/elan-glimmora.png" alt="Élan Glimmora" width={100} height={28} className="h-6 w-auto mb-1" />
                 <h4 className="font-serif text-lg text-rose-900 mb-4">Your Experience Brief</h4>
                 {arrivalSummary && (
                   <div className="mb-3">

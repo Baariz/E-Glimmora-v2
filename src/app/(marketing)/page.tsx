@@ -8,7 +8,6 @@ import { ChevronDown } from 'lucide-react'
 import { useReducedMotion } from '@/lib/hooks/useReducedMotion'
 import { ScrollReveal } from '@/components/shared/ScrollReveal/ScrollReveal'
 import { Parallax } from '@/components/shared/Parallax/Parallax'
-import { Button } from '@/components/shared/Button/Button'
 import { fadeUp } from '@/styles/variants/scroll-reveal'
 
 /**
@@ -122,7 +121,7 @@ export default function MarketingHomePage() {
           />
 
           {/* Tagline — each letter fades in individually */}
-          <div className="flex items-center justify-center gap-[0.4em]">
+          <div className="flex flex-wrap items-center justify-center gap-x-[0.4em] gap-y-2">
             {['Sovereign', 'Lifestyle', 'Intelligence'].map((word, wordIdx) => (
               <span key={word} className="inline-flex">
                 {word.split('').map((char, charIdx) => (
@@ -135,7 +134,7 @@ export default function MarketingHomePage() {
                       delay: 2.0 + wordIdx * 0.3 + charIdx * 0.03,
                       ease: [0.16, 1, 0.3, 1],
                     }}
-                    className="inline-block font-sans text-lg md:text-xl text-sand-600 tracking-[0.3em] uppercase"
+                    className="inline-block font-sans text-sm sm:text-lg md:text-xl text-rose-900 tracking-[0.15em] sm:tracking-[0.3em] uppercase"
                   >
                     {char}
                   </motion.span>
@@ -357,13 +356,11 @@ export default function MarketingHomePage() {
 
           {/* CTA button */}
           <div className="pt-4">
-            <Link href="/invite">
-              <Button
-                size="lg"
-                className="bg-rose-900 text-white hover:bg-rose-800 px-8 py-4 text-base shadow-lg hover:shadow-xl transition-all"
-              >
-                Request Access
-              </Button>
+            <Link
+              href="/invite"
+              className="inline-flex items-center justify-center px-10 py-4 bg-rose-900 text-white font-sans font-medium text-base rounded-lg shadow-lg hover:bg-rose-800 hover:shadow-xl active:bg-rose-950 transition-all"
+            >
+              Request Access
             </Link>
           </div>
         </ScrollReveal>

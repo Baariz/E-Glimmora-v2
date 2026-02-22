@@ -31,6 +31,15 @@ export function MarketingNav() {
     setIsScrolled(latest > 80)
   })
 
+  // Only pages with truly dark hero backgrounds need light nav text
+  const darkHeroPages = ['/privacy']
+  const hasDarkHero = darkHeroPages.includes(pathname)
+  const useLightText = hasDarkHero && !isScrolled
+
+  const textColor = useLightText ? 'text-white' : 'text-rose-900'
+  const dotColor = useLightText ? 'bg-white' : 'bg-rose-900'
+  const borderColor = useLightText ? 'border-white/30' : 'border-rose-200'
+
   const isActive = (href: string) => pathname === href
 
   // Close mobile menu when pathname changes
@@ -65,7 +74,10 @@ export function MarketingNav() {
             {/* Brand wordmark */}
             <Link
               href="/"
-              className="font-serif text-sm uppercase tracking-widest text-rose-900 transition-colors duration-300"
+              className={cn(
+                'font-serif text-sm uppercase tracking-widest transition-colors duration-300',
+                textColor
+              )}
             >
               Élan Glimmora
             </Link>
@@ -77,41 +89,47 @@ export function MarketingNav() {
                   key={link.href}
                   href={link.href}
                   className={cn(
-                    'relative font-sans text-xs uppercase tracking-[0.2em] text-rose-900 transition-opacity duration-300',
+                    'relative font-sans text-xs uppercase tracking-[0.2em] transition-all duration-300',
+                    textColor,
                     isActive(link.href) ? 'opacity-100' : 'opacity-70 hover:opacity-100'
                   )}
                 >
                   {link.label}
                   {isActive(link.href) && (
-                    <span className="absolute -bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-rose-900" />
+                    <span className={cn('absolute -bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full transition-colors duration-300', dotColor)} />
                   )}
                 </Link>
               ))}
             </div>
 
             {/* Desktop CTAs */}
-            <div className="hidden items-center gap-4 md:flex">
+            <div className="hidden items-center gap-6 md:flex">
               <Link
                 href="/invite/login"
-                className="font-sans text-xs uppercase tracking-[0.2em] text-rose-900 opacity-70 hover:opacity-100 transition-opacity duration-300"
+                className={cn(
+                  'font-sans text-xs uppercase tracking-[0.2em] opacity-70 hover:opacity-100 transition-all duration-300',
+                  textColor
+                )}
               >
                 Sign In
               </Link>
-              <Link href="/invite">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="border border-rose-200 text-rose-900 hover:border-rose-300 hover:bg-rose-50 transition-all duration-300"
-                >
-                  Request Access
-                </Button>
+              <Link
+                href="/invite"
+                className={cn(
+                  'font-sans text-xs uppercase tracking-[0.2em] px-5 py-2 rounded-full transition-all duration-300',
+                  useLightText
+                    ? 'bg-white/15 text-white backdrop-blur-sm hover:bg-white/25'
+                    : 'bg-rose-900 text-white hover:bg-rose-800'
+                )}
+              >
+                Request Access
               </Link>
             </div>
 
             {/* Mobile hamburger */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden p-2 text-rose-900 transition-colors duration-300 touch-target"
+              className={cn('md:hidden p-2 transition-colors duration-300 touch-target', textColor)}
               aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
             >
               {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}

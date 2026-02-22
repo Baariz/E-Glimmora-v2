@@ -30,7 +30,9 @@ export type Resource =
   | 'crisis'
   | 'vendor'
   | 'conflict'
-  | 'integration';
+  | 'integration'
+  | 'hotel'
+  | 'package';
 
 export interface PermissionCheck {
   action: Permission;

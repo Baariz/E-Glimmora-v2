@@ -12,11 +12,12 @@ import { Journey, MemoryItem, Message, MessageThread, AdvisorResourcePermissions
 export function getNavLinksForRole(role: B2CRole): Array<{ href: string; label: string }> {
   switch (role) {
     case B2CRole.UHNI:
-      // Full access to all 6 B2C sections + Privacy
+      // Full access to all B2C sections + Privacy
       return [
         { href: '/briefing', label: 'Briefing' },
         { href: '/intent', label: 'Intent' },
         { href: '/journeys', label: 'Journeys' },
+        { href: '/experiences', label: 'Experiences' },
         { href: '/messages', label: 'Messages' },
         { href: '/intelligence', label: 'Intelligence' },
         { href: '/vault', label: 'Vault' },

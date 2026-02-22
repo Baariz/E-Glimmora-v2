@@ -19,6 +19,7 @@ import { Button } from '@/components/shared/Button';
 import { JourneyGovernancePanel } from '@/components/b2b/workflows/JourneyGovernancePanel';
 import { VersionHistory } from '@/components/b2b/workflows/VersionHistory';
 import { AGIBriefPanel } from '@/components/b2b/governance/AGIBriefPanel';
+import { PackageSelector } from '@/components/b2b/governance/PackageSelector';
 import { TravelMonitorPanel } from '@/components/b2b/governance/TravelMonitorPanel';
 import { PreDepartureBrief } from '@/components/b2b/governance/PreDepartureBrief';
 import { ExecutionTracker } from '@/components/b2b/workflows/ExecutionTracker';
@@ -244,6 +245,14 @@ export default function GovernanceDetailPage() {
           {/* AGI Brief Panel — gated on READ journey permission */}
           {can(Permission.READ, 'journey') && (
             <AGIBriefPanel journeyId={journey.id} clientName={client?.name || 'Client'} />
+          )}
+
+          {/* Package Selector — recommend packages for this journey */}
+          {can(Permission.READ, 'journey') && (
+            <PackageSelector
+              journeyId={journey.id}
+              journeyCategory={journey.category}
+            />
           )}
 
           {/* Travel Monitor — only when EXECUTED */}

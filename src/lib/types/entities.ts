@@ -815,3 +815,61 @@ export interface IntegrationConfig {
   updatedBy: string;
   updatedAt: string;
 }
+
+// ============================================================================
+// Hotel & Resort Content Library
+// ============================================================================
+
+export type HotelTier = 'Ultra-Luxury' | 'Luxury' | 'Boutique';
+export type HotelRegion = 'Europe' | 'Asia Pacific' | 'Middle East' | 'Americas' | 'Africa' | 'Indian Ocean';
+
+export interface HotelAmenity {
+  label: string;
+  icon: string;
+}
+
+export interface Hotel {
+  id: string;
+  name: string;
+  location: string;
+  country: string;
+  region: HotelRegion;
+  tier: HotelTier;
+  privacyScore: number;
+  description: string;
+  clientDescription: string;
+  amenities: HotelAmenity[];
+  imageUrl?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ============================================================================
+// Package & Itinerary
+// ============================================================================
+
+export interface ItineraryDay {
+  day: number;
+  title: string;
+  description: string;
+  activities: string[];
+  meals?: string;
+  transport?: string;
+}
+
+export interface Package {
+  id: string;
+  name: string;
+  clientTitle: string;
+  hotelId: string;
+  hotelName: string;
+  duration: number;
+  region: HotelRegion;
+  category: string;
+  tagline: string;
+  itinerary: ItineraryDay[];
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}

@@ -23,6 +23,8 @@ function AdminNav() {
     { href: '/members', label: 'Members' },
     { href: '/institutions', label: 'Institutions' },
     { href: '/audit', label: 'Audit' },
+    { href: '/hotels', label: 'Hotels' },
+    { href: '/packages', label: 'Packages' },
     { href: '/system', label: 'System' },
     { href: '/platform-revenue', label: 'Revenue' },
   ]

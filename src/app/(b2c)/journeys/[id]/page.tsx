@@ -23,6 +23,7 @@ import { LiveJourneyCard } from '@/components/b2c/journeys/LiveJourneyCard';
 import { PrivateConfirmation } from '@/components/b2c/journeys/PrivateConfirmation';
 import { PostJourneyFeedback } from '@/components/b2c/journeys/PostJourneyFeedback';
 import { NextJourneyPanel } from '@/components/b2c/journeys/NextJourneyPanel';
+import { ItineraryViewer } from '@/components/b2c/journeys/ItineraryViewer';
 
 import type { Journey } from '@/lib/types/entities';
 import { JourneyStatus } from '@/lib/types/entities';
@@ -214,6 +215,17 @@ export default function JourneyDetailPage() {
       <motion.div variants={fadeUp}>
         <JourneyDetail journey={journey} className="mb-10" />
       </motion.div>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* Itinerary Viewer — only when confirmed (APPROVED, PRESENTED, EXECUTED) */}
+      {/* ------------------------------------------------------------------ */}
+      {[JourneyStatus.APPROVED, JourneyStatus.PRESENTED, JourneyStatus.EXECUTED].includes(
+        journey.status
+      ) && (
+        <motion.div variants={fadeUp} className="mb-10">
+          <ItineraryViewer journeyTitle={journey.title} />
+        </motion.div>
+      )}
 
       {/* ------------------------------------------------------------------ */}
       {/* Invisible Itinerary Toggle                                         */}

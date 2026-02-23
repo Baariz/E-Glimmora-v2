@@ -5,12 +5,13 @@
 
 export abstract class BaseMockService {
   private readonly storagePrefix = 'elan:';
+  protected readonly isClient = typeof window !== 'undefined';
 
   /**
    * Simulate network delay with realistic jitter
    */
-  protected async delay(ms: number = 300): Promise<void> {
-    const jitter = Math.random() * 200; // 0-200ms random jitter
+  protected async delay(ms: number = 40): Promise<void> {
+    const jitter = Math.random() * 30;
     await new Promise(resolve => setTimeout(resolve, ms + jitter));
   }
 

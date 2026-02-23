@@ -14,7 +14,9 @@ export class MockUserService extends BaseMockService implements IUserService {
 
   constructor() {
     super();
-    this.seedIfEmpty();
+    if (this.isClient) {
+      this.seedIfEmpty();
+    }
   }
 
   private getUsers_(): User[] {

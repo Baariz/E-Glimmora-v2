@@ -12,7 +12,9 @@ export class MockClientService extends BaseMockService implements IClientService
 
   constructor() {
     super();
-    this.seedIfEmpty();
+    if (this.isClient) {
+      this.seedIfEmpty();
+    }
   }
 
   /**

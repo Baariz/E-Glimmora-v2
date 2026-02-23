@@ -36,13 +36,7 @@ const TRAVEL_MODE_ICONS: Record<string, typeof Crown> = {
   'Exclusive Access': Key,
 };
 
-const SEASON_LABELS: Record<string, string> = {
-  Summer: 'Summer — Vibrant & Expansive',
-  Autumn: 'Autumn — Rich & Contemplative',
-  Winter: 'Winter — Rare & Immersive',
-  Spring: 'Spring — Hopeful & Alive',
-  Timeless: 'When the moment calls',
-};
+
 
 const driverLabels: Record<string, string> = {
   security: 'Security',
@@ -122,15 +116,6 @@ export function IntentProfileView({ profile }: IntentProfileViewProps) {
     if (s < 70) return 'Strong coherence between your emotional drivers and stated preferences. Recommendations will be well-matched to your inner landscape.';
     return 'Exceptional alignment. Your emotional drivers, lifestyle priorities, and preferences create a deeply coherent foundation for extraordinary experiences.';
   };
-
-  // Life context items — always show what's available
-  const contextItems = [
-    { label: 'Life Stage', value: profile.lifeStage, icon: LifeStageIcon, gradient: 'from-rose-100 to-amber-50', border: 'border-rose-200/60', iconColor: 'text-rose-600' },
-    ...(profile.travelMode ? [{ label: 'Travel Mode', value: profile.travelMode, icon: TravelModeIcon, gradient: 'from-teal-100 to-emerald-50', border: 'border-teal-200/60', iconColor: 'text-teal-600' }] : []),
-    ...(profile.preferredSeason ? [{ label: 'Preferred Season', value: SEASON_LABELS[profile.preferredSeason] || profile.preferredSeason, icon: Compass, gradient: 'from-amber-100 to-yellow-50', border: 'border-amber-200/60', iconColor: 'text-amber-600' }] : []),
-    ...(profile.discretionPreference ? [{ label: 'Discretion', value: profile.discretionPreference, icon: Shield, gradient: 'from-stone-100 to-stone-50', border: 'border-stone-200/60', iconColor: 'text-stone-500' }] : []),
-    { label: 'Risk Tolerance', value: profile.riskTolerance, icon: Gem, gradient: 'from-purple-100 to-violet-50', border: 'border-purple-200/60', iconColor: 'text-purple-600' },
-  ];
 
   return (
     <div>
@@ -355,26 +340,67 @@ export function IntentProfileView({ profile }: IntentProfileViewProps) {
             <h2 className="font-serif text-4xl sm:text-5xl text-stone-900 leading-[0.95]">Life landscape.</h2>
           </motion.div>
 
-          <div className={cn('grid gap-6', contextItems.length <= 4 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-5')}>
-            {contextItems.map((item, i) => {
-              const Icon = item.icon;
-              return (
-                <motion.div
-                  key={item.label}
-                  initial={{ opacity: 0, y: 24 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.8, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] }}
-                  className="bg-white border border-sand-200/60 rounded-2xl p-7 sm:p-8 shadow-sm hover:shadow-md transition-all"
-                >
-                  <div className={cn('w-11 h-11 rounded-full bg-gradient-to-br border flex items-center justify-center mb-5', item.gradient, item.border)}>
-                    <Icon className={cn('w-5 h-5', item.iconColor)} />
-                  </div>
-                  <p className="text-stone-400 text-[10px] font-sans uppercase tracking-[3px] mb-2">{item.label}</p>
-                  <p className="font-serif text-xl text-stone-900 leading-tight">{item.value}</p>
-                </motion.div>
-              );
-            })}
+          {/* ── ATTRIBUTE GRID ── */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+            {[
+              {
+                label: 'Life Stage',
+                value: profile.lifeStage,
+                Icon: LifeStageIcon,
+                accent: 'from-rose-500/10 to-amber-500/5',
+                iconBg: 'bg-rose-50',
+                iconColor: 'text-rose-700',
+              },
+              {
+                label: 'Travel Mode',
+                value: profile.travelMode || '\u2014',
+                Icon: TravelModeIcon,
+                accent: 'from-teal-500/10 to-emerald-500/5',
+                iconBg: 'bg-teal-50',
+                iconColor: 'text-teal-700',
+              },
+              {
+                label: 'Discretion',
+                value: profile.discretionPreference || 'High',
+                Icon: Shield,
+                accent: 'from-stone-500/[0.08] to-stone-500/[0.03]',
+                iconBg: 'bg-stone-100',
+                iconColor: 'text-stone-600',
+              },
+              {
+                label: 'Risk Tolerance',
+                value: profile.riskTolerance || 'Moderate',
+                Icon: Compass,
+                accent: 'from-amber-500/10 to-amber-500/5',
+                iconBg: 'bg-amber-50',
+                iconColor: 'text-amber-700',
+              },
+            ].map((attr) => (
+              <motion.div
+                key={attr.label}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+                className={cn(
+                  'relative rounded-2xl bg-gradient-to-br border border-stone-200/60 p-6 sm:p-7 overflow-hidden group hover:shadow-lg transition-all duration-500',
+                  attr.accent
+                )}
+              >
+                {/* Decorative corner */}
+                <div className="absolute top-0 right-0 w-16 h-16 rounded-bl-full bg-white/40 group-hover:bg-white/60 transition-colors" />
+
+                <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center mb-5', attr.iconBg)}>
+                  <attr.Icon size={18} className={attr.iconColor} />
+                </div>
+                <p className="text-stone-400 text-[10px] font-sans uppercase tracking-[4px] mb-2">
+                  {attr.label}
+                </p>
+                <h4 className="font-serif text-2xl sm:text-3xl text-stone-900 leading-tight">
+                  {attr.value}
+                </h4>
+              </motion.div>
+            ))}
           </div>
         </div>
       </div>

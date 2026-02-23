@@ -64,7 +64,7 @@ export default function IntentPage() {
         {/* Full-bleed cinematic hero */}
         <div
           className="relative min-h-[80vh] flex items-center justify-center bg-cover bg-center"
-          style={{ backgroundImage: `url(${IMAGES.heroAerial})` }}
+          style={{ backgroundImage: `url(${IMAGES.heroVenice})` }}
         >
           <div className="absolute inset-0 bg-black/50" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />

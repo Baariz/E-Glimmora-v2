@@ -12,7 +12,9 @@ export class MockInstitutionService extends BaseMockService implements IInstitut
 
   constructor() {
     super();
-    this.seedIfEmpty();
+    if (this.isClient) {
+      this.seedIfEmpty();
+    }
   }
 
   /**

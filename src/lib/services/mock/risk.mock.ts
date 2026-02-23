@@ -15,9 +15,11 @@ export class MockRiskService extends BaseMockService implements IRiskService {
 
   constructor() {
     super();
-    this.seedIfEmpty();
-    this.seedGeopoliticalData();
-    this.seedInsuranceData();
+    if (this.isClient) {
+      this.seedIfEmpty();
+      this.seedGeopoliticalData();
+      this.seedInsuranceData();
+    }
   }
 
   /**

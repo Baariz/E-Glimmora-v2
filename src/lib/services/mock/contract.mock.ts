@@ -13,7 +13,9 @@ export class MockContractService extends BaseMockService implements IContractSer
 
   constructor() {
     super();
-    this.seedIfEmpty();
+    if (this.isClient) {
+      this.seedIfEmpty();
+    }
   }
 
   /**

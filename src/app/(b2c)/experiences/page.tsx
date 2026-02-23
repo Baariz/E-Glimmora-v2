@@ -93,9 +93,9 @@ export default function ExperiencesPage() {
               viewport={{ once: true, margin: '-50px' }}
               transition={{ duration: 0.7, delay: i * 0.1, ease: [0.22, 1, 0.36, 1] }}
               className={cn(
-                'group flex flex-col lg:flex-row rounded-[20px] overflow-hidden',
-                'bg-white border border-stone-200/40',
-                'hover:shadow-[0_30px_80px_-20px_rgba(0,0,0,0.12)] transition-all duration-700',
+                'group relative flex flex-col lg:flex-row rounded-3xl overflow-hidden',
+                'bg-white border border-stone-100/80',
+                'shadow-sm hover:shadow-2xl hover:shadow-stone-900/[0.08] transition-all duration-700 hover:-translate-y-1',
                 isReversed && 'lg:flex-row-reverse'
               )}
             >
@@ -104,7 +104,7 @@ export default function ExperiencesPage() {
                 className="relative lg:w-[55%] min-h-[280px] sm:min-h-[380px] lg:min-h-[480px] bg-stone-900 overflow-hidden"
               >
                 <div
-                  className="absolute inset-0 bg-cover bg-center transition-transform duration-[1.5s] ease-out group-hover:scale-[1.03]"
+                  className="absolute inset-0 bg-cover bg-center transition-transform duration-[2s] ease-out group-hover:scale-[1.04]"
                   style={{ backgroundImage: `url(${imageUrl})` }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/15 to-black/5" />

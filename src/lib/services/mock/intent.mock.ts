@@ -12,7 +12,9 @@ export class MockIntentService extends BaseMockService implements IIntentService
 
   constructor() {
     super();
-    this.seedIfEmpty();
+    if (this.isClient) {
+      this.seedIfEmpty();
+    }
   }
 
   /**

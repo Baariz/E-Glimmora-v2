@@ -23,7 +23,9 @@ const MOCK_INSTITUTION_ID = 'inst-001-uuid-placeholder';
 export class MockVendorService extends BaseMockService implements IVendorService {
   constructor() {
     super();
-    this.seedIfEmpty();
+    if (this.isClient) {
+      this.seedIfEmpty();
+    }
   }
 
   private seedIfEmpty(): void {

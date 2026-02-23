@@ -19,7 +19,9 @@ export class MockJourneyService extends BaseMockService implements IJourneyServi
 
   constructor() {
     super();
-    this.seedIfEmpty();
+    if (this.isClient) {
+      this.seedIfEmpty();
+    }
   }
 
   /**

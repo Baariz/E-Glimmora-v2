@@ -12,7 +12,9 @@ export class MockAuditService extends BaseMockService implements IAuditService {
 
   constructor() {
     super();
-    this.seedIfEmpty();
+    if (this.isClient) {
+      this.seedIfEmpty();
+    }
   }
 
   /**

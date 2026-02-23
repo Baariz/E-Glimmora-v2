@@ -22,7 +22,9 @@ const MOCK_INSTITUTION_ID = 'inst-001-uuid-placeholder';
 export class MockPredictiveService extends BaseMockService implements IPredictiveService {
   constructor() {
     super();
-    this.seedIfEmpty();
+    if (this.isClient) {
+      this.seedIfEmpty();
+    }
   }
 
   private seedIfEmpty(): void {

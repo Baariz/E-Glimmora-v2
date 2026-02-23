@@ -211,6 +211,94 @@ export default function BriefingPage() {
         </div>
       </div>
 
+      {/* ═══════════════════════════ SOVEREIGN STATUS ═══ */}
+      <div className="bg-stone-900">
+        <div className="max-w-7xl mx-auto px-6 sm:px-12 lg:px-20 py-16 sm:py-20">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+            className="mb-12"
+          >
+            <div className="w-8 h-px bg-amber-400/40 mb-5" />
+            <p className="text-white/30 text-[10px] font-sans uppercase tracking-[5px]">
+              Your Standing
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-white/[0.08]">
+            {/* Risk */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7, delay: 0, ease: [0.22, 1, 0.36, 1] }}
+              className="px-0 sm:pr-10 pb-10 sm:pb-0"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className="relative">
+                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
+                  <motion.div
+                    className="absolute inset-0 rounded-full bg-emerald-400"
+                    animate={{ scale: [1, 2.5, 1], opacity: [0.6, 0, 0.6] }}
+                    transition={{ duration: 2.5, repeat: Infinity }}
+                  />
+                </div>
+                <p className="text-white/30 text-[10px] font-sans uppercase tracking-[4px]">Risk Status</p>
+              </div>
+              <h3 className="font-serif text-3xl text-white mb-3">All Clear.</h3>
+              <p className="text-white/30 text-[12px] font-sans leading-[1.8] tracking-wide">
+                All privacy protocols are active. Your discretion shield is fully engaged.
+              </p>
+            </motion.div>
+
+            {/* Discretion */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
+              className="px-0 sm:px-10 py-10 sm:py-0"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <span className="text-amber-400/60 text-sm">{'\u25C8'}</span>
+                <p className="text-white/30 text-[10px] font-sans uppercase tracking-[4px]">Discretion</p>
+              </div>
+              <h3 className="font-serif text-3xl text-white mb-3">Maximum.</h3>
+              <p className="text-white/30 text-[12px] font-sans leading-[1.8] tracking-wide">
+                Invisible itineraries active. Maximum privacy protection engaged across all touchpoints.
+              </p>
+            </motion.div>
+
+            {/* Advisor */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7, delay: 0.24, ease: [0.22, 1, 0.36, 1] }}
+              className="px-0 sm:pl-10 pt-10 sm:pt-0"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-2.5 h-2.5 rounded-full bg-rose-400/60" />
+                <p className="text-white/30 text-[10px] font-sans uppercase tracking-[4px]">Your Advisor</p>
+              </div>
+              <h3 className="font-serif text-3xl text-white mb-3">Available.</h3>
+              <p className="text-white/30 text-[12px] font-sans leading-[1.8] tracking-wide mb-5">
+                Your personal advisor is ready. One message is all it takes.
+              </p>
+              <Link
+                href="/messages"
+                className="group inline-flex items-center gap-2 text-white/40 text-[11px] font-sans tracking-wide hover:text-white transition-colors"
+              >
+                Send a message
+                <span className="w-4 h-px bg-white/20 group-hover:w-6 group-hover:bg-white/60 transition-all" />
+              </Link>
+            </motion.div>
+          </div>
+        </div>
+      </div>
+
       {/* ═══════════════════════════ PHOTOGRAPHY DIVIDER ═══ */}
       <div className="relative h-[50vh] min-h-[400px] overflow-hidden">
         <div

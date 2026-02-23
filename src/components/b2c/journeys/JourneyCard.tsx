@@ -7,6 +7,7 @@
  */
 
 import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
 import { Lock, EyeOff, ArrowRight } from 'lucide-react';
 import type { Journey } from '@/lib/types/entities';
 import { cn } from '@/lib/utils/cn';
@@ -48,7 +49,7 @@ export function JourneyCard({ journey, className }: JourneyCardProps) {
         'group relative cursor-pointer overflow-hidden',
         'rounded-[20px] min-h-[420px] sm:min-h-[460px] flex flex-col justify-end',
         'transition-all duration-700 ease-out',
-        'hover:shadow-[0_30px_80px_-20px_rgba(0,0,0,0.35)]',
+        'hover:shadow-[0_32px_80px_-16px_rgba(0,0,0,0.30),0_0_0_1px_rgba(255,255,255,0.08)]',
         className
       )}
       onClick={() => router.push(`/journeys/${journey.id}`)}
@@ -88,7 +89,13 @@ export function JourneyCard({ journey, className }: JourneyCardProps) {
       {/* Bottom content — all overlaid on the image */}
       <div className="relative z-10 p-6 sm:p-7">
         {/* Gold accent */}
-        <div className="w-7 h-px bg-gradient-to-r from-amber-400/80 to-amber-500/40 mb-4 transition-all duration-500 group-hover:w-12" />
+        <motion.div
+          className="h-px bg-gradient-to-r from-amber-400/80 to-amber-500/40 mb-4"
+          initial={{ width: 0 }}
+          animate={{ width: 28 }}
+          whileHover={{ width: 48 }}
+          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+        />
 
         {/* Emotional objective */}
         {journey.emotionalObjective && (

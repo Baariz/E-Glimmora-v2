@@ -14,7 +14,9 @@ export class MockInviteCodeService extends BaseMockService implements IInviteCod
 
   constructor() {
     super();
-    this.seedDefaultCodes();
+    if (this.isClient) {
+      this.seedDefaultCodes();
+    }
   }
 
   private getDefaultCodes(): InviteCode[] {

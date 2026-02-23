@@ -1,10 +1,9 @@
 'use client';
 
 /**
- * MessageInput Component
- * Text input for composing and sending messages
- * Shift+Enter for newline, Enter to send
- * Optimistic updates for instant feedback
+ * MessageInput — Refined Composer
+ * Minimal, elegant input area with circular send button.
+ * Shift+Enter for newline, Enter to send.
  */
 
 import { useState, KeyboardEvent } from 'react';
@@ -19,7 +18,7 @@ interface MessageInputProps {
 
 export function MessageInput({
   onSend,
-  placeholder = 'Type a message...',
+  placeholder = 'Write a message...',
   disabled = false,
 }: MessageInputProps) {
   const [content, setContent] = useState('');
@@ -31,17 +30,15 @@ export function MessageInput({
     setIsSending(true);
     try {
       await onSend(content.trim());
-      setContent(''); // Clear input on success
+      setContent('');
     } catch (error) {
       console.error('Failed to send message:', error);
-      alert('Failed to send message. Please try again.');
     } finally {
       setIsSending(false);
     }
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    // Enter to send, Shift+Enter for newline
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
@@ -49,47 +46,42 @@ export function MessageInput({
   };
 
   return (
-    <div className="border-t border-sand-200 bg-white p-4">
+    <div className="border-t border-stone-200/60 bg-white px-5 sm:px-6 py-4">
       <div className="flex gap-3 items-end">
-        {/* Text input */}
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           disabled={disabled || isSending}
-          rows={2}
+          rows={1}
           className={cn(
-            'flex-1 px-4 py-3 bg-sand-50 border border-sand-200 rounded-lg',
-            'font-sans text-sm text-sand-900 placeholder:text-sand-400',
-            'focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent',
-            'resize-none',
-            'disabled:opacity-50 disabled:cursor-not-allowed'
+            'flex-1 px-5 py-3 bg-stone-50 border border-stone-200/60 rounded-xl',
+            'font-sans text-sm text-stone-700 placeholder:text-stone-300',
+            'focus:outline-none focus:ring-2 focus:ring-stone-300/50 focus:border-stone-300',
+            'resize-none leading-[1.6] tracking-wide',
+            'disabled:opacity-40 disabled:cursor-not-allowed'
           )}
         />
 
-        {/* Send button */}
         <button
           onClick={handleSend}
           disabled={!content.trim() || isSending || disabled}
           className={cn(
-            'px-4 py-3 bg-rose-900 text-rose-50 rounded-lg',
-            'hover:bg-rose-800 transition-colors',
-            'flex items-center justify-center gap-2',
-            'disabled:opacity-50 disabled:cursor-not-allowed'
+            'w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0',
+            'transition-all duration-300',
+            content.trim() && !isSending
+              ? 'bg-stone-900 text-white hover:bg-stone-800 shadow-sm'
+              : 'bg-stone-100 text-stone-300 cursor-not-allowed'
           )}
           aria-label="Send message"
         >
-          <Send className="w-4 h-4" />
-          <span className="font-sans text-sm font-medium">
-            {isSending ? 'Sending...' : 'Send'}
-          </span>
+          <Send size={15} className={content.trim() ? '-translate-x-px' : ''} />
         </button>
       </div>
 
-      {/* Helper text */}
-      <p className="text-xs font-sans text-sand-400 mt-2">
-        Press Enter to send, Shift+Enter for new line
+      <p className="text-[10px] font-sans text-stone-300 tracking-wide mt-2.5 pl-1">
+        Enter to send &middot; Shift + Enter for new line
       </p>
     </div>
   );

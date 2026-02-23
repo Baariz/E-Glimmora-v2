@@ -2,7 +2,7 @@
 
 /**
  * Step 2: Emotional Outcome Drivers
- * 5 slider inputs for emotional driver calibration
+ * 5 slider inputs for emotional driver calibration — card-wrapped for premium feel
  */
 
 import { UseFormReturn } from 'react-hook-form';
@@ -55,37 +55,33 @@ export function EmotionalOutcomeStep({ form }: EmotionalOutcomeStepProps) {
   const drivers = form.watch('emotionalDrivers');
 
   return (
-    <div className="space-y-8">
-      <div className="text-center max-w-2xl mx-auto mb-8">
-        <div
-          className="relative rounded-2xl overflow-hidden mb-6 h-32 bg-cover bg-center"
-          style={{ backgroundImage: `url(https://images.unsplash.com/photo-1600334129128-685c5582fd35?auto=format&fit=crop&w=800&q=80)` }}
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/30" />
-          <div className="relative z-10 flex items-center h-full px-8">
-            <h2 className="font-serif text-2xl sm:text-3xl text-white">
-              What do you seek from this journey?
-            </h2>
-          </div>
-        </div>
-        <p className="text-stone-500 text-base">
+    <div className="space-y-10">
+      <div className="text-center max-w-2xl mx-auto">
+        <div className="w-10 h-px bg-amber-400 mx-auto mb-5" />
+        <h2 className="font-serif text-3xl sm:text-4xl text-stone-900 mb-4 tracking-[-0.01em]">
+          What do you seek from this journey?
+        </h2>
+        <p className="text-stone-400 text-sm font-sans tracking-wide leading-[1.7]">
           Adjust each slider to reflect the emotional priorities that guide your choices.
         </p>
       </div>
 
-      <div className="space-y-8 max-w-3xl mx-auto">
+      <div className="space-y-5 max-w-3xl mx-auto">
         {EMOTIONAL_DRIVERS.map((driver) => {
           const value = drivers?.[driver.key] ?? 50;
 
           return (
-            <div key={driver.key} className="space-y-3">
-              <div className="flex items-start justify-between">
+            <div key={driver.key} className="bg-white border border-sand-200/60 rounded-2xl p-6 sm:p-7 shadow-sm">
+              <div className="flex items-start justify-between mb-4">
                 <div>
-                  <h3 className="font-serif text-xl text-stone-900">{driver.label}</h3>
-                  <p className="text-sm text-stone-600 mt-1">{driver.description}</p>
+                  <h3 className="font-serif text-lg text-stone-900">{driver.label}</h3>
+                  <p className="text-xs text-stone-400 mt-0.5 font-sans tracking-wide">{driver.description}</p>
                 </div>
                 <div className="flex-shrink-0 ml-4">
-                  <div className="text-2xl font-serif text-rose-600 min-w-[3rem] text-right">
+                  <div className={cn(
+                    'text-2xl font-serif min-w-[3rem] text-right tabular-nums',
+                    value >= 70 ? 'text-rose-500' : value >= 40 ? 'text-amber-500' : 'text-stone-300'
+                  )}>
                     {value}
                   </div>
                 </div>
@@ -103,15 +99,15 @@ export function EmotionalOutcomeStep({ form }: EmotionalOutcomeStepProps) {
                       form.setValue(`emotionalDrivers.${driver.key}`, parseInt(e.target.value, 10));
                     }}
                     className={cn(
-                      'w-full h-2 rounded-full appearance-none cursor-pointer',
-                      'bg-gradient-to-r from-stone-200 via-rose-200 to-rose-500',
+                      'w-full h-1.5 rounded-full appearance-none cursor-pointer',
+                      'bg-gradient-to-r from-sand-200 via-rose-200 to-rose-400',
                       '[&::-webkit-slider-thumb]:appearance-none',
                       '[&::-webkit-slider-thumb]:w-5',
                       '[&::-webkit-slider-thumb]:h-5',
                       '[&::-webkit-slider-thumb]:rounded-full',
                       '[&::-webkit-slider-thumb]:bg-white',
                       '[&::-webkit-slider-thumb]:border-2',
-                      '[&::-webkit-slider-thumb]:border-rose-500',
+                      '[&::-webkit-slider-thumb]:border-rose-400',
                       '[&::-webkit-slider-thumb]:shadow-md',
                       '[&::-webkit-slider-thumb]:cursor-pointer',
                       '[&::-webkit-slider-thumb]:transition-transform',
@@ -121,7 +117,7 @@ export function EmotionalOutcomeStep({ form }: EmotionalOutcomeStepProps) {
                       '[&::-moz-range-thumb]:rounded-full',
                       '[&::-moz-range-thumb]:bg-white',
                       '[&::-moz-range-thumb]:border-2',
-                      '[&::-moz-range-thumb]:border-rose-500',
+                      '[&::-moz-range-thumb]:border-rose-400',
                       '[&::-moz-range-thumb]:shadow-md',
                       '[&::-moz-range-thumb]:cursor-pointer',
                       '[&::-moz-range-thumb]:transition-transform',
@@ -129,7 +125,7 @@ export function EmotionalOutcomeStep({ form }: EmotionalOutcomeStepProps) {
                     )}
                   />
                 </div>
-                <div className="flex justify-between text-xs text-stone-500">
+                <div className="flex justify-between text-[10px] text-stone-400 font-sans uppercase tracking-wider">
                   <span>{driver.lowLabel}</span>
                   <span>{driver.highLabel}</span>
                 </div>

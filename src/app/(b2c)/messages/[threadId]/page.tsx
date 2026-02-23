@@ -1,15 +1,14 @@
 'use client';
 
 /**
- * Message Thread Detail Page
- * Displays full thread view with message history
- * Fetches thread, shows ThreadView, handles 404
+ * Thread Detail Page — Private Conversation View
+ * Full-bleed wrapper matching Messages hub design
  */
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, ArrowLeft } from 'lucide-react';
 
 import { useServices } from '@/lib/hooks/useServices';
 import { MOCK_UHNI_USER_ID } from '@/lib/hooks/useCurrentUser';
@@ -35,7 +34,6 @@ export default function ThreadDetailPage() {
     setError(null);
 
     try {
-      // Fetch thread
       const fetchedThread = await services.message.getThreadById(threadId);
 
       if (!fetchedThread) {
@@ -44,7 +42,6 @@ export default function ThreadDetailPage() {
         return;
       }
 
-      // Verify user is participant
       if (!fetchedThread.participants.includes(MOCK_UHNI_USER_ID)) {
         setError('You do not have access to this conversation');
         setIsLoading(false);
@@ -53,14 +50,12 @@ export default function ThreadDetailPage() {
 
       setThread(fetchedThread);
 
-      // Fetch messages
       const fetchedMessages = await services.message.getMessages(threadId);
       const sortedMessages = fetchedMessages.sort(
         (a, b) => new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime()
       );
       setMessages(sortedMessages);
 
-      // Fetch participants (mock)
       const threadParticipants = fetchedThread.participants.map((userId) => ({
         id: userId,
         name: userId === MOCK_UHNI_USER_ID ? 'James Duchamp' : 'Sarah Chen',
@@ -71,7 +66,6 @@ export default function ThreadDetailPage() {
       })) as User[];
       setParticipants(threadParticipants);
 
-      // Fetch related journey
       if (fetchedThread.relatedResourceId) {
         const journey = await services.journey.getJourneyById(
           fetchedThread.relatedResourceId
@@ -87,7 +81,6 @@ export default function ThreadDetailPage() {
   };
 
   const handleMessagesUpdated = () => {
-    // Reload messages when new message is sent
     loadThread();
   };
 
@@ -100,39 +93,49 @@ export default function ThreadDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-[calc(100vh-200px)]">
-        <motion.div
-          className="w-8 h-8 border-4 border-rose-900 border-t-transparent rounded-full"
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-        />
+      <div
+        className="min-h-screen bg-[#f5f3f0] -mx-4 md:-mx-6 -mt-[5.5rem] md:-mt-24 -mb-6 md:-mb-8 overflow-x-hidden flex items-center justify-center"
+        style={{ width: '100vw', maxWidth: '100vw', marginLeft: 'calc(-50vw + 50%)' }}
+      >
+        <div className="flex flex-col items-center gap-4">
+          <motion.div
+            className="w-8 h-8 border-2 border-stone-300 border-t-stone-900 rounded-full"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+          />
+          <p className="text-stone-400 text-[11px] font-sans tracking-wide">Loading conversation...</p>
+        </div>
       </div>
     );
   }
 
   if (error || !thread) {
     return (
-      <div className="max-w-2xl mx-auto">
+      <div
+        className="min-h-screen bg-[#f5f3f0] -mx-4 md:-mx-6 -mt-[5.5rem] md:-mt-24 -mb-6 md:-mb-8 overflow-x-hidden flex items-center justify-center"
+        style={{ width: '100vw', maxWidth: '100vw', marginLeft: 'calc(-50vw + 50%)' }}
+      >
         <motion.div
-          className="bg-white rounded-xl shadow-sm border border-sand-200 p-12 text-center"
+          className="bg-white border border-stone-200/60 rounded-2xl p-10 sm:p-14 text-center shadow-sm max-w-md mx-6"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
+          transition={{ duration: 0.5 }}
         >
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-rose-50 rounded-full mb-4">
-            <AlertCircle className="w-8 h-8 text-rose-600" />
+          <div className="w-14 h-14 rounded-full bg-rose-50 border border-rose-200/60 flex items-center justify-center mx-auto mb-5">
+            <AlertCircle className="w-6 h-6 text-rose-400" />
           </div>
-          <h2 className="text-2xl font-serif font-light text-rose-900 mb-2">
+          <h2 className="font-serif text-2xl text-stone-900 mb-3">
             {error || 'Conversation not found'}
           </h2>
-          <p className="text-sm font-sans text-sand-600 mb-6">
+          <p className="text-stone-400 text-sm font-sans leading-[1.7] tracking-wide mb-7">
             The conversation you&apos;re looking for doesn&apos;t exist or you don&apos;t have
             access to it.
           </p>
           <button
             onClick={() => router.push('/messages')}
-            className="px-6 py-3 bg-rose-900 text-rose-50 font-sans font-medium rounded-lg hover:bg-rose-800 transition-colors"
+            className="inline-flex items-center gap-2.5 px-7 py-3 bg-stone-900 text-white font-sans text-[13px] font-semibold tracking-wide rounded-full hover:bg-stone-800 transition-all"
           >
+            <ArrowLeft size={13} />
             Back to Messages
           </button>
         </motion.div>
@@ -141,12 +144,38 @@ export default function ThreadDetailPage() {
   }
 
   return (
-    <ThreadView
-      thread={thread}
-      messages={messages}
-      participants={participants}
-      relatedJourney={relatedJourney}
-      onMessagesUpdated={handleMessagesUpdated}
-    />
+    <div
+      className="min-h-screen bg-[#f5f3f0] -mx-4 md:-mx-6 -mt-[5.5rem] md:-mt-24 -mb-6 md:-mb-8 overflow-x-hidden"
+      style={{ width: '100vw', maxWidth: '100vw', marginLeft: 'calc(-50vw + 50%)' }}
+    >
+      {/* Compact dark header for thread context */}
+      <div className="bg-gradient-to-r from-stone-950 via-stone-900 to-stone-800 pt-24 sm:pt-28 pb-6">
+        <div className="max-w-4xl mx-auto px-6 sm:px-12 lg:px-16">
+          <button
+            onClick={() => router.push('/messages')}
+            className="flex items-center gap-2 text-white/40 text-[11px] font-sans tracking-wide hover:text-white/60 transition-colors mb-3"
+          >
+            <ArrowLeft size={12} />
+            All Messages
+          </button>
+          {relatedJourney && (
+            <h1 className="font-serif text-2xl sm:text-3xl text-white leading-snug">
+              {relatedJourney.title}
+            </h1>
+          )}
+        </div>
+      </div>
+
+      {/* Thread view container */}
+      <div className="max-w-4xl mx-auto px-6 sm:px-12 lg:px-16 py-8 sm:py-10">
+        <ThreadView
+          thread={thread}
+          messages={messages}
+          participants={participants}
+          relatedJourney={relatedJourney}
+          onMessagesUpdated={handleMessagesUpdated}
+        />
+      </div>
+    </div>
   );
 }

@@ -1,14 +1,13 @@
 'use client';
 
 /**
- * ExposureRiskOverview Component (INTL-04)
- * Plain language risk categories: Privacy, Travel, Financial
- * Color-coded indicators with overall summary
- * Non-technical, sophisticated presentation
+ * ExposureRiskOverview — Risk categories with color-coded indicators
+ * Clean card-based layout matching analytical theme
  */
 
 import { motion } from 'framer-motion';
 import { Shield, AlertTriangle, CheckCircle } from 'lucide-react';
+import { cn } from '@/lib/utils/cn';
 
 interface RiskCategory {
   name: string;
@@ -43,127 +42,121 @@ const riskCategories: RiskCategory[] = [
 
 const levelConfig = {
   Low: {
-    color: 'text-emerald-700',
-    bgColor: 'bg-emerald-50',
-    borderColor: 'border-emerald-200',
+    color: 'text-emerald-600',
+    bg: 'bg-emerald-50',
+    border: 'border-emerald-200/60',
     icon: CheckCircle,
   },
   Moderate: {
-    color: 'text-amber-700',
-    bgColor: 'bg-amber-50',
-    borderColor: 'border-amber-200',
+    color: 'text-amber-600',
+    bg: 'bg-amber-50',
+    border: 'border-amber-200/60',
     icon: AlertTriangle,
   },
   Elevated: {
-    color: 'text-rose-700',
-    bgColor: 'bg-rose-50',
-    borderColor: 'border-rose-200',
+    color: 'text-rose-600',
+    bg: 'bg-rose-50',
+    border: 'border-rose-200/60',
     icon: AlertTriangle,
   },
 };
 
 export function ExposureRiskOverview() {
   return (
-    <motion.section
-      className="py-16 px-8 bg-sand-50"
-      initial={{ opacity: 0, y: 40 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.6, delay: 0.4 }}
-    >
-      <div className="max-w-5xl mx-auto">
-        {/* Section header */}
-        <div className="mb-12">
-          <div className="flex items-center gap-3 mb-3">
-            <Shield className="w-6 h-6 text-rose-600" />
-            <h2 className="text-3xl font-serif font-light text-rose-900">
-              Exposure & Risk Overview
-            </h2>
-          </div>
-          <p className="text-base font-sans text-sand-600 leading-relaxed italic max-w-3xl">
-            A holistic view of your exposure across privacy, travel security, and financial
-            dimensions. We continuously monitor these factors to protect your sovereignty.
-          </p>
-        </div>
-
-        {/* Risk categories */}
-        <div className="space-y-6 mb-12">
-          {riskCategories.map((category, index) => {
-            const config = levelConfig[category.level];
-            const Icon = config.icon;
-
-            return (
-              <motion.div
-                key={category.name}
-                className={`p-6 rounded-lg border ${config.borderColor} ${config.bgColor}`}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: index * 0.1 }}
-              >
-                <div className="flex items-start gap-4">
-                  {/* Icon */}
-                  <div className={`mt-1 ${config.color}`}>
-                    <Icon className="w-6 h-6" />
-                  </div>
-
-                  {/* Content */}
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between gap-4 mb-2">
-                      <h3 className="text-xl font-serif font-light text-rose-900">
-                        {category.name}
-                      </h3>
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-sans font-semibold ${config.color} ${config.bgColor} border ${config.borderColor}`}
-                      >
-                        {category.level}
-                      </span>
-                    </div>
-
-                    <p className="text-base font-sans font-medium text-sand-900 mb-3">
-                      {category.summary}
-                    </p>
-
-                    <p className="text-sm font-sans text-sand-700 leading-relaxed">
-                      {category.details}
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
-
-        {/* Overall summary */}
-        <motion.div
-          className="p-8 bg-white rounded-xl border border-sand-200 shadow-sm"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.4, delay: 0.5 }}
-        >
-          <div className="flex items-start gap-4">
-            <div className="inline-flex items-center justify-center w-12 h-12 bg-emerald-100 rounded-full">
-              <Shield className="w-6 h-6 text-emerald-700" />
-            </div>
-            <div>
-              <h3 className="text-xl font-serif font-light text-rose-900 mb-3">
-                Overall Assessment
-              </h3>
-              <p className="font-serif text-lg text-sand-900 leading-relaxed mb-4">
-                Your overall risk profile remains <strong className="text-emerald-700">well-managed</strong>
-                {' '}and aligned with your stated preferences for discretion and security. The moderate
-                travel security awareness is routine for your destinations and does not require
-                journey modification—only enhanced coordination.
-              </p>
-              <p className="text-sm font-sans text-sand-600 leading-relaxed">
-                We conduct quarterly reviews of your risk exposure and will proactively notify you
-                of any material changes. Your next scheduled review is <strong>May 15, 2026</strong>.
-              </p>
-            </div>
-          </div>
-        </motion.div>
+    <div>
+      {/* Section header */}
+      <div className="mb-10">
+        <div className="w-10 h-px bg-gradient-to-r from-slate-400 to-slate-300 mb-5" />
+        <p className="text-slate-400 text-[10px] font-sans uppercase tracking-[5px] mb-3">
+          Section IV
+        </p>
+        <h2 className="font-serif text-3xl text-stone-900 mb-3">
+          Exposure & Risk
+        </h2>
+        <p className="text-stone-400 font-sans text-sm leading-[1.7] tracking-wide max-w-2xl">
+          A holistic view of your exposure across privacy, travel security, and financial
+          dimensions. We continuously monitor these factors to protect your sovereignty.
+        </p>
       </div>
-    </motion.section>
+
+      {/* Risk cards */}
+      <div className="space-y-4 mb-10">
+        {riskCategories.map((category, index) => {
+          const config = levelConfig[category.level];
+          const Icon = config.icon;
+
+          return (
+            <motion.div
+              key={category.name}
+              className="bg-white border border-stone-200/60 rounded-2xl p-6 sm:p-7 shadow-sm"
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: index * 0.08, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <div className="flex items-start gap-4">
+                <div className={cn(
+                  'w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0',
+                  config.bg
+                )}>
+                  <Icon size={17} className={config.color} />
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-3 mb-2">
+                    <h3 className="font-serif text-lg text-stone-900">
+                      {category.name}
+                    </h3>
+                    <span className={cn(
+                      'text-[9px] font-sans font-medium uppercase tracking-[2px] px-3 py-1.5 rounded-full border flex-shrink-0',
+                      config.bg, config.color, config.border
+                    )}>
+                      {category.level}
+                    </span>
+                  </div>
+
+                  <p className="font-sans text-sm font-medium text-stone-700 mb-2">
+                    {category.summary}
+                  </p>
+
+                  <p className="text-stone-400 font-sans text-sm leading-[1.7] tracking-wide">
+                    {category.details}
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+
+      {/* Overall assessment */}
+      <motion.div
+        className="bg-white border border-emerald-200/60 rounded-2xl p-7 sm:p-8 shadow-sm"
+        initial={{ opacity: 0, y: 16 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.5, delay: 0.3 }}
+      >
+        <div className="flex items-start gap-4">
+          <div className="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center flex-shrink-0">
+            <Shield size={20} className="text-emerald-500" />
+          </div>
+          <div>
+            <h3 className="font-serif text-xl text-stone-900 mb-3">
+              Overall Assessment
+            </h3>
+            <p className="font-serif text-base text-stone-600 leading-[1.8] mb-4">
+              Your overall risk profile remains <strong className="text-emerald-600">well-managed</strong>{' '}
+              and aligned with your stated preferences for discretion and security. The moderate
+              travel security awareness is routine and does not require
+              journey modification—only enhanced coordination.
+            </p>
+            <p className="text-stone-400 font-sans text-[11px] tracking-wide">
+              Next scheduled review: <strong className="text-stone-600">May 15, 2026</strong>
+            </p>
+          </div>
+        </div>
+      </motion.div>
+    </div>
   );
 }

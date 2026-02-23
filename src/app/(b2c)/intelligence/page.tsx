@@ -1,14 +1,13 @@
 'use client';
 
 /**
- * Intelligence Brief Page (INTL-05)
- * Magazine-style layout with stacked editorial sections
- * NOT a grid of cards - alternating layouts, scroll-triggered animations
- * Luxury magazine feel - each section is a feature article spread
+ * Intelligence Brief Page — Analytical Magazine
+ * Deep slate header with grid-pattern overlay (unique from all other pages)
+ * Sticky section nav, editorial scroll sections
  */
 
 import { motion } from 'framer-motion';
-import { BookOpen, TrendingUp } from 'lucide-react';
+import { Brain } from 'lucide-react';
 
 import { ScrollReveal } from '@/components/shared/ScrollReveal/ScrollReveal';
 import { fadeUp, fadeIn } from '@/styles/variants';
@@ -17,135 +16,144 @@ import { LifestylePatterns } from '@/components/b2c/intelligence/LifestylePatter
 import { RenewalSignals } from '@/components/b2c/intelligence/RenewalSignals';
 import { ExposureRiskOverview } from '@/components/b2c/intelligence/ExposureRiskOverview';
 
+const SECTIONS = [
+  { label: 'Emotional Trends', href: '#emotional-trends' },
+  { label: 'Lifestyle Patterns', href: '#lifestyle-patterns' },
+  { label: 'Renewal Signals', href: '#renewal-signals' },
+  { label: 'Exposure & Risk', href: '#exposure-risk' },
+];
+
 export default function IntelligencePage() {
   return (
-    <div className="min-h-screen bg-sand-50">
-      {/* Magazine cover / Hero */}
-      <motion.div
-        className="relative bg-gradient-to-br from-rose-900 via-rose-800 to-rose-900 text-white overflow-hidden"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.8 }}
-      >
-        {/* Background pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-          }} />
-        </div>
+    <div
+      className="min-h-screen bg-[#f7f6f4] -mx-4 md:-mx-6 -mt-[5.5rem] md:-mt-24 -mb-6 md:-mb-8 overflow-x-hidden"
+      style={{ width: '100vw', maxWidth: '100vw', marginLeft: 'calc(-50vw + 50%)' }}
+    >
+      {/* ═══════ DEEP SLATE HEADER (unique — no image, no rose) ═══════ */}
+      <div className="relative bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 overflow-hidden">
+        {/* Analytical grid pattern */}
+        <div
+          className="absolute inset-0 opacity-[0.04]"
+          style={{
+            backgroundImage: `
+              linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)
+            `,
+            backgroundSize: '48px 48px',
+          }}
+        />
+        {/* Subtle accent glows */}
+        <div className="absolute top-0 right-1/4 w-[600px] h-[400px] bg-blue-500/[0.04] rounded-full blur-[120px]" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[300px] bg-emerald-500/[0.03] rounded-full blur-[100px] translate-y-1/2" />
 
-        <div className="relative max-w-5xl mx-auto px-8 py-24">
+        <div className="relative z-10 max-w-5xl mx-auto px-6 sm:px-12 lg:px-16 pt-28 sm:pt-36 pb-16 sm:pb-20">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
           >
-            {/* Issue label */}
-            <div className="flex items-center gap-3 mb-4">
-              <BookOpen className="w-6 h-6" />
-              <p className="text-sm font-sans uppercase tracking-widest text-rose-200">
-                Intelligence Brief — February 2026
-              </p>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-9 h-9 rounded-full bg-white/[0.06] border border-white/[0.08] flex items-center justify-center">
+                <Brain size={15} className="text-blue-400/60" />
+              </div>
+              <div>
+                <p className="text-blue-300/40 text-[10px] font-sans uppercase tracking-[5px]">
+                  Intelligence Brief
+                </p>
+                <p className="text-slate-500 text-[10px] font-sans tracking-wider mt-0.5">
+                  February 2026
+                </p>
+              </div>
             </div>
-
-            {/* Cover title */}
-            <h1 className="text-6xl md:text-7xl font-serif font-light mb-6 leading-tight">
-              Your Evolving<br />
-              Narrative
-            </h1>
-
-            {/* Subtitle */}
-            <p className="text-xl font-sans text-rose-100 leading-relaxed max-w-2xl">
-              An analytical view of your emotional trends, lifestyle patterns, renewal signals,
-              and exposure profile. This brief informs our journey recommendations and ensures
-              alignment with your evolving priorities.
-            </p>
           </motion.div>
 
-          {/* Decorative element */}
-          <motion.div
-            className="absolute bottom-0 right-0 w-64 h-64 opacity-20"
-            initial={{ opacity: 0, rotate: -45 }}
-            animate={{ opacity: 0.2, rotate: 0 }}
-            transition={{ duration: 1, delay: 0.5 }}
+          <motion.h1
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+            className="font-serif text-5xl sm:text-6xl md:text-7xl text-white leading-[1] tracking-[-0.03em] mb-6"
           >
-            <TrendingUp className="w-full h-full" strokeWidth={0.5} />
-          </motion.div>
-        </div>
-      </motion.div>
+            Your Evolving<br />
+            Narrative
+          </motion.h1>
 
-      {/* Table of contents bar */}
-      <motion.div
-        className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-sand-200 shadow-sm"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.6 }}
-      >
-        <div className="max-w-5xl mx-auto px-8 py-4">
-          <nav className="flex items-center gap-8 overflow-x-auto">
-            {[
-              { label: 'Emotional Trends', href: '#emotional-trends' },
-              { label: 'Lifestyle Patterns', href: '#lifestyle-patterns' },
-              { label: 'Renewal Signals', href: '#renewal-signals' },
-              { label: 'Exposure & Risk', href: '#exposure-risk' },
-            ].map((item) => (
+          <motion.p
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            className="text-white/20 font-sans text-sm sm:text-base max-w-xl leading-[1.8] tracking-wide"
+          >
+            An analytical view of your emotional trends, lifestyle patterns,
+            renewal signals, and exposure profile — informing every journey
+            we curate for you.
+          </motion.p>
+        </div>
+      </div>
+
+      {/* ═══════ STICKY SECTION NAV ═══════ */}
+      <div className="sticky top-16 z-20 bg-[#f7f6f4]/95 backdrop-blur-md border-b border-stone-200/50">
+        <div className="max-w-5xl mx-auto px-6 sm:px-12 lg:px-16">
+          <nav className="flex items-center gap-1 overflow-x-auto py-0 -mx-2">
+            {SECTIONS.map((item) => (
               <a
                 key={item.href}
                 href={item.href}
-                className="text-sm font-sans text-sand-600 hover:text-rose-900 transition-colors whitespace-nowrap"
+                className="flex items-center gap-1.5 px-4 py-4 text-[12px] font-sans text-stone-400 tracking-wide whitespace-nowrap hover:text-stone-700 transition-colors border-b-2 border-transparent hover:border-stone-400"
               >
                 {item.label}
               </a>
             ))}
           </nav>
         </div>
-      </motion.div>
+      </div>
 
-      {/* Magazine sections - stacked editorial spreads with scroll-reveal */}
-      <ScrollReveal variant={fadeUp} delay={0}>
-        <div id="emotional-trends">
-          <EmotionalTrends />
-        </div>
-      </ScrollReveal>
+      {/* ═══════ EDITORIAL SECTIONS ═══════ */}
+      <div className="max-w-5xl mx-auto px-6 sm:px-12 lg:px-16">
+        <ScrollReveal variant={fadeUp} delay={0}>
+          <div id="emotional-trends" className="py-14 sm:py-16">
+            <EmotionalTrends />
+          </div>
+        </ScrollReveal>
 
-      <ScrollReveal variant={fadeUp} delay={0.1}>
-        <div id="lifestyle-patterns">
-          <LifestylePatterns />
-        </div>
-      </ScrollReveal>
+        <div className="h-px bg-stone-200/60" />
 
-      <ScrollReveal variant={fadeUp} delay={0.2}>
-        <div id="renewal-signals">
-          <RenewalSignals />
-        </div>
-      </ScrollReveal>
+        <ScrollReveal variant={fadeUp} delay={0.1}>
+          <div id="lifestyle-patterns" className="py-14 sm:py-16">
+            <LifestylePatterns />
+          </div>
+        </ScrollReveal>
 
-      <ScrollReveal variant={fadeUp} delay={0.3}>
-        <div id="exposure-risk">
-          <ExposureRiskOverview />
-        </div>
-      </ScrollReveal>
+        <div className="h-px bg-stone-200/60" />
 
-      {/* Closing statement */}
-      <motion.section
-        className="py-16 px-8 bg-gradient-to-br from-rose-900 to-rose-800 text-white"
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.6 }}
-      >
-        <div className="max-w-3xl mx-auto text-center">
-          <p className="text-2xl font-serif font-light leading-relaxed mb-6">
-            This Intelligence Brief is updated quarterly and reflects our ongoing analysis
-            of your preferences, behaviors, and life stage transitions.
+        <ScrollReveal variant={fadeUp} delay={0.2}>
+          <div id="renewal-signals" className="py-14 sm:py-16">
+            <RenewalSignals />
+          </div>
+        </ScrollReveal>
+
+        <div className="h-px bg-stone-200/60" />
+
+        <ScrollReveal variant={fadeUp} delay={0.3}>
+          <div id="exposure-risk" className="py-14 sm:py-16">
+            <ExposureRiskOverview />
+          </div>
+        </ScrollReveal>
+      </div>
+
+      {/* ═══════ CLOSING STATEMENT ═══════ */}
+      <div className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
+        <div className="max-w-3xl mx-auto px-6 sm:px-12 lg:px-16 py-16 sm:py-20 text-center">
+          <div className="w-8 h-px bg-gradient-to-r from-blue-400/40 to-blue-500/20 mx-auto mb-6" />
+          <p className="font-serif text-2xl sm:text-3xl text-white/80 leading-[1.3] tracking-[-0.01em] mb-6">
+            This brief is updated quarterly and reflects
+            our ongoing analysis of your priorities.
           </p>
-          <p className="text-base font-sans text-rose-200 leading-relaxed">
-            For questions about any insights presented here, please reach out to your
-            relationship manager. We&apos;re here to ensure every journey aligns with your
-            evolving narrative.
+          <p className="text-white/20 font-sans text-sm leading-[1.8] tracking-wide max-w-md mx-auto">
+            For questions about any insights presented here,
+            please reach out to your relationship manager.
           </p>
         </div>
-      </motion.section>
+      </div>
     </div>
   );
 }

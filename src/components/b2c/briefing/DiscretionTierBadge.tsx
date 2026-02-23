@@ -2,8 +2,7 @@
 
 /**
  * Discretion Tier Badge (BREF-05)
- * Displays current privacy/discretion tier as a styled badge.
- * Links to /privacy settings.
+ * Premium editorial discretion tier display.
  * Tiers: High / Medium / Standard.
  */
 
@@ -18,31 +17,39 @@ interface DiscretionTierBadgeProps {
 
 const tierConfig: Record<DiscretionTier, {
   label: string;
+  shortLabel: string;
   description: string;
-  badgeBg: string;
-  badgeText: string;
   icon: string;
+  pillBg: string;
+  pillText: string;
+  accentBar: string;
 }> = {
   High: {
     label: 'High Discretion',
+    shortLabel: 'Maximum',
     description: 'Maximum privacy protection. Invisible itineraries enabled by default.',
-    badgeBg: 'bg-teal-100',
-    badgeText: 'text-teal-800',
-    icon: 'Shield',
+    icon: '◈',
+    pillBg: 'bg-teal-50',
+    pillText: 'text-teal-700',
+    accentBar: 'from-teal-500 to-emerald-400',
   },
   Medium: {
     label: 'Medium Discretion',
+    shortLabel: 'Balanced',
     description: 'Balanced privacy with selective advisor visibility.',
-    badgeBg: 'bg-sand-200',
-    badgeText: 'text-sand-800',
-    icon: 'Lock',
+    icon: '◇',
+    pillBg: 'bg-stone-100',
+    pillText: 'text-stone-700',
+    accentBar: 'from-stone-400 to-stone-300',
   },
   Standard: {
     label: 'Standard',
+    shortLabel: 'Open',
     description: 'Standard privacy settings. Advisors have default visibility.',
-    badgeBg: 'bg-sand-100',
-    badgeText: 'text-sand-600',
-    icon: 'Eye',
+    icon: '○',
+    pillBg: 'bg-stone-50',
+    pillText: 'text-stone-500',
+    accentBar: 'from-stone-300 to-stone-200',
   },
 };
 
@@ -51,61 +58,53 @@ export function DiscretionTierBadge({ tier = 'High', isLoading }: DiscretionTier
 
   if (isLoading) {
     return (
-      <div className="animate-pulse space-y-3">
-        <div className="h-4 w-28 bg-sand-200 rounded" />
-        <div className="h-8 w-36 bg-sand-200 rounded-full" />
-        <div className="h-3 w-full bg-sand-200 rounded" />
+      <div className="rounded-2xl bg-white border border-stone-100 p-6 sm:p-8 animate-pulse min-h-[200px]">
+        <div className="h-3 w-24 bg-stone-200 rounded mb-6" />
+        <div className="h-8 w-36 bg-stone-200 rounded-full mb-4" />
+        <div className="h-3 w-full bg-stone-200 rounded" />
       </div>
     );
   }
 
   return (
-    <div className="rounded-2xl bg-white border border-stone-100 shadow-sm hover:shadow-md transition-shadow p-6">
-      <p className="text-amber-600 text-xs font-sans font-semibold uppercase tracking-widest mb-4">
-        Discretion Tier
-      </p>
+    <div className="rounded-2xl bg-white border border-stone-100 shadow-sm hover:shadow-lg transition-all duration-500 overflow-hidden group">
+      {/* Gradient accent bar */}
+      <div className={cn('h-1 w-full bg-gradient-to-r', config.accentBar)} />
 
-      {/* Badge */}
-      <div className="mb-3">
-        <span
-          className={cn(
-            'inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-sans font-medium border',
-            tier === 'High'
-              ? 'bg-gradient-to-r from-teal-50 to-emerald-50 text-teal-800 border-teal-200'
-              : tier === 'Medium'
-              ? 'bg-gradient-to-r from-stone-50 to-stone-100 text-stone-700 border-stone-200'
-              : 'bg-stone-50 text-stone-500 border-stone-200'
-          )}
+      <div className="p-6 sm:p-8">
+        {/* Header */}
+        <p className="text-stone-400 text-[10px] font-sans font-semibold uppercase tracking-[4px] mb-6">
+          Discretion Tier
+        </p>
+
+        {/* Tier display */}
+        <div className="flex items-center gap-3 mb-4">
+          <span className="text-2xl">{config.icon}</span>
+          <div>
+            <h4 className="font-serif text-2xl text-stone-900 leading-tight">{config.label}</h4>
+            <span className={cn(
+              'inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-sans font-medium uppercase tracking-wider mt-1',
+              config.pillBg, config.pillText
+            )}>
+              {config.shortLabel} Privacy
+            </span>
+          </div>
+        </div>
+
+        {/* Description */}
+        <p className="text-sm font-sans text-stone-500 leading-relaxed mb-5">
+          {config.description}
+        </p>
+
+        {/* Link */}
+        <Link
+          href="/privacy"
+          className="inline-flex items-center gap-1.5 text-[11px] font-sans text-rose-700 hover:text-rose-500 font-medium transition-colors uppercase tracking-wider group/link"
         >
-          <svg
-            className="w-3.5 h-3.5"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={2}
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"
-            />
-          </svg>
-          {config.label}
-        </span>
+          Manage Settings
+          <span className="group-hover/link:translate-x-0.5 transition-transform">&rarr;</span>
+        </Link>
       </div>
-
-      {/* Description */}
-      <p className="text-sm font-sans text-stone-500 leading-relaxed mb-4">
-        {config.description}
-      </p>
-
-      {/* Link to privacy settings */}
-      <Link
-        href="/privacy"
-        className="text-xs font-sans text-rose-700 hover:text-rose-600 font-medium transition-colors"
-      >
-        Manage privacy settings &rarr;
-      </Link>
     </div>
   );
 }

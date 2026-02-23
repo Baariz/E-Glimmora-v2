@@ -1,16 +1,13 @@
 'use client';
 
 /**
- * NewThreadModal Component (COLB-05)
- * Modal for creating new message thread
- * - Journey selector dropdown
- * - Advisor selector
- * - Creates thread, sends initial system message, redirects to thread view
+ * NewThreadModal — Luxury Modal for Starting Conversations
+ * Gold accent line, refined selects, pill-shaped buttons.
  */
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, MessageCirclePlus } from 'lucide-react';
+import { X, Plus, MessageCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 import { useServices } from '@/lib/hooks/useServices';
@@ -39,9 +36,7 @@ export function NewThreadModal({
   const [selectedAdvisorId, setSelectedAdvisorId] = useState('');
   const [isCreating, setIsCreating] = useState(false);
 
-  const handleOpenModal = () => {
-    setIsOpen(true);
-  };
+  const handleOpenModal = () => setIsOpen(true);
 
   const handleCloseModal = () => {
     if (!isCreating) {
@@ -58,35 +53,25 @@ export function NewThreadModal({
 
     try {
       const selectedJourney = journeys.find((j) => j.id === selectedJourneyId);
-      if (!selectedJourney) {
-        throw new Error('Journey not found');
-      }
+      if (!selectedJourney) throw new Error('Journey not found');
 
-      // Create thread with journey link
       const thread = await services.message.createThread(
         [MOCK_UHNI_USER_ID, selectedAdvisorId],
         'b2c',
         selectedJourneyId
       );
 
-      // Send initial system message
       await services.message.sendMessage({
         threadId: thread.id,
         senderId: 'system',
         content: `Conversation started about journey: ${selectedJourney.title}`,
       });
 
-      // Close modal
       handleCloseModal();
-
-      // Notify parent
       onThreadCreated?.();
-
-      // Redirect to thread view
       router.push(`/messages/${thread.id}`);
     } catch (error) {
       console.error('Failed to create thread:', error);
-      alert('Failed to create conversation. Please try again.');
       setIsCreating(false);
     }
   };
@@ -101,9 +86,9 @@ export function NewThreadModal({
       ) : (
         <button
           onClick={handleOpenModal}
-          className="flex items-center gap-2 px-6 py-3 bg-rose-900 text-rose-50 font-sans font-medium rounded-lg hover:bg-rose-800 transition-colors"
+          className="flex items-center gap-2.5 px-6 py-3 bg-white/10 backdrop-blur-sm border border-white/15 text-white font-sans text-[13px] font-medium tracking-wide rounded-full hover:bg-white/15 transition-all"
         >
-          <MessageCirclePlus className="w-5 h-5" />
+          <Plus size={14} />
           New Conversation
         </button>
       )}
@@ -112,132 +97,134 @@ export function NewThreadModal({
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={handleCloseModal}
           >
             <motion.div
-              className="bg-white rounded-xl shadow-2xl max-w-lg w-full p-8 relative"
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden"
+              initial={{ opacity: 0, scale: 0.96, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+              exit={{ opacity: 0, scale: 0.96, y: 20 }}
+              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Close button */}
-              <button
-                onClick={handleCloseModal}
-                className="absolute top-4 right-4 text-sand-400 hover:text-sand-600 transition-colors"
-                disabled={isCreating}
-              >
-                <X className="w-6 h-6" />
-              </button>
+              {/* Header */}
+              <div className="px-7 pt-7 pb-5 border-b border-stone-200/60">
+                <button
+                  onClick={handleCloseModal}
+                  className="absolute top-5 right-5 w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-stone-400 hover:text-stone-600 hover:bg-stone-200 transition-all"
+                  disabled={isCreating}
+                >
+                  <X size={14} />
+                </button>
 
-              {/* Modal content */}
-              <div className="mb-6">
-                <div className="inline-flex items-center justify-center w-12 h-12 bg-rose-50 rounded-full mb-4">
-                  <MessageCirclePlus className="w-6 h-6 text-rose-900" />
+                <div className="w-10 h-10 rounded-full bg-stone-900 flex items-center justify-center mb-4">
+                  <MessageCircle size={17} className="text-white" />
                 </div>
-                <h2 className="text-2xl font-serif font-light text-rose-900 mb-2">
-                  Start Conversation
+                <h2 className="font-serif text-2xl text-stone-900 mb-1.5">
+                  New Conversation
                 </h2>
-                <p className="text-sm font-sans text-sand-600 leading-relaxed">
-                  Create a private conversation with your advisor about a specific journey.
+                <p className="text-stone-400 text-sm font-sans leading-[1.6] tracking-wide">
+                  Start a private dialogue with your advisor.
                 </p>
               </div>
 
-              {/* Journey selector */}
-              <div className="mb-6">
-                <label
-                  htmlFor="journey-select"
-                  className="block text-sm font-sans font-medium text-sand-900 mb-2"
-                >
-                  Select Journey
-                </label>
-                <select
-                  id="journey-select"
-                  value={selectedJourneyId}
-                  onChange={(e) => setSelectedJourneyId(e.target.value)}
-                  disabled={isCreating}
-                  className={cn(
-                    'w-full px-4 py-3 bg-sand-50 border border-sand-200 rounded-lg',
-                    'font-sans text-sm text-sand-900',
-                    'focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent',
-                    'disabled:opacity-50 disabled:cursor-not-allowed'
-                  )}
-                >
-                  <option value="">Choose a journey...</option>
-                  {journeys.map((journey) => (
-                    <option key={journey.id} value={journey.id}>
-                      {journey.title} ({journey.category})
-                    </option>
-                  ))}
-                </select>
+              {/* Form */}
+              <div className="px-7 py-6 space-y-5">
+                {/* Journey selector */}
+                <div>
+                  <label
+                    htmlFor="journey-select"
+                    className="block text-[10px] font-sans uppercase tracking-[4px] text-stone-400 mb-2"
+                  >
+                    Journey
+                  </label>
+                  <select
+                    id="journey-select"
+                    value={selectedJourneyId}
+                    onChange={(e) => setSelectedJourneyId(e.target.value)}
+                    disabled={isCreating}
+                    className={cn(
+                      'w-full px-4 py-3.5 bg-stone-50 border border-stone-200/60 rounded-xl',
+                      'font-sans text-sm text-stone-700',
+                      'focus:outline-none focus:ring-2 focus:ring-stone-300/50 focus:border-stone-300',
+                      'disabled:opacity-40 disabled:cursor-not-allowed',
+                      'appearance-none'
+                    )}
+                  >
+                    <option value="">Select a journey...</option>
+                    {journeys.map((journey) => (
+                      <option key={journey.id} value={journey.id}>
+                        {journey.title} ({journey.category})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Advisor selector */}
+                <div>
+                  <label
+                    htmlFor="advisor-select"
+                    className="block text-[10px] font-sans uppercase tracking-[4px] text-stone-400 mb-2"
+                  >
+                    Advisor
+                  </label>
+                  <select
+                    id="advisor-select"
+                    value={selectedAdvisorId}
+                    onChange={(e) => setSelectedAdvisorId(e.target.value)}
+                    disabled={isCreating}
+                    className={cn(
+                      'w-full px-4 py-3.5 bg-stone-50 border border-stone-200/60 rounded-xl',
+                      'font-sans text-sm text-stone-700',
+                      'focus:outline-none focus:ring-2 focus:ring-stone-300/50 focus:border-stone-300',
+                      'disabled:opacity-40 disabled:cursor-not-allowed',
+                      'appearance-none'
+                    )}
+                  >
+                    <option value="">Choose an advisor...</option>
+                    {advisors.map((advisor) => (
+                      <option key={advisor.id} value={advisor.id}>
+                        {advisor.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
-              {/* Advisor selector */}
-              <div className="mb-6">
-                <label
-                  htmlFor="advisor-select"
-                  className="block text-sm font-sans font-medium text-sand-900 mb-2"
-                >
-                  Select Advisor
-                </label>
-                <select
-                  id="advisor-select"
-                  value={selectedAdvisorId}
-                  onChange={(e) => setSelectedAdvisorId(e.target.value)}
-                  disabled={isCreating}
-                  className={cn(
-                    'w-full px-4 py-3 bg-sand-50 border border-sand-200 rounded-lg',
-                    'font-sans text-sm text-sand-900',
-                    'focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent',
-                    'disabled:opacity-50 disabled:cursor-not-allowed'
-                  )}
-                >
-                  <option value="">Choose an advisor...</option>
-                  {advisors.map((advisor) => (
-                    <option key={advisor.id} value={advisor.id}>
-                      {advisor.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Actions */}
-              <div className="flex gap-4">
+              {/* Footer */}
+              <div className="px-7 pb-7 flex gap-3">
                 <button
                   onClick={handleCloseModal}
                   disabled={isCreating}
-                  className="flex-1 px-6 py-3 bg-sand-100 text-sand-900 font-sans font-medium rounded-lg hover:bg-sand-200 transition-colors disabled:opacity-50"
+                  className="flex-1 py-3.5 bg-stone-100 text-stone-500 font-sans text-[13px] font-medium tracking-wide rounded-full hover:bg-stone-200 transition-all disabled:opacity-40"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleCreateThread}
                   disabled={!canCreate}
-                  className="flex-1 px-6 py-3 bg-rose-900 text-rose-50 font-sans font-medium rounded-lg hover:bg-rose-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  className={cn(
+                    'flex-1 py-3.5 font-sans text-[13px] font-semibold tracking-wide rounded-full transition-all flex items-center justify-center gap-2.5',
+                    canCreate
+                      ? 'bg-stone-900 text-white hover:bg-stone-800 shadow-sm'
+                      : 'bg-stone-100 text-stone-300 cursor-not-allowed'
+                  )}
                 >
                   {isCreating ? (
                     <>
                       <motion.div
-                        className="w-4 h-4 border-2 border-rose-50 border-t-transparent rounded-full"
+                        className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
                         animate={{ rotate: 360 }}
-                        transition={{
-                          duration: 1,
-                          repeat: Infinity,
-                          ease: 'linear',
-                        }}
+                        transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                       />
                       Creating...
                     </>
                   ) : (
-                    <>
-                      <MessageCirclePlus className="w-5 h-5" />
-                      Create
-                    </>
+                    'Start Conversation'
                   )}
                 </button>
               </div>

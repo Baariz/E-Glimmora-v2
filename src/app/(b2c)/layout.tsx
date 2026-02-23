@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { usePathname } from 'next/navigation'
 import { Menu, X, LogOut } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { PageTransition } from '@/components/providers/PageTransition'
@@ -11,25 +12,49 @@ import { AIChatWidget } from '@/components/b2c/chat/AIChatWidget'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { getNavLinksForRole, getRoleBadge } from '@/lib/rbac/b2c-role-filters'
 import { B2CRole } from '@/lib/types/roles'
+import { cn } from '@/lib/utils/cn'
+
+/** Routes where the nav is hidden (immersive wizard flows) */
+const NAV_HIDDEN_ROUTES = ['/intent/wizard'];
 
 /**
  * B2C Client Portal Navigation
- * Website-style horizontal top navigation (NOT dashboard with sidebar)
- * Luxury feel: warm background, generous spacing
- * Role-aware navigation using B2C role filters
- * Mobile-responsive with hamburger menu and touch-friendly targets
+ * Transparent → solid on scroll. Fixed over hero content.
+ * Role-aware navigation using B2C role filters.
+ * Mobile-responsive with hamburger menu.
  */
 function B2CNav() {
   const { currentRole, user, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
-  // Get nav links based on current B2C role
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 30);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   const role = currentRole as B2CRole || B2CRole.UHNI;
   const navLinks = getNavLinksForRole(role);
   const roleBadge = getRoleBadge(role);
 
+  const linkColor = scrolled
+    ? 'text-rose-800 hover:text-rose-600'
+    : 'text-white/90 hover:text-white';
+
+  const iconColor = scrolled ? 'text-rose-900' : 'text-white';
+
   return (
-    <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-sm border-b border-sand-200" aria-label="B2C navigation">
+    <nav
+      className={cn(
+        'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
+        scrolled
+          ? 'bg-white/90 backdrop-blur-md border-b border-sand-200 shadow-sm'
+          : 'bg-transparent border-b border-transparent'
+      )}
+      aria-label="B2C navigation"
+    >
       <div className="max-w-7xl mx-auto px-4 md:px-6">
         <div className="flex items-center justify-between h-16">
           {/* Brand */}
@@ -39,7 +64,10 @@ function B2CNav() {
               alt="Élan Glimmora"
               width={140}
               height={40}
-              className="h-9 w-auto"
+              className={cn(
+                'h-9 w-auto transition-all duration-300',
+                !scrolled && 'brightness-0 invert'
+              )}
               priority
             />
           </Link>
@@ -50,42 +78,51 @@ function B2CNav() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="font-sans text-sm text-rose-800 hover:text-rose-600 transition-colors"
+                className={cn('font-sans text-sm transition-colors', linkColor)}
               >
                 {link.label}
               </Link>
             ))}
 
-            {/* Privacy Settings link - UHNI only */}
             {role === B2CRole.UHNI && (
               <Link
                 href="/privacy-settings"
-                className="font-sans text-sm text-rose-800 hover:text-rose-600 transition-colors"
+                className={cn('font-sans text-sm transition-colors', linkColor)}
               >
                 Privacy
               </Link>
             )}
 
-            {/* Role Badge for non-UHNI */}
             {roleBadge && (
               <div className={`px-3 py-1 rounded-full text-xs font-medium ${roleBadge.color}`}>
                 {roleBadge.label}
               </div>
             )}
 
-            {/* Context Switcher - UHNI only */}
             {role === B2CRole.UHNI && <ContextSwitcher />}
 
             {/* User menu */}
-            <div className="ml-4 pl-4 border-l border-sand-300 flex items-center gap-3">
-              <div className="w-8 h-8 bg-rose-100 rounded-full flex items-center justify-center">
-                <span className="text-xs font-sans text-rose-700">
+            <div className={cn(
+              'ml-4 pl-4 border-l flex items-center gap-3 transition-colors',
+              scrolled ? 'border-sand-300' : 'border-white/20'
+            )}>
+              <div className={cn(
+                'w-8 h-8 rounded-full flex items-center justify-center transition-colors',
+                scrolled ? 'bg-rose-100' : 'bg-white/15'
+              )}>
+                <span className={cn(
+                  'text-xs font-sans transition-colors',
+                  scrolled ? 'text-rose-700' : 'text-white'
+                )}>
                   {user?.name?.split(' ').map(n => n[0]).join('') || 'U'}
                 </span>
               </div>
               <button
                 onClick={logout}
-                className="flex items-center gap-1.5 font-sans text-sm text-sand-500 hover:text-rose-700 transition-colors"
+                className={cn(
+                  'flex items-center gap-1.5 font-sans text-sm transition-colors',
+                  scrolled ? 'text-sand-500 hover:text-rose-700' : 'text-white/70 hover:text-white'
+                )}
               >
                 <LogOut size={14} />
                 <span>Sign Out</span>
@@ -93,10 +130,10 @@ function B2CNav() {
             </div>
           </div>
 
-          {/* Mobile hamburger menu button */}
+          {/* Mobile hamburger */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 text-rose-900 hover:text-rose-700 touch-target"
+            className={cn('md:hidden p-2 touch-target transition-colors', iconColor)}
             aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
           >
             {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -126,7 +163,6 @@ function B2CNav() {
                 </Link>
               ))}
 
-              {/* Privacy Settings link - UHNI only */}
               {role === B2CRole.UHNI && (
                 <Link
                   href="/privacy-settings"
@@ -137,21 +173,18 @@ function B2CNav() {
                 </Link>
               )}
 
-              {/* Role Badge for non-UHNI */}
               {roleBadge && (
                 <div className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${roleBadge.color} mt-2`}>
                   {roleBadge.label}
                 </div>
               )}
 
-              {/* Context Switcher - UHNI only */}
               {role === B2CRole.UHNI && (
                 <div className="pt-3 border-t border-sand-200">
                   <ContextSwitcher />
                 </div>
               )}
 
-              {/* Sign Out */}
               <div className="pt-3 border-t border-sand-200">
                 <button
                   onClick={logout}
@@ -170,15 +203,26 @@ function B2CNav() {
 }
 
 /**
- * B2C Layout: Website-style with warm, inviting aesthetic
- * NOT a dashboard - narrative-driven luxury experience
- * Mobile-optimized with reduced padding on small screens
+ * B2C Layout: Luxury narrative-driven experience.
+ * Fixed nav overlays content; main has top padding to compensate.
+ * Nav is hidden on immersive wizard flows for distraction-free UX.
  */
 export default function B2CLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const hideNav = NAV_HIDDEN_ROUTES.some((r) => pathname?.startsWith(r));
+
   return (
-    <div className="min-h-screen bg-sand-50">
-      <B2CNav />
-      <main className="max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-8" aria-label="B2C content">
+    <div className="min-h-screen bg-sand-50 overflow-x-hidden">
+      {!hideNav && <B2CNav />}
+      <main
+        className={cn(
+          'aria-label-b2c',
+          hideNav
+            ? ''
+            : 'max-w-7xl mx-auto px-4 md:px-6 pt-[5.5rem] md:pt-24 pb-6 md:pb-8'
+        )}
+        aria-label="B2C content"
+      >
         <PageTransition>{children}</PageTransition>
       </main>
       <AIChatWidget />

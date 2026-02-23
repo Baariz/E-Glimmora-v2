@@ -1,17 +1,14 @@
 'use client';
 
 /**
- * ThreadView Component (COLB-01, COLB-03)
- * Displays message thread with:
- * - Header showing journey title and participants
- * - Scrollable message list with auto-scroll to bottom
- * - MessageInput at bottom
- * - Marks messages as read when viewed
+ * ThreadView — Refined Private Conversation
+ * Elegant chat interface with frosted header, refined message area,
+ * and premium input. No generic chat-app feel.
  */
 
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Users } from 'lucide-react';
+import { ArrowLeft, Shield } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 import { useServices } from '@/lib/hooks/useServices';
@@ -41,12 +38,10 @@ export function ThreadView({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [messages, setMessages] = useState(initialMessages);
 
-  // Auto-scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Mark messages as read when component mounts
   useEffect(() => {
     const markRead = async () => {
       try {
@@ -55,12 +50,10 @@ export function ThreadView({
         console.error('Failed to mark messages as read:', error);
       }
     };
-
     markRead();
   }, [thread.id, services.message]);
 
   const handleSendMessage = async (content: string) => {
-    // Optimistic update: add message immediately
     const optimisticMessage: Message = {
       id: `temp-${Date.now()}`,
       threadId: thread.id,
@@ -74,24 +67,19 @@ export function ThreadView({
     setMessages((prev) => [...prev, optimisticMessage]);
 
     try {
-      // Send message to service
       const sentMessage = await services.message.sendMessage({
         threadId: thread.id,
         senderId: MOCK_UHNI_USER_ID,
         content,
       });
 
-      // Replace optimistic message with real one
       setMessages((prev) =>
         prev.map((msg) =>
           msg.id === optimisticMessage.id ? sentMessage : msg
         )
       );
-
-      // Notify parent to refresh thread list
       onMessagesUpdated?.();
     } catch (error) {
-      // Remove optimistic message on error
       setMessages((prev) =>
         prev.filter((msg) => msg.id !== optimisticMessage.id)
       );
@@ -104,44 +92,43 @@ export function ThreadView({
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-200px)] bg-white rounded-xl shadow-sm border border-sand-200 overflow-hidden">
-      {/* Header */}
-      <div className="border-b border-sand-200 bg-sand-50 px-6 py-4">
+    <div className="flex flex-col h-[calc(100vh-200px)] bg-white rounded-2xl shadow-sm border border-stone-200/60 overflow-hidden">
+      {/* Header — frosted with journey context */}
+      <div className="border-b border-stone-200/60 bg-stone-50/80 backdrop-blur-sm px-6 sm:px-7 py-4">
         <div className="flex items-center gap-4">
-          {/* Back button */}
           <button
             onClick={() => router.push('/messages')}
-            className="text-sand-600 hover:text-sand-900 transition-colors"
+            className="w-8 h-8 rounded-full bg-white border border-stone-200/60 flex items-center justify-center text-stone-500 hover:text-stone-900 hover:border-stone-300 transition-all"
             aria-label="Back to messages"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft size={14} />
           </button>
 
-          <div className="flex-1">
-            {/* Journey title */}
+          <div className="flex-1 min-w-0">
             {relatedJourney && (
-              <h2 className="font-serif text-lg font-light text-rose-900 mb-1">
+              <h2 className="font-serif text-lg text-stone-900 leading-snug truncate">
                 {relatedJourney.title}
               </h2>
             )}
-
-            {/* Participants */}
-            <div className="flex items-center gap-2 text-sm font-sans text-sand-600">
-              <Users className="w-4 h-4" />
-              <span>
-                {participants.map((p) => p.name).join(', ')}
+            <div className="flex items-center gap-2 mt-0.5">
+              <Shield size={10} className="text-stone-300" />
+              <span className="text-[10px] font-sans text-stone-400 tracking-wide">
+                {participants.map((p) => p.name).join(' & ')} &middot; End-to-end encrypted
               </span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Message list */}
-      <div className="flex-1 overflow-y-auto px-6 py-6">
+      {/* Message area */}
+      <div className="flex-1 overflow-y-auto px-6 sm:px-7 py-6 bg-[#faf9f7]">
         {messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
-            <p className="text-sm font-sans text-sand-400 italic">
-              No messages yet. Start the conversation.
+          <div className="flex flex-col items-center justify-center h-full">
+            <div className="w-12 h-12 rounded-full bg-stone-100 flex items-center justify-center mb-4">
+              <Shield size={18} className="text-stone-400" />
+            </div>
+            <p className="text-stone-400 text-sm font-sans tracking-wide">
+              Begin your private conversation.
             </p>
           </div>
         ) : (
@@ -163,7 +150,7 @@ export function ThreadView({
         )}
       </div>
 
-      {/* Message input */}
+      {/* Input */}
       <MessageInput onSend={handleSendMessage} />
     </div>
   );

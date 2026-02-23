@@ -55,19 +55,33 @@ export function JourneyStatusTimeline({ status, journeyTitle }: JourneyStatusTim
   const currentStepData = JOURNEY_STEPS[currentStep - 1];
 
   return (
-    <div className="bg-white border border-sand-200 rounded-2xl overflow-hidden">
-      <div className="bg-gradient-to-r from-rose-900 to-rose-800 px-4 sm:px-8 py-4 sm:py-6">
-        <p className="text-rose-200 text-xs font-sans uppercase tracking-widest mb-1">Your Experience</p>
-        <h3 className="font-serif text-xl text-white mb-3">{journeyTitle}</h3>
-        <div className="flex items-center gap-3">
-          <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-          <p className="text-rose-100 font-sans text-sm">{currentStepData?.clientMessage}</p>
+    <div className="bg-white border border-sand-200/60 rounded-2xl overflow-hidden shadow-sm">
+      {/* Header */}
+      <div className="px-7 sm:px-8 pt-7 sm:pt-8 pb-6">
+        <div className="w-10 h-px bg-rose-300 mb-5" />
+        <p className="text-rose-400 text-[10px] font-sans uppercase tracking-[5px] mb-3">
+          Your Experience
+        </p>
+        <h3 className="font-serif text-2xl text-stone-900 mb-4">{journeyTitle}</h3>
+
+        {/* Current step message */}
+        <div className="bg-rose-50/60 border border-rose-200/40 rounded-xl px-5 py-4 flex items-start gap-3">
+          <div className="relative w-2.5 h-2.5 mt-1.5 flex-shrink-0">
+            <div className="absolute inset-0 rounded-full bg-rose-400 animate-ping opacity-40" />
+            <div className="relative rounded-full bg-rose-400 w-2.5 h-2.5" />
+          </div>
+          <p className="text-stone-600 font-sans text-sm leading-[1.7] tracking-wide">
+            {currentStepData?.clientMessage}
+          </p>
         </div>
       </div>
 
-      <div className="px-4 sm:px-8 py-4 sm:py-6">
+      {/* Timeline */}
+      <div className="px-7 sm:px-8 pb-7 sm:pb-8">
         <div className="relative">
-          <div className="absolute left-4 top-2 bottom-2 w-px bg-sand-200" />
+          {/* Vertical line */}
+          <div className="absolute left-[15px] top-4 bottom-4 w-px bg-sand-200/80" />
+
           <div className="space-y-0">
             {JOURNEY_STEPS.map((step, index) => {
               const isCompleted = step.number < currentStep;
@@ -81,34 +95,42 @@ export function JourneyStatusTimeline({ status, journeyTitle }: JourneyStatusTim
                   key={step.number}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="relative flex items-start gap-5 pb-5"
+                  transition={{ delay: index * 0.05, duration: 0.4 }}
+                  className="relative flex items-start gap-5 pb-5 last:pb-0"
                 >
+                  {/* Step circle */}
                   <div className={cn(
                     'relative z-10 w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all',
-                    isCompleted && 'bg-emerald-100 border-2 border-emerald-500',
-                    isCurrent && 'bg-rose-900 border-2 border-rose-900 shadow-md shadow-rose-200',
-                    isFuture && 'bg-white border-2 border-sand-200',
+                    isCompleted && 'bg-emerald-50 border border-emerald-300',
+                    isCurrent && 'bg-rose-500 shadow-md shadow-rose-200/50',
+                    isFuture && 'bg-white border border-sand-200',
                   )}>
-                    {isCompleted && <Check className="w-4 h-4 text-emerald-600" />}
-                    {isCurrent && <div className="w-2.5 h-2.5 rounded-full bg-white" />}
-                    {isFuture && <span className="text-xs text-sand-400 font-sans">{step.number}</span>}
+                    {isCompleted && <Check className="w-3.5 h-3.5 text-emerald-500" />}
+                    {isCurrent && <div className="w-2 h-2 rounded-full bg-white" />}
+                    {isFuture && <span className="text-[10px] text-stone-300 font-sans">{step.number}</span>}
                   </div>
+
+                  {/* Step content */}
                   <div className="flex-1 pt-1">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4">
                       <p className={cn(
-                        'font-sans text-sm font-medium',
-                        isCompleted && 'text-emerald-700',
-                        isCurrent && 'text-rose-900',
-                        isFuture && 'text-sand-400',
+                        'font-sans text-sm',
+                        isCompleted && 'text-emerald-600 font-medium',
+                        isCurrent && 'text-stone-900 font-semibold',
+                        isFuture && 'text-stone-300',
                       )}>{step.label}</p>
+
                       {(isCurrent || (isFuture && step.number === currentStep + 1)) && (
                         <span className={cn(
-                          'text-xs font-sans px-2 py-0.5 rounded-full',
-                          isCurrent ? 'bg-rose-50 text-rose-600 border border-rose-200' : 'bg-sand-50 text-sand-500 border border-sand-200'
+                          'text-[10px] font-sans px-2.5 py-1 rounded-full tracking-wide',
+                          isCurrent
+                            ? 'bg-rose-50 text-rose-500 border border-rose-200/60'
+                            : 'bg-sand-50 text-stone-400 border border-sand-200/60'
                         )}>{step.expectedTiming}</span>
                       )}
-                      {isCompleted && <span className="text-xs font-sans text-emerald-600">Completed</span>}
+                      {isCompleted && (
+                        <span className="text-[10px] font-sans text-emerald-500 tracking-wide">Completed</span>
+                      )}
                     </div>
                   </div>
                 </motion.div>
@@ -116,8 +138,9 @@ export function JourneyStatusTimeline({ status, journeyTitle }: JourneyStatusTim
             })}
           </div>
         </div>
+
         {currentStep < 7 && (
-          <p className="text-xs text-sand-400 font-sans text-center mt-2">
+          <p className="text-[10px] text-stone-300 font-sans text-center mt-4 tracking-wide">
             {10 - currentStep - 3} further steps ahead
           </p>
         )}

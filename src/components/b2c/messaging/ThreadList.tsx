@@ -1,16 +1,15 @@
 'use client';
 
 /**
- * ThreadList Component
- * Displays list of messaging threads
- * Each shows: linked journey title, last message preview, timestamp,
- * participant names, unread indicator
+ * ThreadList — Luxury Correspondence Cards
+ * Each thread displayed as an editorial card with accent borders,
+ * journey context, and unread indicators.
  */
 
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
-import { MessageCircle, Clock } from 'lucide-react';
+import { MessageCircle, ArrowRight, Clock, User as UserIcon } from 'lucide-react';
 
 import { cn } from '@/lib/utils/cn';
 import { MOCK_UHNI_USER_ID } from '@/lib/hooks/useCurrentUser';
@@ -42,32 +41,32 @@ export function ThreadList({
     const otherParticipants = threadParticipants.filter(
       (p) => p.id !== MOCK_UHNI_USER_ID
     );
-    return otherParticipants.map((p) => p.name).join(', ') || 'Unknown';
+    return otherParticipants.map((p) => p.name).join(', ') || 'Your Advisor';
   };
 
   if (threads.length === 0) {
     return (
-      <div className="text-center py-16">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-sand-100 rounded-full mb-4">
-          <MessageCircle className="w-8 h-8 text-sand-400" />
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+        className="bg-white border border-stone-200/60 rounded-2xl p-12 sm:p-16 text-center shadow-sm"
+      >
+        <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center mx-auto mb-6">
+          <MessageCircle className="w-7 h-7 text-stone-400" />
         </div>
-        <h3 className="font-serif text-xl font-light text-rose-900 mb-2">
-          No messages yet
+        <h3 className="font-serif text-2xl text-stone-900 mb-3">
+          No conversations yet
         </h3>
-        <p className="text-sm font-sans text-sand-600 max-w-md mx-auto">
-          Start a conversation with your advisor about a journey.
+        <p className="text-stone-400 text-sm font-sans leading-[1.7] tracking-wide max-w-sm mx-auto">
+          Begin a private conversation with your advisor about any of your journeys.
         </p>
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <motion.div
-      className="space-y-3"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.4 }}
-    >
+    <div className="space-y-4">
       {threads.map((thread, index) => {
         const lastMessage = lastMessages[thread.id];
         const journey = relatedJourneys[thread.id];
@@ -78,68 +77,82 @@ export function ThreadList({
             key={thread.id}
             onClick={() => router.push(`/messages/${thread.id}`)}
             className={cn(
-              'w-full text-left p-5 bg-white rounded-lg border transition-all',
+              'group w-full text-left bg-white rounded-2xl border overflow-hidden',
+              'transition-all duration-500',
+              'hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)]',
               hasUnread
-                ? 'border-rose-300 shadow-sm'
-                : 'border-sand-200 hover:border-sand-300',
-              'hover:shadow-md'
+                ? 'border-amber-300/60 shadow-sm'
+                : 'border-stone-200/60 shadow-sm hover:border-stone-300/60'
             )}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: index * 0.05 }}
+            transition={{ duration: 0.5, delay: index * 0.06, ease: [0.22, 1, 0.36, 1] }}
           >
-            {/* Journey title */}
-            {journey && (
-              <h3
-                className={cn(
-                  'font-serif text-base mb-1',
-                  hasUnread
-                    ? 'text-rose-900 font-medium'
-                    : 'text-rose-900 font-light'
-                )}
-              >
-                {journey.title}
-              </h3>
-            )}
+            <div className="flex items-stretch">
+              {/* Left accent bar */}
+              <div className={cn(
+                'w-1 flex-shrink-0 transition-colors',
+                hasUnread
+                  ? 'bg-gradient-to-b from-amber-400 to-amber-500'
+                  : 'bg-gradient-to-b from-stone-200 to-stone-300 group-hover:from-stone-300 group-hover:to-stone-400'
+              )} />
 
-            {/* Participants */}
-            <p className="text-xs font-sans text-sand-500 mb-2">
-              {getThreadParticipantNames(thread)}
-            </p>
+              <div className="flex-1 p-5 sm:p-6">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    {/* Journey title */}
+                    {journey && (
+                      <h3 className="font-serif text-lg text-stone-900 leading-snug mb-1.5 truncate">
+                        {journey.title}
+                      </h3>
+                    )}
 
-            {/* Last message preview */}
-            {lastMessage && (
-              <p
-                className={cn(
-                  'text-sm font-sans mb-2 line-clamp-2',
-                  hasUnread
-                    ? 'text-sand-900 font-medium'
-                    : 'text-sand-600'
-                )}
-              >
-                {lastMessage.type === 'system' && <em>System: </em>}
-                {lastMessage.content}
-              </p>
-            )}
+                    {/* Advisor name */}
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-5 h-5 rounded-full bg-stone-100 flex items-center justify-center">
+                        <UserIcon size={10} className="text-stone-500" />
+                      </div>
+                      <span className="text-[11px] font-sans text-stone-400 tracking-wide">
+                        {getThreadParticipantNames(thread)}
+                      </span>
+                    </div>
 
-            {/* Timestamp and unread indicator */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1 text-xs font-sans text-sand-400">
-                <Clock className="w-3 h-3" />
-                {lastMessage && (
-                  <span>
-                    {format(new Date(lastMessage.sentAt), 'MMM d, h:mm a')}
-                  </span>
-                )}
+                    {/* Last message preview */}
+                    {lastMessage && (
+                      <p className={cn(
+                        'font-sans text-sm leading-[1.6] tracking-wide line-clamp-2',
+                        hasUnread
+                          ? 'text-stone-700 font-medium'
+                          : 'text-stone-400'
+                      )}>
+                        {lastMessage.type === 'system' && (
+                          <span className="text-stone-300 italic">System: </span>
+                        )}
+                        {lastMessage.content}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Right side: time + indicators */}
+                  <div className="flex flex-col items-end gap-3 flex-shrink-0 pt-0.5">
+                    {lastMessage && (
+                      <span className="text-[10px] font-sans text-stone-300 tracking-wide whitespace-nowrap">
+                        {format(new Date(lastMessage.sentAt), 'MMM d')}
+                      </span>
+                    )}
+
+                    {hasUnread ? (
+                      <div className="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.4)]" />
+                    ) : (
+                      <ArrowRight size={13} className="text-stone-300 opacity-0 translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
+                    )}
+                  </div>
+                </div>
               </div>
-
-              {hasUnread && (
-                <div className="w-2 h-2 bg-rose-600 rounded-full" />
-              )}
             </div>
           </motion.button>
         );
       })}
-    </motion.div>
+    </div>
   );
 }

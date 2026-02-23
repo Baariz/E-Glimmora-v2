@@ -1,11 +1,10 @@
 'use client';
 
 /**
- * MessageBubble Component
- * Displays individual message with sender-based styling
- * Own messages: right-aligned, rose background
- * Other messages: left-aligned, sand background
- * System messages: centered, italic, no bubble
+ * MessageBubble — Premium Message Display
+ * Own messages: dark stone background, right-aligned
+ * Other messages: white card, left-aligned
+ * System messages: centered divider style
  */
 
 import { motion } from 'framer-motion';
@@ -24,60 +23,62 @@ export function MessageBubble({
   sender,
   isOwnMessage,
 }: MessageBubbleProps) {
-  // System messages: centered, no bubble
   if (message.type === 'system') {
     return (
       <motion.div
-        className="flex justify-center my-6"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
+        className="flex items-center gap-4 my-8"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.4 }}
       >
-        <p className="text-sm font-sans italic text-sand-500 text-center max-w-md">
+        <div className="flex-1 h-px bg-stone-200/60" />
+        <p className="text-[11px] font-sans text-stone-300 tracking-wide whitespace-nowrap">
           {message.content}
         </p>
+        <div className="flex-1 h-px bg-stone-200/60" />
       </motion.div>
     );
   }
 
-  // User messages: bubbles with sender info
   return (
     <motion.div
       className={cn(
-        'flex flex-col mb-4',
+        'flex flex-col mb-5',
         isOwnMessage ? 'items-end' : 'items-start'
       )}
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
       {/* Sender name */}
-      <div className="px-4 mb-1">
-        <p className="text-xs font-sans text-sand-600">
-          {sender?.name || 'Unknown'}
-        </p>
-      </div>
+      <p className={cn(
+        'text-[10px] font-sans tracking-wide mb-1.5 px-1',
+        isOwnMessage ? 'text-stone-400' : 'text-stone-500'
+      )}>
+        {sender?.name || 'Unknown'}
+      </p>
 
-      {/* Message bubble */}
+      {/* Bubble */}
       <div
         className={cn(
-          'px-4 py-3 rounded-2xl max-w-md',
+          'px-5 py-3.5 max-w-[75%] sm:max-w-md',
           isOwnMessage
-            ? 'bg-rose-900 text-rose-50 rounded-tr-sm'
-            : 'bg-sand-100 text-sand-900 rounded-tl-sm'
+            ? 'bg-stone-900 text-white rounded-2xl rounded-tr-md'
+            : 'bg-white border border-stone-200/60 text-stone-700 rounded-2xl rounded-tl-md shadow-sm'
         )}
       >
-        <p className="text-sm font-sans leading-relaxed whitespace-pre-wrap">
+        <p className={cn(
+          'font-sans text-sm leading-[1.7] tracking-wide whitespace-pre-wrap',
+          isOwnMessage ? 'text-white/90' : 'text-stone-600'
+        )}>
           {message.content}
         </p>
       </div>
 
       {/* Timestamp */}
-      <div className="px-4 mt-1">
-        <p className="text-xs font-sans text-sand-400">
-          {format(new Date(message.sentAt), 'MMM d, h:mm a')}
-        </p>
-      </div>
+      <p className="text-[10px] font-sans text-stone-300 tracking-wide mt-1.5 px-1">
+        {format(new Date(message.sentAt), 'MMM d, h:mm a')}
+      </p>
     </motion.div>
   );
 }

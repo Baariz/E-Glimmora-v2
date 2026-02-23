@@ -1,26 +1,13 @@
 'use client';
 
-/**
- * Journeys Page
- * Journey Intelligence engine -- displays AI-generated narrative journeys.
- * Luxury editorial layout with filter tabs and generation CTA.
- *
- * This is the core value proposition of Elan: personalized narrative
- * experiences that feel like bespoke travel proposals from a luxury concierge.
- */
-
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles, Plus } from 'lucide-react';
-
-import { ScrollReveal } from '@/components/shared/ScrollReveal/ScrollReveal';
-import { fadeUp, staggerChildren } from '@/styles/variants';
+import { Sparkles } from 'lucide-react';
 import { useServices } from '@/lib/hooks/useServices';
 import { MOCK_UHNI_USER_ID } from '@/lib/hooks/useCurrentUser';
 import { generateNarrativeJourneys } from '@/lib/utils/narrative-generator';
 import { JourneyList } from '@/components/b2c/journeys/JourneyList';
-
-import type { IntentProfile } from '@/lib/types/entities';
+import { IMAGES } from '@/lib/constants/imagery';
 
 type FilterTab = 'all' | 'active' | 'archived';
 
@@ -30,116 +17,115 @@ export default function JourneysPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  const handleGenerateJourneys = async () => {
+  const handleGenerate = async () => {
     setIsGenerating(true);
-
     try {
-      // Fetch user's intent profile
-      const intentProfile = await services.intent.getIntentProfile(MOCK_UHNI_USER_ID);
-
-      if (!intentProfile) {
-        alert('Please complete your Intent Profile first.');
-        return;
-      }
-
-      // Generate narrative journeys
-      await generateNarrativeJourneys(intentProfile);
-
-      // Refresh the list
-      setRefreshKey((prev) => prev + 1);
-    } catch (error) {
-      console.error('Failed to generate journeys:', error);
-      alert('Failed to generate journeys. Please try again.');
+      const profile = await services.intent.getIntentProfile(MOCK_UHNI_USER_ID);
+      if (!profile) { alert('Please complete your Intent Profile first.'); return; }
+      await generateNarrativeJourneys(profile);
+      setRefreshKey(k => k + 1);
+    } catch (e) {
+      console.error(e);
     } finally {
       setIsGenerating(false);
     }
   };
 
   return (
-    <motion.div
-      className="max-w-7xl mx-auto"
-      variants={staggerChildren}
-      initial="hidden"
-      animate="visible"
+    <div
+      className="min-h-screen bg-[#f8f6f3] -mx-4 md:-mx-6 -mt-[5.5rem] md:-mt-24 -mb-6 md:-mb-8"
+      style={{ width: '100vw', marginLeft: 'calc(-50vw + 50%)' }}
     >
-      {/* ------------------------------------------------------------------ */}
-      {/* Hero Section                                                       */}
-      {/* ------------------------------------------------------------------ */}
-      <motion.header variants={fadeUp} className="mb-12">
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-4xl md:text-5xl font-serif font-light text-rose-900 mb-3">
-              Your Journey Intelligence
-            </h1>
-            <p className="text-lg font-sans text-sand-600 max-w-2xl">
-              AI-generated narrative experiences tailored to your emotional landscape.
-              Each journey is a bespoke proposal designed around your values, drivers, and life stage.
-            </p>
-          </div>
+      {/* ═══════ CINEMATIC HERO ═══════ */}
+      <div
+        className="relative min-h-[50vh] sm:min-h-[55vh] flex items-end bg-cover bg-center"
+        style={{ backgroundImage: `url(${IMAGES.heroMaldives})` }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-t from-[#f8f6f3] via-black/20 to-black/10" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-black/20 to-transparent" />
 
-          {/* Generate New Journeys Button */}
-          <button
-            onClick={handleGenerateJourneys}
-            disabled={isGenerating}
-            className="px-6 py-3 bg-rose-900 text-rose-50 font-sans font-medium rounded-lg hover:bg-rose-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+        <div className="relative z-10 w-full max-w-6xl mx-auto px-6 sm:px-12 lg:px-16 pb-16 sm:pb-20">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
           >
-            {isGenerating ? (
-              <>
-                <motion.div
-                  className="w-4 h-4 border-2 border-rose-50 border-t-transparent rounded-full"
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                />
-                Generating...
-              </>
-            ) : (
-              <>
-                <Sparkles className="w-5 h-5" />
-                Generate New
-              </>
-            )}
-          </button>
-        </div>
-      </motion.header>
+            <div className="w-10 h-px bg-gradient-to-r from-amber-400 to-amber-600 mb-5" />
+            <p className="text-amber-300/50 text-[10px] font-sans uppercase tracking-[5px] mb-4">
+              Your Journey Collection
+            </p>
+          </motion.div>
 
-      {/* ------------------------------------------------------------------ */}
-      {/* Filter Tabs                                                        */}
-      {/* ------------------------------------------------------------------ */}
-      <motion.div variants={fadeUp} className="mb-8">
-        <div className="flex gap-4 border-b border-sand-200">
-          {(['all', 'active', 'archived'] as FilterTab[]).map((tab) => (
+          <motion.h1
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.9, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+            className="font-serif text-4xl sm:text-5xl md:text-[3.5rem] text-white leading-[1] tracking-[-0.025em] mb-5 max-w-lg"
+          >
+            Your Journey<br />Intelligence.
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            className="text-white/30 font-sans text-sm max-w-md leading-[1.7] tracking-wide mb-8"
+          >
+            Narrative experiences shaped around your emotional landscape, values, and life stage.
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+          >
             <button
-              key={tab}
-              onClick={() => setActiveFilter(tab)}
-              className={`px-4 py-3 font-sans font-medium text-sm capitalize transition-colors relative ${
-                activeFilter === tab
-                  ? 'text-rose-900'
-                  : 'text-sand-500 hover:text-sand-700'
-              }`}
+              onClick={handleGenerate}
+              disabled={isGenerating}
+              className="group inline-flex items-center gap-2.5 px-8 py-3.5 bg-white/95 backdrop-blur-sm text-stone-900 font-sans text-[13px] font-semibold tracking-wide rounded-full hover:bg-white transition-all disabled:opacity-60 shadow-2xl"
             >
-              {tab}
-              {activeFilter === tab && (
-                <motion.div
-                  layoutId="activeFilterIndicator"
-                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-rose-900"
-                  transition={{ duration: 0.2 }}
-                />
+              {isGenerating ? (
+                <><motion.div className="w-4 h-4 border-2 border-stone-900 border-t-transparent rounded-full" animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} /> Generating...</>
+              ) : (
+                <><Sparkles size={14} /> Generate New Journeys</>
               )}
             </button>
-          ))}
+          </motion.div>
         </div>
-      </motion.div>
+      </div>
 
-      {/* ------------------------------------------------------------------ */}
-      {/* Journey List                                                       */}
-      {/* ------------------------------------------------------------------ */}
-      <motion.div variants={fadeUp}>
-        <JourneyList
-          key={refreshKey}
-          filter={activeFilter}
-          onGenerateClick={handleGenerateJourneys}
-        />
-      </motion.div>
-    </motion.div>
+      {/* ═══════ FILTER BAR ═══════ */}
+      <div className="sticky top-16 z-20 bg-[#f8f6f3]/95 backdrop-blur-md border-b border-stone-200/40">
+        <div className="max-w-6xl mx-auto px-6 sm:px-12 lg:px-16">
+          <div className="flex items-center gap-1">
+            {(['all', 'active', 'archived'] as FilterTab[]).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveFilter(tab)}
+                className={`relative px-5 py-4 font-sans text-[11px] font-medium uppercase tracking-[3px] transition-colors ${
+                  activeFilter === tab
+                    ? 'text-stone-900'
+                    : 'text-stone-400 hover:text-stone-600'
+                }`}
+              >
+                {tab}
+                {activeFilter === tab && (
+                  <motion.div
+                    layoutId="journeyFilter"
+                    className="absolute bottom-0 left-3 right-3 h-[1.5px] bg-stone-900 rounded-full"
+                    transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                  />
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ═══════ JOURNEY GRID ═══════ */}
+      <div className="max-w-6xl mx-auto px-6 sm:px-12 lg:px-16 py-10 sm:py-14">
+        <JourneyList key={refreshKey} filter={activeFilter} onGenerateClick={handleGenerate} />
+      </div>
+    </div>
   );
 }

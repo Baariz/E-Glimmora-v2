@@ -10,7 +10,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Edit, X, Save } from 'lucide-react';
+import { PenLine, X, Save } from 'lucide-react';
 
 import { useServices } from '@/lib/hooks/useServices';
 import { MOCK_UHNI_USER_ID } from '@/lib/hooks/useCurrentUser';
@@ -96,9 +96,9 @@ export function RefineJourneyModal({
       ) : (
         <button
           onClick={handleOpenModal}
-          className="flex-1 px-6 py-3 bg-sand-100 text-sand-900 font-sans font-medium rounded-lg hover:bg-sand-200 transition-colors flex items-center justify-center gap-2"
+          className="px-8 py-3.5 bg-white text-stone-600 font-sans text-[13px] font-semibold tracking-wide rounded-full border border-sand-200/60 hover:bg-sand-50 hover:border-sand-300 transition-all flex items-center gap-2.5 shadow-sm"
         >
-          <Edit className="w-5 h-5" />
+          <PenLine className="w-4 h-4" />
           Refine Journey
         </button>
       )}
@@ -107,38 +107,39 @@ export function RefineJourneyModal({
       <AnimatePresence>
         {isModalOpen && (
           <motion.div
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={handleCloseModal}
           >
             <motion.div
-              className="bg-white rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-8 relative"
+              className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-8 relative"
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
               onClick={(e) => e.stopPropagation()}
             >
               {/* Close button */}
               <button
                 onClick={handleCloseModal}
-                className="absolute top-4 right-4 text-sand-400 hover:text-sand-600 transition-colors"
+                className="absolute top-5 right-5 text-stone-300 hover:text-stone-500 transition-colors"
                 disabled={isSaving}
               >
-                <X className="w-6 h-6" />
+                <X className="w-5 h-5" />
               </button>
 
               {/* Modal header */}
-              <div className="mb-6">
-                <div className="inline-flex items-center justify-center w-12 h-12 bg-sand-50 rounded-full mb-4">
-                  <Edit className="w-6 h-6 text-sand-900" />
-                </div>
-                <h2 className="text-2xl font-serif font-light text-rose-900 mb-2">
-                  Refine Journey
+              <div className="mb-8">
+                <div className="w-10 h-px bg-gradient-to-r from-amber-400 to-amber-600 mb-5" />
+                <p className="text-rose-400 text-[10px] font-sans uppercase tracking-[5px] mb-3">
+                  Refine
+                </p>
+                <h2 className="font-serif text-2xl text-stone-900 mb-3">
+                  Shape Your Narrative
                 </h2>
-                <p className="text-base font-sans text-sand-700">
+                <p className="text-stone-500 text-sm font-sans leading-[1.7] tracking-wide max-w-lg">
                   Modify the journey narrative to better align with your vision. Your changes
                   will create a new version while preserving the original.
                 </p>
@@ -150,7 +151,7 @@ export function RefineJourneyModal({
                 <div>
                   <label
                     htmlFor="title"
-                    className="block text-sm font-sans font-semibold text-sand-900 mb-2"
+                    className="block text-[10px] font-sans uppercase tracking-[4px] text-stone-400 mb-2.5"
                   >
                     Title
                   </label>
@@ -159,7 +160,7 @@ export function RefineJourneyModal({
                     type="text"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    className="w-full px-4 py-3 border border-sand-300 rounded-lg font-serif text-lg text-rose-900 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                    className="w-full px-5 py-3.5 bg-sand-50 border border-sand-200/60 rounded-xl font-serif text-lg text-stone-900 focus:outline-none focus:ring-2 focus:ring-rose-300/50 focus:border-rose-300 transition-all"
                     placeholder="Journey title..."
                   />
                 </div>
@@ -168,16 +169,16 @@ export function RefineJourneyModal({
                 <div>
                   <label
                     htmlFor="objective"
-                    className="block text-sm font-sans font-semibold text-sand-900 mb-2"
+                    className="block text-[10px] font-sans uppercase tracking-[4px] text-stone-400 mb-2.5"
                   >
-                    Emotional Objective (Optional)
+                    Emotional Objective
                   </label>
                   <input
                     id="objective"
                     type="text"
                     value={emotionalObjective}
                     onChange={(e) => setEmotionalObjective(e.target.value)}
-                    className="w-full px-4 py-3 border border-sand-300 rounded-lg font-sans text-base text-sand-900 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                    className="w-full px-5 py-3.5 bg-sand-50 border border-sand-200/60 rounded-xl font-sans text-sm text-stone-700 focus:outline-none focus:ring-2 focus:ring-rose-300/50 focus:border-rose-300 transition-all tracking-wide"
                     placeholder="What is the emotional purpose of this journey?"
                   />
                 </div>
@@ -186,7 +187,7 @@ export function RefineJourneyModal({
                 <div>
                   <label
                     htmlFor="narrative"
-                    className="block text-sm font-sans font-semibold text-sand-900 mb-2"
+                    className="block text-[10px] font-sans uppercase tracking-[4px] text-stone-400 mb-2.5"
                   >
                     Narrative
                   </label>
@@ -194,34 +195,34 @@ export function RefineJourneyModal({
                     id="narrative"
                     value={narrative}
                     onChange={(e) => setNarrative(e.target.value)}
-                    rows={12}
-                    className="w-full px-4 py-3 border border-sand-300 rounded-lg font-sans text-base text-sand-900 leading-relaxed focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent resize-none"
+                    rows={10}
+                    className="w-full px-5 py-4 bg-sand-50 border border-sand-200/60 rounded-xl font-sans text-sm text-stone-700 leading-[1.8] focus:outline-none focus:ring-2 focus:ring-rose-300/50 focus:border-rose-300 transition-all resize-none tracking-wide"
                     placeholder="Describe the journey in detail..."
                   />
-                  <p className="text-xs font-sans text-sand-500 mt-1">
+                  <p className="text-[10px] font-sans text-stone-300 mt-2 tracking-wide">
                     {narrative.length} characters
                   </p>
                 </div>
               </div>
 
               {/* Actions */}
-              <div className="flex gap-4">
+              <div className="flex items-center gap-4 pt-6 border-t border-sand-200/60">
                 <button
                   onClick={handleCloseModal}
                   disabled={isSaving}
-                  className="flex-1 px-6 py-3 bg-sand-100 text-sand-900 font-sans font-medium rounded-lg hover:bg-sand-200 transition-colors disabled:opacity-50"
+                  className="text-stone-400 hover:text-stone-600 font-sans text-[13px] font-medium transition-colors disabled:opacity-40"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSave}
                   disabled={isSaving || !hasChanges}
-                  className="flex-1 px-6 py-3 bg-rose-900 text-rose-50 font-sans font-medium rounded-lg hover:bg-rose-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="flex-1 px-8 py-3.5 bg-rose-600 text-white font-sans text-[13px] font-semibold tracking-wide rounded-full hover:bg-rose-700 transition-all disabled:opacity-40 flex items-center justify-center gap-2.5 shadow-lg"
                 >
                   {isSaving ? (
                     <>
                       <motion.div
-                        className="w-4 h-4 border-2 border-rose-50 border-t-transparent rounded-full"
+                        className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
                         animate={{ rotate: 360 }}
                         transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                       />
@@ -229,7 +230,7 @@ export function RefineJourneyModal({
                     </>
                   ) : (
                     <>
-                      <Save className="w-5 h-5" />
+                      <Save className="w-4 h-4" />
                       Save Changes
                     </>
                   )}

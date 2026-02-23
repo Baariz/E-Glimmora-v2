@@ -9,14 +9,14 @@
 
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, MapPin, ChevronDown, ChevronUp } from 'lucide-react';
+import { Calendar, MapPin, ChevronDown, ChevronUp, Utensils, Car } from 'lucide-react';
 import { MOCK_PACKAGES } from '@/lib/mock/packages.mock';
 import { MOCK_HOTELS } from '@/lib/mock/hotels.mock';
+import { IMAGES } from '@/lib/constants/imagery';
 import type { Package, Hotel, ItineraryDay } from '@/lib/types/entities';
 
 interface ItineraryViewerProps {
   journeyTitle: string;
-  /** Optional: pre-selected package ID. If not provided, shows first matching package. */
   packageId?: string;
 }
 
@@ -37,38 +37,49 @@ export function ItineraryViewer({ journeyTitle, packageId }: ItineraryViewerProp
   if (!pkg) return null;
 
   return (
-    <div className="border border-sand-200 rounded-2xl overflow-hidden bg-white">
+    <div className="border border-sand-200/60 rounded-2xl overflow-hidden bg-white shadow-sm">
       {/* Cinematic Header */}
       <div
-        className="relative min-h-[200px] sm:min-h-[260px] bg-cover bg-center flex items-end cursor-pointer"
-        style={{ backgroundImage: `url(https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?auto=format&fit=crop&w=1200&q=80)` }}
+        className="relative min-h-[220px] sm:min-h-[280px] bg-cover bg-center flex items-end cursor-pointer"
+        style={{ backgroundImage: `url(${IMAGES.heroVenice})` }}
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
-        <div className="relative z-10 px-6 sm:px-8 py-6 w-full">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent" />
+
+        <div className="relative z-10 px-7 sm:px-8 py-7 w-full">
           <div className="flex items-end justify-between gap-4">
             <div>
-              <p className="text-amber-300 text-xs font-sans uppercase tracking-widest mb-2">Your Experience</p>
-              <h3 className="font-serif text-2xl sm:text-3xl text-white">{pkg.clientTitle}</h3>
-              <p className="text-white/70 font-sans text-sm mt-1 italic">&ldquo;{pkg.tagline}&rdquo;</p>
+              <div className="w-10 h-px bg-gradient-to-r from-amber-400 to-amber-600 mb-4" />
+              <p className="text-amber-300/60 text-[10px] font-sans uppercase tracking-[5px] mb-2">
+                Your Experience
+              </p>
+              <h3 className="font-serif text-2xl sm:text-3xl text-white leading-tight tracking-[-0.01em] mb-2">
+                {pkg.clientTitle}
+              </h3>
+              <p className="text-white/50 font-sans text-sm italic tracking-wide">
+                &ldquo;{pkg.tagline}&rdquo;
+              </p>
               {hotel && (
-                <div className="flex flex-wrap items-center gap-3 mt-2 text-sm font-sans text-white/60">
-                  <span className="flex items-center gap-1">
+                <div className="flex flex-wrap items-center gap-4 mt-3">
+                  <span className="flex items-center gap-1.5 text-white/40 text-[11px] font-sans tracking-wide">
                     <MapPin className="w-3.5 h-3.5" />
                     {hotel.name} &middot; {hotel.location}
                   </span>
-                  <span className="flex items-center gap-1">
+                  <span className="flex items-center gap-1.5 text-white/40 text-[11px] font-sans tracking-wide">
                     <Calendar className="w-3.5 h-3.5" />
                     {pkg.duration} nights
                   </span>
                 </div>
               )}
             </div>
-            {isExpanded ? (
-              <ChevronUp className="w-5 h-5 text-white/60 shrink-0" />
-            ) : (
-              <ChevronDown className="w-5 h-5 text-white/60 shrink-0" />
-            )}
+            <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-full p-2 flex-shrink-0">
+              {isExpanded ? (
+                <ChevronUp className="w-4 h-4 text-white/60" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-white/60" />
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -78,58 +89,86 @@ export function ItineraryViewer({ journeyTitle, packageId }: ItineraryViewerProp
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="border-t border-sand-100 bg-sand-50/50"
+          transition={{ duration: 0.4 }}
+          className="border-t border-sand-200/60"
         >
-          <div className="p-6 sm:p-8">
-            <div className="relative pl-6 border-l-2 border-rose-200 space-y-6">
-              {pkg.itinerary.map((day: ItineraryDay, index: number) => (
-                <motion.div
-                  key={day.day}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="relative"
-                >
-                  {/* Timeline dot */}
-                  <div className="absolute -left-[25px] w-3 h-3 rounded-full bg-rose-400 border-2 border-white shadow-sm" />
+          {/* Hotel summary bar */}
+          {hotel && (
+            <div className="bg-sand-50/80 px-7 sm:px-8 py-4 border-b border-sand-200/60">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-white border border-sand-200/60 flex items-center justify-center flex-shrink-0">
+                  <MapPin className="w-4 h-4 text-rose-400" />
+                </div>
+                <div>
+                  <p className="font-serif text-sm text-stone-800">{hotel.name}</p>
+                  <p className="text-stone-400 text-[11px] font-sans tracking-wide">{hotel.location}</p>
+                </div>
+              </div>
+            </div>
+          )}
 
-                  <div>
-                    <div className="flex items-center gap-4 mb-2">
-                      <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-rose-100 to-amber-50 border border-rose-200 flex items-center justify-center shadow-sm">
-                        <span className="font-serif text-sm text-rose-800 font-semibold">{day.day}</span>
-                      </div>
-                      <h3 className="font-serif text-base text-sand-800">
+          {/* Day-by-day timeline */}
+          <div className="px-7 sm:px-8 py-7 sm:py-8">
+            <div className="relative">
+              {/* Vertical timeline line */}
+              <div className="absolute left-[15px] top-6 bottom-6 w-px bg-sand-200/80" />
+
+              <div className="space-y-7">
+                {pkg.itinerary.map((day: ItineraryDay, index: number) => (
+                  <motion.div
+                    key={day.day}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.06, duration: 0.4 }}
+                    className="relative flex gap-5"
+                  >
+                    {/* Day circle */}
+                    <div className="relative z-10 w-8 h-8 rounded-full bg-rose-50 border border-rose-200/60 flex items-center justify-center flex-shrink-0">
+                      <span className="font-serif text-[11px] text-rose-500 font-semibold">{day.day}</span>
+                    </div>
+
+                    {/* Day content card */}
+                    <div className="flex-1 bg-sand-50/50 border border-sand-200/40 rounded-xl p-5">
+                      <h4 className="font-serif text-base text-stone-800 mb-2">
                         {day.title}
-                      </h3>
-                    </div>
+                      </h4>
 
-                    <p className="font-sans text-sm text-sand-600 leading-relaxed mb-3">
-                      {day.description}
-                    </p>
+                      <p className="font-sans text-sm text-stone-500 leading-[1.7] tracking-wide mb-4">
+                        {day.description}
+                      </p>
 
-                    {/* Activities */}
-                    <div className="space-y-1.5 mb-2">
-                      {day.activities.map((activity, i) => (
-                        <div
-                          key={i}
-                          className="flex items-start gap-2 text-sm font-sans text-sand-600"
-                        >
-                          <span className="text-rose-400 mt-0.5">&bull;</span>
-                          {activity}
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Meals & Transport */}
-                    {(day.meals || day.transport) && (
-                      <div className="flex flex-wrap gap-4 mt-2 text-xs font-sans text-sand-500">
-                        {day.meals && <span>Dining: {day.meals}</span>}
-                        {day.transport && <span>Transport: {day.transport}</span>}
+                      {/* Activities */}
+                      <div className="space-y-2 mb-3">
+                        {day.activities.map((activity, i) => (
+                          <div
+                            key={i}
+                            className="flex items-start gap-2.5 text-sm font-sans text-stone-500 leading-[1.6]"
+                          >
+                            <span className="text-rose-300 mt-1 text-[8px]">&#9679;</span>
+                            <span className="tracking-wide">{activity}</span>
+                          </div>
+                        ))}
                       </div>
-                    )}
-                  </div>
-                </motion.div>
-              ))}
+
+                      {/* Meals & Transport */}
+                      {(day.meals || day.transport) && (
+                        <div className="flex flex-wrap gap-4 pt-3 border-t border-sand-200/40">
+                          {day.meals && (
+                            <span className="flex items-center gap-1.5 text-[10px] font-sans uppercase tracking-[3px] text-stone-400">
+                              <Utensils className="w-3 h-3" /> {day.meals}
+                            </span>
+                          )}
+                          {day.transport && (
+                            <span className="flex items-center gap-1.5 text-[10px] font-sans uppercase tracking-[3px] text-stone-400">
+                              <Car className="w-3 h-3" /> {day.transport}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
             </div>
           </div>
         </motion.div>

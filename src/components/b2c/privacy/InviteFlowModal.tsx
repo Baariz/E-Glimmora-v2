@@ -2,14 +2,14 @@
 
 /**
  * Invite Flow Modal Component (PRIV-04, PRIV-05, PRIV-06)
- * End-to-end invite flow for spouse/heir/advisor with role-specific messaging
+ * Luxury modal — end-to-end invite flow for spouse/heir/advisor
  */
 
 import { useState } from 'react';
 import { B2CRole } from '@/lib/types/roles';
 import { useServices } from '@/lib/hooks/useServices';
 import { cn } from '@/lib/utils/cn';
-import { X, Mail, Check, Loader2 } from 'lucide-react';
+import { X, Mail, Check, UserPlus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface InviteFlowModalProps {
@@ -24,19 +24,16 @@ const ROLE_CONFIG = {
     title: 'Invite Your Spouse',
     description: 'Grant your spouse access to journeys and memories you choose to share.',
     accessDescription: 'Your spouse will be able to view journeys and memories you explicitly share with them.',
-    color: 'teal',
   },
   LegacyHeir: {
     title: 'Invite a Legacy Heir',
     description: 'Grant a trusted family member access to your legacy planning and selected journeys.',
     accessDescription: 'Your heir will be able to view journeys and memories you explicitly share, excluding locked items.',
-    color: 'sand',
   },
   ElanAdvisor: {
-    title: 'Invite an Elan Advisor',
+    title: 'Invite an Advisor',
     description: 'Grant an advisor access to specific journeys, intelligence briefs, and shared memories.',
     accessDescription: 'You will configure granular access controls after the invitation is accepted.',
-    color: 'rose',
   },
 } as const;
 
@@ -59,29 +56,22 @@ export function InviteFlowModal({ isOpen, onClose, role, onInviteComplete }: Inv
     setStatus('sending');
 
     try {
-      // Create invite code
       const invite = await services.inviteCode.createInviteCode({
         type: 'b2c',
-        createdBy: 'mock-uhni-user-id', // In real app, use actual user ID
-        assignedRoles: {
-          b2c: role as B2CRole,
-        },
+        createdBy: 'mock-uhni-user-id',
+        assignedRoles: { b2c: role as B2CRole },
         maxUses: 1,
       });
 
       setInviteCode(invite.code);
 
-      // Create mock user (in real app, user would register via invite link)
       const newUser = await services.user.createUser({
         email: formData.email,
         name: formData.name,
-        roles: {
-          b2c: role as B2CRole,
-        },
+        roles: { b2c: role as B2CRole },
       });
 
-      // Simulate delay for sending email
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       setStatus('success');
       onInviteComplete(newUser.id);
@@ -102,45 +92,47 @@ export function InviteFlowModal({ isOpen, onClose, role, onInviteComplete }: Inv
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        {/* Backdrop */}
+      <motion.div
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={handleClose}
+      >
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={handleClose}
-          className="absolute inset-0 bg-black/40"
-        />
-
-        {/* Modal */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.95 }}
-          className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl"
+          className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden"
+          initial={{ opacity: 0, scale: 0.96, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.96, y: 20 }}
+          transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+          onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-stone-200">
-            <div className="flex items-center gap-3">
-              <Mail className={cn('w-6 h-6', `text-${config.color}-600`)} />
-              <h2 className="font-serif text-2xl text-stone-900">{config.title}</h2>
-            </div>
+          <div className="px-7 pt-7 pb-5 border-b border-stone-200/60">
             <button
               onClick={handleClose}
-              className="text-stone-400 hover:text-stone-600 transition-colors"
+              className="absolute top-5 right-5 w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-stone-400 hover:text-stone-600 hover:bg-stone-200 transition-all"
             >
-              <X className="w-5 h-5" />
+              <X size={14} />
             </button>
+
+            <div className="w-10 h-10 rounded-full bg-stone-900 flex items-center justify-center mb-4">
+              <UserPlus size={17} className="text-white" />
+            </div>
+            <h2 className="font-serif text-2xl text-stone-900 mb-1.5">
+              {config.title}
+            </h2>
+            <p className="text-stone-400 text-sm font-sans leading-[1.6] tracking-wide">
+              {config.description}
+            </p>
           </div>
 
           {/* Content */}
-          <div className="p-6">
+          <div className="px-7 py-6">
             {status === 'form' && (
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <p className="text-stone-600 leading-relaxed">{config.description}</p>
-
+              <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-2">
+                  <label className="block text-[10px] font-sans uppercase tracking-[4px] text-stone-400 mb-2">
                     Full Name
                   </label>
                   <input
@@ -148,13 +140,13 @@ export function InviteFlowModal({ isOpen, onClose, role, onInviteComplete }: Inv
                     required
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                    className="w-full px-4 py-3.5 bg-stone-50 border border-stone-200/60 rounded-xl font-sans text-sm text-stone-700 focus:outline-none focus:ring-2 focus:ring-stone-300/50 focus:border-stone-300 placeholder:text-stone-300"
                     placeholder="Enter their name"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-2">
+                  <label className="block text-[10px] font-sans uppercase tracking-[4px] text-stone-400 mb-2">
                     Email Address
                   </label>
                   <input
@@ -162,40 +154,44 @@ export function InviteFlowModal({ isOpen, onClose, role, onInviteComplete }: Inv
                     required
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                    className="w-full px-4 py-3.5 bg-stone-50 border border-stone-200/60 rounded-xl font-sans text-sm text-stone-700 focus:outline-none focus:ring-2 focus:ring-stone-300/50 focus:border-stone-300 placeholder:text-stone-300"
                     placeholder="their.email@example.com"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-2">
-                    Personal Message (Optional)
+                  <label className="block text-[10px] font-sans uppercase tracking-[4px] text-stone-400 mb-2">
+                    Personal Message <span className="normal-case tracking-normal text-[11px]">(optional)</span>
                   </label>
                   <textarea
                     value={formData.message}
                     onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                     rows={3}
-                    className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent resize-none"
-                    placeholder="Add a personal note to your invitation..."
+                    className="w-full px-4 py-3.5 bg-stone-50 border border-stone-200/60 rounded-xl font-sans text-sm text-stone-700 focus:outline-none focus:ring-2 focus:ring-stone-300/50 focus:border-stone-300 resize-none placeholder:text-stone-300"
+                    placeholder="Add a personal note..."
                   />
                 </div>
 
-                <div className={cn('p-4 rounded-lg', `bg-${config.color}-50`)}>
-                  <div className="text-sm font-medium text-stone-700 mb-1">What They&apos;ll Access</div>
-                  <p className="text-sm text-stone-600">{config.accessDescription}</p>
+                <div className="px-4 py-3.5 bg-emerald-50/50 border border-emerald-200/60 rounded-xl">
+                  <p className="text-[10px] font-sans uppercase tracking-[3px] text-emerald-600 mb-1">
+                    What they&apos;ll access
+                  </p>
+                  <p className="text-sm font-sans text-stone-600 leading-[1.6]">
+                    {config.accessDescription}
+                  </p>
                 </div>
 
-                <div className="flex gap-3">
+                <div className="flex gap-3 pt-1">
                   <button
                     type="button"
                     onClick={handleClose}
-                    className="flex-1 px-4 py-2.5 border-2 border-stone-300 rounded-lg text-stone-700 font-medium hover:border-stone-400 hover:bg-stone-50 transition-all"
+                    className="flex-1 py-3.5 bg-stone-100 text-stone-500 font-sans text-[13px] font-medium tracking-wide rounded-full hover:bg-stone-200 transition-all"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 px-4 py-2.5 bg-rose-600 text-white font-medium rounded-lg hover:bg-rose-700 transition-all"
+                    className="flex-1 py-3.5 bg-stone-900 text-white font-sans text-[13px] font-semibold tracking-wide rounded-full hover:bg-stone-800 transition-all shadow-sm"
                   >
                     Send Invitation
                   </button>
@@ -204,37 +200,39 @@ export function InviteFlowModal({ isOpen, onClose, role, onInviteComplete }: Inv
             )}
 
             {status === 'sending' && (
-              <div className="py-12 flex flex-col items-center">
-                <Loader2 className="w-12 h-12 animate-spin text-rose-600 mb-4" />
-                <p className="text-stone-600">Sending invitation...</p>
+              <div className="py-14 flex flex-col items-center">
+                <motion.div
+                  className="w-10 h-10 border-2 border-stone-300 border-t-stone-900 rounded-full mb-5"
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                />
+                <p className="text-stone-500 font-sans text-sm tracking-wide">Sending invitation...</p>
               </div>
             )}
 
             {status === 'success' && (
-              <div className="py-8">
-                <div className="w-16 h-16 mx-auto mb-4 bg-teal-100 rounded-full flex items-center justify-center">
-                  <Check className="w-8 h-8 text-teal-600" />
+              <div className="py-8 text-center">
+                <div className="w-14 h-14 mx-auto mb-5 bg-emerald-50 border border-emerald-200/60 rounded-full flex items-center justify-center">
+                  <Check size={22} className="text-emerald-600" />
                 </div>
-                <h3 className="font-serif text-2xl text-center text-stone-900 mb-2">
-                  Invitation Sent
-                </h3>
-                <p className="text-center text-stone-600 mb-6">
-                  An email invitation has been sent to <strong>{formData.email}</strong>
+                <h3 className="font-serif text-2xl text-stone-900 mb-2">Invitation Sent</h3>
+                <p className="text-stone-400 text-sm font-sans tracking-wide mb-6">
+                  An email has been sent to <span className="text-stone-600 font-medium">{formData.email}</span>
                 </p>
 
-                <div className="bg-stone-50 rounded-lg p-4 mb-6">
-                  <div className="text-xs uppercase tracking-wider text-stone-500 mb-1">
+                <div className="bg-stone-50 border border-stone-200/60 rounded-xl p-4 mb-7 text-left">
+                  <p className="text-[10px] font-sans uppercase tracking-[4px] text-stone-400 mb-1.5">
                     Invite Code
-                  </div>
-                  <div className="font-mono text-lg text-stone-900">{inviteCode}</div>
-                  <p className="text-xs text-stone-500 mt-2">
+                  </p>
+                  <p className="font-mono text-lg text-stone-900">{inviteCode}</p>
+                  <p className="text-[11px] text-stone-400 mt-1.5 tracking-wide">
                     They can also use this code during registration
                   </p>
                 </div>
 
                 <button
                   onClick={handleClose}
-                  className="w-full px-4 py-2.5 bg-rose-600 text-white font-medium rounded-lg hover:bg-rose-700 transition-all"
+                  className="w-full py-3.5 bg-stone-900 text-white font-sans text-[13px] font-semibold tracking-wide rounded-full hover:bg-stone-800 transition-all shadow-sm"
                 >
                   Done
                 </button>
@@ -242,7 +240,7 @@ export function InviteFlowModal({ isOpen, onClose, role, onInviteComplete }: Inv
             )}
           </div>
         </motion.div>
-      </div>
+      </motion.div>
     </AnimatePresence>
   );
 }

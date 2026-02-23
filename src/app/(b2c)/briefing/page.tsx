@@ -1,213 +1,358 @@
 'use client';
 
-/**
- * Sovereign Briefing Page
- * The UHNI's personalized home view -- luxury editorial layout.
- * Composes 6 data sections: emotional phase, balance, journeys,
- * risk status, discretion tier, advisor message preview.
- *
- * This is a WEBSITE page, not a dashboard. Think luxury magazine.
- */
-
-import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { useEffect, useState, useRef } from 'react';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import { format } from 'date-fns';
-
+import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
 import { useServices } from '@/lib/hooks/useServices';
 import { useCurrentUser, MOCK_UHNI_USER_ID } from '@/lib/hooks/useCurrentUser';
-import { useReducedMotion } from '@/lib/hooks/useReducedMotion';
-
 import { EmotionalPhaseCard } from '@/components/b2c/briefing/EmotionalPhaseCard';
 import { BalanceSummary } from '@/components/b2c/briefing/BalanceSummary';
-import { UpcomingJourneys } from '@/components/b2c/briefing/UpcomingJourneys';
-import { RiskStatusCard } from '@/components/b2c/briefing/RiskStatusCard';
-import { DiscretionTierBadge } from '@/components/b2c/briefing/DiscretionTierBadge';
-import { AdvisorMessagePreview } from '@/components/b2c/briefing/AdvisorMessagePreview';
+import { IMAGES } from '@/lib/constants/imagery';
+import type { IntentProfile, Journey } from '@/lib/types/entities';
 
-import type { IntentProfile, Journey, MessageThread, Message } from '@/lib/types/entities';
-
-/** Stagger container animation */
-const stagger = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.12,
-    },
-  },
-};
-
-/** Child item fade-up animation */
-const fadeUp = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] },
-  },
-};
-
-/** Determine time-of-day greeting */
-function getGreeting(): string {
-  const hour = new Date().getHours();
-  if (hour < 12) return 'Good morning';
-  if (hour < 17) return 'Good afternoon';
+function getGreeting() {
+  const h = new Date().getHours();
+  if (h < 12) return 'Good morning';
+  if (h < 17) return 'Good afternoon';
   return 'Good evening';
 }
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 36 },
+  visible: { opacity: 1, y: 0, transition: { duration: 1, ease: [0.22, 1, 0.36, 1] } },
+};
+const fadeIn = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 1.2, ease: 'easeOut' } },
+};
+const stagger = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.16 } },
+};
+const lineDraw = {
+  hidden: { scaleX: 0 },
+  visible: { scaleX: 1, transition: { duration: 1.2, ease: [0.22, 1, 0.36, 1] } },
+};
 
 export default function BriefingPage() {
   const { user } = useCurrentUser();
   const services = useServices();
-  const prefersReducedMotion = useReducedMotion();
+  const heroRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
+  const heroY = useTransform(scrollYProgress, [0, 1], ['0%', '25%']);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
+  const heroScale = useTransform(scrollYProgress, [0, 1], [1, 1.06]);
 
-  // Data state
   const [intentProfile, setIntentProfile] = useState<IntentProfile | null>(null);
   const [journeys, setJourneys] = useState<Journey[]>([]);
-  const [threads, setThreads] = useState<MessageThread[]>([]);
-  const [lastMessages, setLastMessages] = useState<Record<string, Message | null>>({});
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch all data from mock services
   useEffect(() => {
     let cancelled = false;
-
-    async function fetchBriefingData() {
-      setIsLoading(true);
-
+    async function load() {
       try {
-        const [profile, userJourneys, userThreads] = await Promise.all([
+        const [profile, userJourneys] = await Promise.all([
           services.intent.getIntentProfile(MOCK_UHNI_USER_ID),
           services.journey.getJourneys(MOCK_UHNI_USER_ID, 'b2c'),
-          services.message.getThreads(MOCK_UHNI_USER_ID),
         ]);
-
         if (cancelled) return;
-
         setIntentProfile(profile);
         setJourneys(userJourneys);
-        setThreads(userThreads);
-
-        // Fetch last message for each thread
-        const messageMap: Record<string, Message | null> = {};
-        await Promise.all(
-          userThreads.map(async (thread) => {
-            const messages = await services.message.getMessages(thread.id);
-            const sorted = messages.sort(
-              (a, b) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime()
-            );
-            messageMap[thread.id] = sorted[0] ?? null;
-          })
-        );
-
-        if (!cancelled) {
-          setLastMessages(messageMap);
-        }
-      } catch (error) {
-        // Silently handle -- mock services should not fail
-        console.error('Briefing data fetch error:', error);
+      } catch (e) {
+        console.error(e);
       } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
+        if (!cancelled) setIsLoading(false);
       }
     }
-
-    fetchBriefingData();
-
-    return () => {
-      cancelled = true;
-    };
+    load();
+    return () => { cancelled = true; };
   }, [services]);
 
   const firstName = user.name.split(' ')[0];
-  const todayFormatted = format(new Date(), 'EEEE, MMMM d, yyyy');
+  const initials = user.name.split(' ').map(n => n[0]).join('');
+  const today = format(new Date(), 'EEEE, MMMM d, yyyy');
+  const upcomingJourneys = journeys.filter(j => j.status !== 'ARCHIVED').slice(0, 3);
 
   return (
-    <motion.div
-      className="max-w-6xl mx-auto"
-      variants={prefersReducedMotion ? undefined : stagger}
-      initial={prefersReducedMotion ? undefined : "hidden"}
-      animate={prefersReducedMotion ? undefined : "visible"}
+    <div
+      className="min-h-screen bg-sand-50 -mx-4 md:-mx-6 -mt-[5.5rem] md:-mt-24 -mb-6 md:-mb-8"
+      style={{ width: '100vw', marginLeft: 'calc(-50vw + 50%)' }}
     >
-      {/* ------------------------------------------------------------------ */}
-      {/* Cinematic Greeting Hero                                             */}
-      {/* ------------------------------------------------------------------ */}
-      <motion.header variants={fadeUp} className="mb-16">
-        <div
-          className="relative rounded-3xl overflow-hidden min-h-[240px] sm:min-h-[300px] flex items-end bg-cover bg-center"
-          style={{ backgroundImage: `url(https://images.unsplash.com/photo-1600334129128-685c5582fd35?auto=format&fit=crop&w=1200&q=80)` }}
+
+      {/* ═══════════════════════════════ CINEMATIC HERO ═══ */}
+      <div ref={heroRef} className="relative h-screen min-h-[600px] overflow-hidden">
+        <motion.div
+          style={{ y: heroY, scale: heroScale }}
+          className="absolute inset-[-12%]"
+          aria-hidden
         >
-          <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/20 to-transparent" />
-          <div className="relative z-10 px-6 sm:px-10 py-8 sm:py-10 w-full">
-            <p className="text-amber-300 text-xs font-sans uppercase tracking-[3px] mb-3">Your Private Briefing</p>
-            <h1 className="font-serif text-3xl sm:text-4xl text-white mb-2">
-              {getGreeting()}, {firstName}
-            </h1>
-            <p className="text-white/70 font-sans text-base">
-              Here is everything your Élan team has prepared for you.
-            </p>
-            <p className="text-white/40 font-sans text-sm mt-2">{todayFormatted}</p>
-          </div>
-        </div>
-      </motion.header>
-
-      {/* ------------------------------------------------------------------ */}
-      {/* Section: Your Emotional Landscape                                  */}
-      {/* ------------------------------------------------------------------ */}
-      <motion.div variants={fadeUp} className="mb-4">
-        <div className="flex items-center gap-4 mb-8">
-          <div className="h-px flex-1 bg-gradient-to-r from-stone-200 to-transparent" />
-          <span className="text-stone-400 text-xs font-sans uppercase tracking-[3px] shrink-0">Your Emotional Landscape</span>
-          <div className="h-px flex-1 bg-gradient-to-l from-stone-200 to-transparent" />
-        </div>
-      </motion.div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 mb-16">
-        {/* Left column: Phase + Balance */}
-        <div className="lg:col-span-2 space-y-8">
-          <motion.div variants={fadeUp}>
-            <EmotionalPhaseCard intentProfile={intentProfile} isLoading={isLoading} />
-          </motion.div>
-
-          <motion.div variants={fadeUp}>
-            <BalanceSummary intentProfile={intentProfile} isLoading={isLoading} />
-          </motion.div>
-        </div>
-
-        {/* Right column: Upcoming Journeys */}
-        <motion.div variants={fadeUp} className="lg:col-span-3">
-          <UpcomingJourneys journeys={journeys} isLoading={isLoading} />
-        </motion.div>
-      </div>
-
-      {/* ------------------------------------------------------------------ */}
-      {/* Section: Your Private Shield                                       */}
-      {/* ------------------------------------------------------------------ */}
-      <motion.div variants={fadeUp} className="mb-4">
-        <div className="flex items-center gap-4 mb-8">
-          <div className="h-px flex-1 bg-gradient-to-r from-stone-200 to-transparent" />
-          <span className="text-stone-400 text-xs font-sans uppercase tracking-[3px] shrink-0">Your Private Shield</span>
-          <div className="h-px flex-1 bg-gradient-to-l from-stone-200 to-transparent" />
-        </div>
-      </motion.div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-        <motion.div variants={fadeUp}>
-          <RiskStatusCard riskLevel="low" isLoading={isLoading} />
-        </motion.div>
-
-        <motion.div variants={fadeUp}>
-          <DiscretionTierBadge tier="High" isLoading={isLoading} />
-        </motion.div>
-
-        <motion.div variants={fadeUp}>
-          <AdvisorMessagePreview
-            threads={threads}
-            lastMessages={lastMessages}
-            isLoading={isLoading}
+          <div
+            className="w-full h-full bg-cover bg-center"
+            style={{ backgroundImage: `url(${IMAGES.heroRiviera})` }}
           />
         </motion.div>
+
+        {/* Overlays */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/10" />
+
+        {/* Content — vertically centered, left-aligned */}
+        <motion.div
+          style={{ opacity: heroOpacity }}
+          className="relative z-10 h-full flex flex-col justify-center px-6 sm:px-12 lg:px-20 max-w-7xl mx-auto"
+        >
+          <motion.div initial="hidden" animate="visible" variants={stagger}>
+            {/* Monogram + date */}
+            <motion.div variants={fadeIn} className="mb-10">
+              <span className="text-white/35 text-[10px] font-sans uppercase tracking-[5px]">
+                {today}
+              </span>
+            </motion.div>
+
+            {/* Decorative line */}
+            <motion.div variants={lineDraw} className="w-16 h-px bg-gradient-to-r from-amber-400 to-amber-600 mb-8 origin-left" />
+
+            {/* Greeting */}
+            <motion.h1
+              variants={fadeUp}
+              className="font-serif text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem] text-white leading-[0.88] tracking-[-0.02em] mb-6 max-w-4xl"
+            >
+              {getGreeting()},
+              <br />
+              <span className="text-amber-200/90">{firstName}</span>.
+            </motion.h1>
+
+            <motion.p
+              variants={fadeUp}
+              className="font-sans text-sm sm:text-base text-white/40 max-w-lg leading-[1.7] mb-10 tracking-wide"
+            >
+              Your sovereign briefing is ready. Every detail curated by your Elan team,
+              presented for your review.
+            </motion.p>
+
+            <motion.div variants={fadeUp} className="flex flex-wrap items-center gap-2 mb-10">
+              <div className="flex items-center gap-2 bg-white/8 backdrop-blur-md border border-white/15 text-white/60 text-[11px] font-sans px-4 py-2 rounded-full">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                {journeys.filter(j => j.status === 'EXECUTED').length > 0 ? 'Journey Active' : 'All Clear'}
+              </div>
+              <div className="flex items-center gap-2 bg-white/8 backdrop-blur-md border border-white/15 text-white/60 text-[11px] font-sans px-4 py-2 rounded-full">
+                <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                {journeys.filter(j => !['ARCHIVED', 'EXECUTED'].includes(j.status)).length} in progress
+              </div>
+              <div className="flex items-center gap-2 bg-white/8 backdrop-blur-md border border-white/15 text-white/60 text-[11px] font-sans px-4 py-2 rounded-full">
+                <div className="w-1.5 h-1.5 rounded-full bg-rose-300" />
+                Discretion · High
+              </div>
+            </motion.div>
+
+            <motion.div variants={fadeUp} className="flex flex-wrap items-center gap-5">
+              <Link
+                href="/journeys"
+                className="group inline-flex items-center gap-3 bg-white text-rose-900 font-sans text-[13px] font-semibold tracking-wide px-8 py-3.5 rounded-full hover:bg-amber-50 transition-all shadow-2xl"
+              >
+                Explore Journeys
+                <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+              </Link>
+              <Link
+                href="/messages"
+                className="group inline-flex items-center gap-2 text-white/50 font-sans text-[13px] tracking-wide hover:text-white transition-colors"
+              >
+                Contact Advisor
+                <span className="w-4 h-px bg-white/30 group-hover:w-6 group-hover:bg-white transition-all" />
+              </Link>
+            </motion.div>
+          </motion.div>
+        </motion.div>
       </div>
-    </motion.div>
+
+      {/* ═══════════════════════ EMOTIONAL LANDSCAPE ═══ */}
+      <div className="bg-sand-50">
+        <div className="max-w-7xl mx-auto px-6 sm:px-12 lg:px-20 py-28 sm:py-36">
+          {/* Section header */}
+          <motion.div
+            initial={{ opacity: 0, y: 36 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+            className="mb-16 sm:mb-20"
+          >
+            <div className="w-10 h-px bg-rose-300 mb-6" />
+            <p className="text-rose-400 text-[10px] font-sans uppercase tracking-[5px] mb-3">
+              Your State
+            </p>
+            <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl text-stone-900 leading-[0.95]">
+              Emotional landscape.
+            </h2>
+          </motion.div>
+
+          {/* Asymmetric grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-10">
+            <motion.div
+              initial={{ opacity: 0, y: 36 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 1, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+              className="lg:col-span-3"
+            >
+              <EmotionalPhaseCard intentProfile={intentProfile} isLoading={isLoading} />
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 36 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 1, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+              className="lg:col-span-2"
+            >
+              <BalanceSummary intentProfile={intentProfile} isLoading={isLoading} />
+            </motion.div>
+          </div>
+        </div>
+      </div>
+
+      {/* ═══════════════════════════ PHOTOGRAPHY DIVIDER ═══ */}
+      <div className="relative h-[50vh] min-h-[400px] overflow-hidden">
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url(${IMAGES.heroMaldives})` }}
+        />
+        <div className="absolute inset-0 bg-black/40" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent" />
+
+        <div className="relative z-10 h-full flex items-end px-6 sm:px-12 lg:px-20 pb-16 sm:pb-20 max-w-7xl mx-auto">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={stagger}
+          >
+            <motion.div variants={lineDraw} className="w-10 h-px bg-amber-400/60 mb-6 origin-left" />
+            <motion.p variants={fadeUp} className="text-white/40 text-[10px] font-sans uppercase tracking-[5px] mb-3">
+              Your Collection
+            </motion.p>
+            <motion.h3 variants={fadeUp} className="font-serif text-3xl sm:text-4xl lg:text-5xl text-white leading-[0.95] mb-5 max-w-lg">
+              {upcomingJourneys.length > 0
+                ? `${upcomingJourneys.length} journeys in motion.`
+                : 'Your journeys await.'}
+            </motion.h3>
+            <motion.div variants={fadeUp}>
+              <Link
+                href="/journeys"
+                className="group inline-flex items-center gap-2 text-white/50 text-[13px] font-sans tracking-wide hover:text-white transition-colors"
+              >
+                View all journeys
+                <span className="w-4 h-px bg-white/30 group-hover:w-6 group-hover:bg-white transition-all" />
+              </Link>
+            </motion.div>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* ═══════════════════════ UPCOMING JOURNEYS ═══ */}
+      {upcomingJourneys.length > 0 && (
+        <div className="bg-sand-50">
+          <div className="max-w-7xl mx-auto px-6 sm:px-12 lg:px-20 py-28 sm:py-36">
+            <motion.div
+              initial={{ opacity: 0, y: 36 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+              className="mb-16"
+            >
+              <div className="w-10 h-px bg-rose-300 mb-6" />
+              <p className="text-rose-400 text-[10px] font-sans uppercase tracking-[5px] mb-3">
+                In Motion
+              </p>
+              <h2 className="font-serif text-4xl sm:text-5xl text-stone-900 leading-[0.95]">
+                Upcoming journeys.
+              </h2>
+            </motion.div>
+
+            <div className="divide-y divide-stone-200/60">
+              {upcomingJourneys.map((journey, i) => (
+                <motion.div
+                  key={journey.id}
+                  initial={{ opacity: 0, y: 24 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.8, delay: i * 0.1, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  <Link href={`/journeys/${journey.id}`} className="group block py-8 sm:py-10">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-10">
+                      {/* Number */}
+                      <span className="font-serif text-5xl sm:text-6xl text-stone-200 group-hover:text-rose-200 transition-colors duration-500 flex-shrink-0 w-20">
+                        {String(i + 1).padStart(2, '0')}
+                      </span>
+
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-3 mb-2">
+                          <span className="text-[10px] font-sans uppercase tracking-[3px] text-stone-400">
+                            {journey.category}
+                          </span>
+                          <span className="text-[10px] text-rose-500 font-sans font-medium tracking-wide uppercase">
+                            {journey.status.replace('_', ' ')}
+                          </span>
+                        </div>
+                        <h4 className="font-serif text-2xl sm:text-3xl text-stone-800 group-hover:text-rose-800 transition-colors duration-300 truncate">
+                          {journey.title}
+                        </h4>
+                        <p className="text-stone-400 text-sm mt-2 line-clamp-1 font-sans tracking-wide">
+                          {journey.narrative}
+                        </p>
+                      </div>
+
+                      {/* Arrow */}
+                      <div className="flex-shrink-0 w-10 h-10 rounded-full border border-stone-200 group-hover:border-rose-300 flex items-center justify-center transition-all duration-500 group-hover:bg-rose-50">
+                        <ArrowRight size={16} className="text-stone-300 group-hover:text-rose-500 group-hover:translate-x-0.5 transition-all duration-300" />
+                      </div>
+                    </div>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════════════════════ FOOTER CTA ═══ */}
+      <div className="relative py-36 sm:py-44 overflow-hidden">
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url(${IMAGES.heroSuite})` }}
+        />
+        <div className="absolute inset-0 bg-black/55" />
+
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={stagger}
+          className="relative z-10 text-center px-6 max-w-2xl mx-auto"
+        >
+          <motion.div variants={lineDraw} className="w-12 h-px bg-amber-400/50 mx-auto mb-8 origin-center" />
+          <motion.p variants={fadeUp} className="text-amber-300/50 text-[10px] font-sans uppercase tracking-[6px] mb-6">
+            Begin
+          </motion.p>
+          <motion.h3 variants={fadeUp} className="font-serif text-4xl sm:text-5xl text-white leading-[0.95] mb-6">
+            Ready for your next<br />experience?
+          </motion.h3>
+          <motion.p variants={fadeUp} className="text-white/40 font-sans text-sm mb-12 leading-[1.8] tracking-wide max-w-sm mx-auto">
+            Tell us what you seek. Our intelligence will craft something extraordinary.
+          </motion.p>
+          <motion.div variants={fadeUp}>
+            <Link
+              href="/intent"
+              className="group inline-flex items-center gap-3 bg-white text-rose-900 font-sans text-[13px] font-semibold tracking-wide px-10 py-4 rounded-full hover:bg-rose-50 transition-all shadow-2xl"
+            >
+              Begin Your Intent
+              <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </motion.div>
+        </motion.div>
+      </div>
+
+    </div>
   );
 }

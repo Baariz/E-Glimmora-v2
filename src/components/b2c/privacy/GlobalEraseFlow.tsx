@@ -2,17 +2,15 @@
 
 /**
  * Global Erase Flow (PRIV-08)
- * Multi-step nuclear option for complete data deletion
- * Step 1: Warning with deletion checklist
- * Step 2: Type "DELETE MY DATA" confirmation
- * Step 3: Final red button execution
+ * Multi-step nuclear option for complete data deletion — luxury modal treatment
  */
 
 import { useState } from 'react';
 import { signOut } from 'next-auth/react';
 import { useServices } from '@/lib/hooks/useServices';
-import { AlertTriangle, Loader2, Trash2, Shield } from 'lucide-react';
+import { AlertTriangle, Trash2, Shield, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from '@/lib/utils/cn';
 
 interface GlobalEraseFlowProps {
   userId: string;
@@ -41,13 +39,9 @@ export function GlobalEraseFlow({ userId }: GlobalEraseFlowProps) {
     setError(null);
 
     try {
-      // Execute the nuclear option
       await services.privacy.executeGlobalErase(userId);
-
-      // Show completion message briefly
       setCurrentStep('complete');
 
-      // Auto-redirect to signOut after 2 seconds
       setTimeout(() => {
         signOut({ callbackUrl: '/' });
       }, 2000);
@@ -59,7 +53,7 @@ export function GlobalEraseFlow({ userId }: GlobalEraseFlowProps) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-rose-200 overflow-hidden">
+    <div className="bg-white border border-rose-200/60 rounded-2xl shadow-sm overflow-hidden">
       <AnimatePresence mode="wait">
         {/* Step 1: Warning */}
         {currentStep === 'warning' && (
@@ -68,47 +62,49 @@ export function GlobalEraseFlow({ userId }: GlobalEraseFlowProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="p-6"
+            className="p-7 sm:p-8"
           >
-            <div className="flex items-start gap-4 mb-6">
-              <div className="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <AlertTriangle className="w-6 h-6 text-rose-600" />
+            <div className="flex items-start gap-4 mb-7">
+              <div className="w-11 h-11 bg-rose-50 rounded-full flex items-center justify-center flex-shrink-0">
+                <AlertTriangle size={18} className="text-rose-500" />
               </div>
               <div>
-                <h3 className="font-serif text-2xl text-rose-900 mb-2">
+                <h3 className="font-serif text-2xl text-stone-900 mb-2">
                   Global Data Erase
                 </h3>
-                <p className="text-stone-600 leading-relaxed">
-                  This action is <strong>irreversible</strong> and will permanently delete all of your data
-                  from our systems. This is the ultimate privacy sovereign action.
+                <p className="text-stone-500 font-sans text-sm leading-[1.7] tracking-wide">
+                  This action is <strong className="text-stone-700">irreversible</strong> and will permanently
+                  delete all of your data from our systems.
                 </p>
               </div>
             </div>
 
             {/* Deletion Checklist */}
-            <div className="mb-6 p-4 bg-rose-50 rounded-lg border border-rose-200">
-              <h4 className="font-medium text-stone-900 mb-3">What will be deleted:</h4>
-              <ul className="space-y-2">
+            <div className="mb-7 p-5 bg-rose-50/50 border border-rose-200/60 rounded-xl">
+              <p className="text-[10px] font-sans uppercase tracking-[4px] text-rose-500 mb-3">
+                What will be deleted
+              </p>
+              <ul className="space-y-2.5">
                 {deletionChecklist.map((item, idx) => (
-                  <li key={idx} className="flex items-start gap-2 text-sm text-stone-700">
-                    <Trash2 className="w-4 h-4 text-rose-600 mt-0.5 flex-shrink-0" />
+                  <li key={idx} className="flex items-start gap-2.5 text-sm font-sans text-stone-600">
+                    <Trash2 size={12} className="text-rose-400 mt-1 flex-shrink-0" />
                     <span>{item}</span>
                   </li>
                 ))}
               </ul>
             </div>
 
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
-              <p className="text-sm text-amber-900 font-medium">
-                ⚠️ This action cannot be undone. All data will be permanently erased and you will be
-                logged out immediately.
+            <div className="px-4 py-3.5 bg-amber-50 border border-amber-200/60 rounded-xl mb-7">
+              <p className="text-[12px] font-sans text-amber-800 leading-[1.5]">
+                This action cannot be undone. All data will be permanently erased and you
+                will be logged out immediately.
               </p>
             </div>
 
-            <div className="flex items-center justify-end gap-4">
+            <div className="flex justify-end">
               <button
                 onClick={() => setCurrentStep('confirm-text')}
-                className="px-6 py-2 bg-rose-600 text-white font-medium rounded-lg hover:bg-rose-700 transition-all"
+                className="px-7 py-3.5 bg-rose-600 text-white font-sans text-[13px] font-semibold tracking-wide rounded-full hover:bg-rose-700 transition-all shadow-sm"
               >
                 Continue to Confirmation
               </button>
@@ -123,19 +119,19 @@ export function GlobalEraseFlow({ userId }: GlobalEraseFlowProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="p-6"
+            className="p-7 sm:p-8"
           >
-            <div className="flex items-start gap-4 mb-6">
-              <div className="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <Shield className="w-6 h-6 text-rose-600" />
+            <div className="flex items-start gap-4 mb-7">
+              <div className="w-11 h-11 bg-rose-50 rounded-full flex items-center justify-center flex-shrink-0">
+                <Shield size={18} className="text-rose-500" />
               </div>
               <div>
-                <h3 className="font-serif text-2xl text-rose-900 mb-2">
+                <h3 className="font-serif text-2xl text-stone-900 mb-2">
                   Confirm Data Deletion
                 </h3>
-                <p className="text-stone-600 leading-relaxed">
+                <p className="text-stone-500 font-sans text-sm leading-[1.7] tracking-wide">
                   To proceed, please type{' '}
-                  <code className="px-2 py-1 bg-stone-100 rounded text-sm font-mono text-rose-600">
+                  <code className="px-2 py-1 bg-stone-100 rounded-md text-[12px] font-mono text-rose-600">
                     DELETE MY DATA
                   </code>{' '}
                   in the field below.
@@ -143,13 +139,16 @@ export function GlobalEraseFlow({ userId }: GlobalEraseFlowProps) {
               </div>
             </div>
 
-            <div className="mb-6">
+            <div className="mb-7">
+              <label className="block text-[10px] font-sans uppercase tracking-[4px] text-stone-400 mb-2">
+                Confirmation
+              </label>
               <input
                 type="text"
                 value={confirmationText}
                 onChange={(e) => setConfirmationText(e.target.value)}
                 placeholder="Type DELETE MY DATA"
-                className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 font-mono text-sm"
+                className="w-full px-5 py-3.5 bg-stone-50 border border-stone-200/60 rounded-xl font-mono text-sm text-stone-700 focus:outline-none focus:ring-2 focus:ring-rose-300/50 focus:border-rose-300 placeholder:text-stone-300"
                 autoFocus
               />
             </div>
@@ -160,14 +159,19 @@ export function GlobalEraseFlow({ userId }: GlobalEraseFlowProps) {
                   setCurrentStep('warning');
                   setConfirmationText('');
                 }}
-                className="px-6 py-2 text-stone-600 hover:text-stone-900 font-medium transition-colors"
+                className="px-6 py-3.5 text-stone-500 font-sans text-[13px] font-medium tracking-wide hover:text-stone-700 transition-colors"
               >
                 Go Back
               </button>
               <button
                 onClick={() => setCurrentStep('final-button')}
                 disabled={confirmationText !== 'DELETE MY DATA'}
-                className="px-6 py-2 bg-rose-600 text-white font-medium rounded-lg hover:bg-rose-700 disabled:bg-stone-300 disabled:cursor-not-allowed transition-all"
+                className={cn(
+                  'px-7 py-3.5 font-sans text-[13px] font-semibold tracking-wide rounded-full transition-all',
+                  confirmationText === 'DELETE MY DATA'
+                    ? 'bg-rose-600 text-white hover:bg-rose-700 shadow-sm'
+                    : 'bg-stone-100 text-stone-300 cursor-not-allowed'
+                )}
               >
                 Continue to Final Step
               </button>
@@ -182,24 +186,24 @@ export function GlobalEraseFlow({ userId }: GlobalEraseFlowProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="p-6"
+            className="p-7 sm:p-8"
           >
-            <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-rose-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Trash2 className="w-8 h-8 text-white" />
+            <div className="text-center mb-8">
+              <div className="w-16 h-16 bg-rose-600 rounded-full flex items-center justify-center mx-auto mb-5">
+                <Trash2 size={24} className="text-white" />
               </div>
-              <h3 className="font-serif text-2xl text-rose-900 mb-2">
+              <h3 className="font-serif text-2xl text-stone-900 mb-3">
                 Final Confirmation
               </h3>
-              <p className="text-stone-600 max-w-md mx-auto">
-                This is your last chance to cancel. Clicking the button below will permanently erase
-                all your data and log you out.
+              <p className="text-stone-500 font-sans text-sm leading-[1.7] tracking-wide max-w-sm mx-auto">
+                This is your last chance to cancel. Clicking the button below will permanently
+                erase all your data and log you out.
               </p>
             </div>
 
             {error && (
-              <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-sm text-red-800">{error}</p>
+              <div className="mb-6 px-4 py-3 bg-rose-50 border border-rose-200/60 rounded-xl">
+                <p className="text-[12px] font-sans text-rose-700">{error}</p>
               </div>
             )}
 
@@ -210,13 +214,13 @@ export function GlobalEraseFlow({ userId }: GlobalEraseFlowProps) {
                   setConfirmationText('');
                   setError(null);
                 }}
-                className="px-6 py-3 text-stone-600 hover:text-stone-900 font-medium transition-colors"
+                className="px-7 py-3.5 text-stone-500 font-sans text-[13px] font-medium tracking-wide hover:text-stone-700 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleExecuteGlobalErase}
-                className="px-8 py-3 bg-rose-600 text-white font-bold rounded-lg hover:bg-rose-700 transition-all shadow-lg hover:shadow-xl"
+                className="px-8 py-3.5 bg-rose-600 text-white font-sans text-[13px] font-bold tracking-wide rounded-full hover:bg-rose-700 transition-all shadow-lg hover:shadow-xl"
               >
                 Permanently Delete All My Data
               </button>
@@ -231,11 +235,15 @@ export function GlobalEraseFlow({ userId }: GlobalEraseFlowProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="p-12 text-center"
+            className="p-14 text-center"
           >
-            <Loader2 className="w-12 h-12 animate-spin text-rose-600 mx-auto mb-4" />
+            <motion.div
+              className="w-10 h-10 border-2 border-rose-300 border-t-rose-600 rounded-full mx-auto mb-5"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+            />
             <h3 className="font-serif text-2xl text-stone-900 mb-2">Erasing your data...</h3>
-            <p className="text-stone-600">This will only take a moment.</p>
+            <p className="text-stone-400 font-sans text-sm tracking-wide">This will only take a moment.</p>
           </motion.div>
         )}
 
@@ -246,13 +254,13 @@ export function GlobalEraseFlow({ userId }: GlobalEraseFlowProps) {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
-            className="p-12 text-center"
+            className="p-14 text-center"
           >
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Shield className="w-8 h-8 text-green-600" />
+            <div className="w-16 h-16 bg-emerald-50 border border-emerald-200/60 rounded-full flex items-center justify-center mx-auto mb-5">
+              <Check size={24} className="text-emerald-600" />
             </div>
             <h3 className="font-serif text-2xl text-stone-900 mb-2">Data Erased</h3>
-            <p className="text-stone-600">
+            <p className="text-stone-400 font-sans text-sm tracking-wide">
               All your data has been permanently deleted. You will be logged out shortly.
             </p>
           </motion.div>

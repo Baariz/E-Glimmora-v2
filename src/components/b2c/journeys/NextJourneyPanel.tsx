@@ -7,6 +7,7 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 
 const SUGGESTED_JOURNEYS = [
@@ -15,11 +16,17 @@ const SUGGESTED_JOURNEYS = [
   { id: 'next-3', destination: 'Maldives Private Island', country: 'Maldives', category: 'Exclusive Seclusion', match: 'Matches your desire for complete seclusion and silence.', score: 4, timing: 'Winter — December through February', emoji: '\uD83C\uDFDD\uFE0F' },
 ];
 
+const GRADIENT_TOPS = [
+  'from-rose-100/80 to-rose-50/30',
+  'from-amber-100/80 to-amber-50/30',
+  'from-teal-100/80 to-teal-50/30',
+];
+
 function ScoreDots({ score }: { score: number }) {
   return (
     <div className="flex items-center gap-1">
       {[1, 2, 3, 4, 5].map((dot) => (
-        <div key={dot} className={cn('w-1.5 h-1.5 rounded-full', dot <= score ? 'bg-amber-500' : 'bg-sand-200')} />
+        <div key={dot} className={cn('w-1.5 h-1.5 rounded-full', dot <= score ? 'bg-amber-400' : 'bg-sand-200')} />
       ))}
     </div>
   );
@@ -28,40 +35,54 @@ function ScoreDots({ score }: { score: number }) {
 export function NextJourneyPanel() {
   return (
     <div>
-      <div className="flex items-start gap-3 mb-4 sm:mb-5">
-        <div className="w-1 h-6 bg-rose-900 rounded-full" />
-        <div>
-          <p className="text-sand-500 text-xs font-sans uppercase tracking-widest">{'\u25C8'} AGI Anticipates</p>
-          <h3 className="font-serif text-xl text-rose-900">Your next chapter, already taking shape.</h3>
-        </div>
+      <div className="mb-8">
+        <div className="w-10 h-px bg-gradient-to-r from-amber-400 to-amber-600 mb-5" />
+        <p className="text-amber-500 text-[10px] font-sans uppercase tracking-[5px] mb-3">
+          What Comes Next
+        </p>
+        <h3 className="font-serif text-2xl text-stone-900">
+          Your next chapter, already taking shape.
+        </h3>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {SUGGESTED_JOURNEYS.map((journey, i) => (
           <motion.div
             key={journey.id}
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            className="bg-white border border-amber-200 rounded-2xl p-5 hover:shadow-md transition-shadow"
+            className="group bg-white border border-sand-200/60 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-500"
           >
-            <div className="flex items-start justify-between mb-3">
-              <span className="text-2xl">{journey.emoji}</span>
-              <span className="text-xs font-sans px-2 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200">{journey.category}</span>
+            {/* Gradient top strip */}
+            <div className={cn('h-1.5 bg-gradient-to-r', GRADIENT_TOPS[i])} />
+
+            <div className="p-6">
+              <div className="flex items-start justify-between mb-4">
+                <span className="text-2xl">{journey.emoji}</span>
+                <span className="text-[10px] font-sans uppercase tracking-[3px] px-2.5 py-1 rounded-full bg-sand-50 text-stone-400 border border-sand-200/60">
+                  {journey.category}
+                </span>
+              </div>
+
+              <h4 className="font-serif text-lg text-stone-900 mb-1">{journey.destination}</h4>
+              <p className="text-stone-400 text-[11px] font-sans tracking-wide mb-4">{journey.country}</p>
+
+              <p className="text-stone-500 text-sm font-sans leading-[1.7] tracking-wide mb-4">{journey.match}</p>
+
+              <div className="flex items-center justify-between mb-5">
+                <ScoreDots score={journey.score} />
+                <span className="text-[10px] text-stone-300 font-sans italic tracking-wide">{journey.timing}</span>
+              </div>
+
+              <Link
+                href="/intent"
+                className="flex items-center justify-center gap-2 w-full py-3 rounded-full bg-rose-600 text-white text-[13px] font-sans font-semibold tracking-wide hover:bg-rose-700 transition-all shadow-sm group-hover:shadow-md"
+              >
+                Begin Curation
+                <ArrowRight size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+              </Link>
             </div>
-            <h4 className="font-serif text-lg text-rose-900 mb-1">{journey.destination}</h4>
-            <p className="text-sand-500 text-xs font-sans mb-3">{journey.country}</p>
-            <p className="text-sand-600 text-sm font-sans leading-relaxed mb-3">{journey.match}</p>
-            <div className="flex items-center justify-between mb-4">
-              <ScoreDots score={journey.score} />
-              <span className="text-xs text-sand-400 font-sans">{journey.timing}</span>
-            </div>
-            <Link
-              href="/intent"
-              className="block w-full text-center py-2 rounded-lg bg-rose-900 text-white text-sm font-sans font-medium hover:bg-rose-800 transition-colors"
-            >
-              Begin Curation
-            </Link>
           </motion.div>
         ))}
       </div>

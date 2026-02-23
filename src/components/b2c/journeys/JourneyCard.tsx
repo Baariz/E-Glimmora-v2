@@ -1,176 +1,128 @@
 'use client';
 
 /**
- * Journey Card Component
- * Rich preview card for journey narratives -- editorial magazine cover style.
- * Displays: title, category, discretion level, emotional objective,
- * narrative excerpt, risk indicator, status, invisible itinerary indicator.
+ * Journey Card — Luxury full-image editorial card
+ * Everything overlaid on the cinematic image, no white content panel.
+ * Feels like a spread from a luxury travel magazine.
  */
 
-import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import {
-  Lock,
-  Shield,
-  AlertTriangle,
-  Eye,
-  EyeOff,
-} from 'lucide-react';
-
-import type { Journey, JourneyStatus } from '@/lib/types/entities';
+import { Lock, EyeOff, ArrowRight } from 'lucide-react';
+import type { Journey } from '@/lib/types/entities';
 import { cn } from '@/lib/utils/cn';
+import { IMAGES } from '@/lib/constants/imagery';
 
 interface JourneyCardProps {
   journey: Journey;
   className?: string;
 }
 
-/** Status badge colors */
-const STATUS_COLORS: Record<JourneyStatus, string> = {
-  DRAFT: 'bg-sand-100 text-sand-700',
-  RM_REVIEW: 'bg-blue-100 text-blue-700',
-  COMPLIANCE_REVIEW: 'bg-amber-100 text-amber-700',
-  APPROVED: 'bg-emerald-100 text-emerald-700',
-  PRESENTED: 'bg-purple-100 text-purple-700',
-  EXECUTED: 'bg-rose-100 text-rose-700',
-  ARCHIVED: 'bg-sand-200 text-sand-500',
+const CATEGORY_IMAGES: Record<string, string> = {
+  Travel: IMAGES.heroAerial,
+  Wellness: IMAGES.heroWellness,
+  'Estate Planning': IMAGES.heroSuite,
+  Philanthropy: IMAGES.heroCulture,
+  Investment: IMAGES.heroDining,
+  Concierge: IMAGES.heroRiviera,
+  Other: IMAGES.heroJourney,
 };
 
-/** Discretion level badge colors */
-const DISCRETION_COLORS = {
-  High: 'bg-rose-900 text-rose-50',
-  Medium: 'bg-rose-700 text-rose-50',
-  Standard: 'bg-sand-600 text-sand-50',
+const STATUS_LABELS: Record<string, { label: string; color: string }> = {
+  DRAFT: { label: 'Draft', color: 'bg-white/20 text-white/70' },
+  RM_REVIEW: { label: 'In Review', color: 'bg-amber-500/20 text-amber-200' },
+  COMPLIANCE_REVIEW: { label: 'Compliance', color: 'bg-amber-500/20 text-amber-200' },
+  APPROVED: { label: 'Approved', color: 'bg-emerald-500/20 text-emerald-200' },
+  PRESENTED: { label: 'Ready for You', color: 'bg-purple-500/20 text-purple-200' },
+  EXECUTED: { label: 'Active', color: 'bg-rose-500/20 text-rose-200' },
+  ARCHIVED: { label: 'Archived', color: 'bg-white/10 text-white/50' },
 };
-
-/** Risk indicator colors */
-const RISK_INDICATORS = {
-  high: { color: 'text-red-600', label: 'High Risk' },
-  moderate: { color: 'text-amber-600', label: 'Moderate Risk' },
-  low: { color: 'text-emerald-600', label: 'Low Risk' },
-};
-
-/** Determine risk level from riskSummary text */
-function getRiskLevel(riskSummary?: string): 'high' | 'moderate' | 'low' {
-  if (!riskSummary) return 'low';
-  const lower = riskSummary.toLowerCase();
-  if (lower.includes('high') || lower.includes('critical')) return 'high';
-  if (lower.includes('moderate')) return 'moderate';
-  return 'low';
-}
 
 export function JourneyCard({ journey, className }: JourneyCardProps) {
   const router = useRouter();
-  const riskLevel = getRiskLevel(journey.riskSummary);
-  const risk = RISK_INDICATORS[riskLevel];
-
-  // Narrative excerpt (first 150 chars)
-  const excerpt =
-    journey.narrative.length > 150
-      ? journey.narrative.substring(0, 150) + '…'
-      : journey.narrative;
-
-  const handleClick = () => {
-    router.push(`/journeys/${journey.id}`);
-  };
+  const img = CATEGORY_IMAGES[journey.category] || IMAGES.heroJourney;
+  const status = STATUS_LABELS[journey.status] || { label: 'Draft', color: 'bg-white/20 text-white/70' };
 
   return (
-    <motion.article
+    <article
       className={cn(
-        'group relative bg-white border border-stone-100 rounded-2xl overflow-hidden',
-        'cursor-pointer transition-all duration-300',
-        'hover:shadow-xl hover:-translate-y-0.5',
+        'group relative cursor-pointer overflow-hidden',
+        'rounded-[20px] min-h-[420px] sm:min-h-[460px] flex flex-col justify-end',
+        'transition-all duration-700 ease-out',
+        'hover:shadow-[0_30px_80px_-20px_rgba(0,0,0,0.35)]',
         className
       )}
-      onClick={handleClick}
-      whileHover={{ scale: 1.02, y: -4 }}
-      transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+      onClick={() => router.push(`/journeys/${journey.id}`)}
     >
-      {/* Gradient accent bar */}
-      <div className={cn(
-        'h-1 w-full',
-        journey.status === 'EXECUTED'  ? 'bg-gradient-to-r from-emerald-400 to-teal-400' :
-        journey.status === 'PRESENTED' ? 'bg-gradient-to-r from-rose-400 to-amber-400' :
-        journey.status === 'APPROVED'  ? 'bg-gradient-to-r from-amber-400 to-yellow-300' :
-        'bg-gradient-to-r from-stone-200 to-stone-300'
-      )} />
+      {/* Full-cover image with slow zoom on hover */}
+      <div
+        className="absolute inset-0 bg-cover bg-center transition-transform duration-[1.5s] ease-out group-hover:scale-[1.05]"
+        style={{ backgroundImage: `url(${img})` }}
+      />
+
+      {/* Multi-layer gradient for depth */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/5" />
+      <div className="absolute inset-0 bg-gradient-to-tr from-black/40 via-transparent to-transparent" />
 
       {/* Top badges row */}
-      <div className="absolute top-4 left-4 right-4 flex items-start justify-between gap-2 z-10">
-        <div className="flex gap-2 flex-wrap">
-          {/* Category badge */}
-          <span className="px-3 py-1 bg-rose-50 text-rose-900 text-xs font-sans font-medium rounded-full">
-            {journey.category}
-          </span>
+      <div className="absolute top-0 left-0 right-0 p-5 flex items-start justify-between gap-2 z-10">
+        {/* Category pill */}
+        <span className="bg-white/10 backdrop-blur-xl border border-white/10 text-white/80 text-[9px] font-sans font-medium uppercase tracking-[3px] px-4 py-2 rounded-full">
+          {journey.category}
+        </span>
 
-          {/* Discretion level badge */}
-          {journey.discretionLevel && (
-            <span
-              className={cn(
-                'px-3 py-1 text-xs font-sans font-medium rounded-full flex items-center gap-1',
-                DISCRETION_COLORS[journey.discretionLevel]
-              )}
-            >
-              <Lock className="w-3 h-3" />
-              {journey.discretionLevel}
+        {/* Privacy badges */}
+        <div className="flex items-center gap-1.5">
+          {journey.discretionLevel && journey.discretionLevel !== 'Standard' && (
+            <span className="bg-black/30 backdrop-blur-xl border border-white/10 text-white/70 text-[9px] font-sans px-3 py-1.5 rounded-full flex items-center gap-1.5">
+              <Lock size={8} /> {journey.discretionLevel}
+            </span>
+          )}
+          {journey.isInvisible && (
+            <span className="bg-black/30 backdrop-blur-xl border border-white/10 text-white/60 p-1.5 rounded-full">
+              <EyeOff size={10} />
             </span>
           )}
         </div>
-
-        {/* Invisible itinerary indicator */}
-        {journey.isInvisible && (
-          <div
-            className="px-3 py-1 bg-rose-900 text-rose-50 text-xs font-sans font-medium rounded-full flex items-center gap-1"
-            title="Invisible Itinerary Active"
-          >
-            <EyeOff className="w-3 h-3" />
-          </div>
-        )}
       </div>
 
-      {/* Card content */}
-      <div className="p-6 pt-16">
-        {/* Title */}
-        <h3 className="text-2xl font-serif font-light text-rose-900 mb-2 leading-tight">
-          {journey.title}
-        </h3>
+      {/* Bottom content — all overlaid on the image */}
+      <div className="relative z-10 p-6 sm:p-7">
+        {/* Gold accent */}
+        <div className="w-7 h-px bg-gradient-to-r from-amber-400/80 to-amber-500/40 mb-4 transition-all duration-500 group-hover:w-12" />
 
         {/* Emotional objective */}
         {journey.emotionalObjective && (
-          <p className="text-sm font-sans text-sand-600 italic mb-4">
+          <p className="text-white/35 text-[11px] font-sans italic tracking-wider mb-2 line-clamp-1">
             {journey.emotionalObjective}
           </p>
         )}
 
+        {/* Title */}
+        <h3 className="font-serif text-[22px] sm:text-2xl text-white leading-[1.15] tracking-[-0.01em] mb-3">
+          {journey.title}
+        </h3>
+
         {/* Narrative excerpt */}
-        <p className="text-base font-sans text-sand-700 leading-relaxed mb-4">
-          {excerpt}
+        <p className="text-white/35 text-[13px] font-sans leading-[1.7] tracking-wide mb-5 line-clamp-2">
+          {journey.narrative.length > 110
+            ? journey.narrative.substring(0, 110) + '\u2026'
+            : journey.narrative}
         </p>
 
-        {/* Bottom row: Risk + Status */}
-        <div className="flex items-center justify-between pt-4 border-t border-sand-100">
-          {/* Risk indicator */}
-          <div className="flex items-center gap-2">
-            <AlertTriangle className={cn('w-4 h-4', risk.color)} />
-            <span className={cn('text-xs font-sans font-medium', risk.color)}>
-              {risk.label}
-            </span>
-          </div>
+        {/* Footer: status + explore link */}
+        <div className="flex items-center justify-between">
+          <span className={cn(
+            'text-[9px] font-sans font-medium uppercase tracking-[3px] px-3 py-1.5 rounded-full backdrop-blur-sm',
+            status.color
+          )}>
+            {status.label}
+          </span>
 
-          {/* Status badge */}
-          <span
-            className={cn(
-              'px-3 py-1 text-xs font-sans font-medium rounded-full',
-              STATUS_COLORS[journey.status]
-            )}
-          >
-            {journey.status.replace('_', ' ')}
+          <span className="flex items-center gap-1.5 text-white/30 text-[11px] font-sans font-medium tracking-wider opacity-0 translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500">
+            Explore <ArrowRight size={11} className="transition-transform duration-300 group-hover:translate-x-0.5" />
           </span>
         </div>
       </div>
-
-      {/* Hover overlay effect */}
-      <div className="absolute inset-0 border-2 border-rose-500 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-    </motion.article>
+    </article>
   );
 }

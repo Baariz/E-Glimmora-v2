@@ -10,20 +10,13 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import type { MemoryItem } from '@/lib/types/entities';
+import { Users, Lock } from 'lucide-react';
+import { cn } from '@/lib/utils/cn';
 
 interface FamilySharingPanelProps {
   memory: MemoryItem;
   onUpdate: (sharingPermissions: string[]) => Promise<void>;
 }
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] },
-  },
-};
 
 export function FamilySharingPanel({ memory, onUpdate }: FamilySharingPanelProps) {
   const [isUpdating, setIsUpdating] = useState(false);
@@ -52,71 +45,102 @@ export function FamilySharingPanel({ memory, onUpdate }: FamilySharingPanelProps
 
   return (
     <motion.div
-      variants={fadeUp}
-      initial="hidden"
-      animate="visible"
-      className="bg-white rounded-lg p-6 shadow-sm ring-1 ring-sand-200"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+      className="bg-white border border-stone-200/60 rounded-2xl p-6 sm:p-7 shadow-sm"
     >
-      <h2 className="text-xl font-serif text-rose-900 mb-4">Family Sharing</h2>
+      <div className="flex items-center gap-3 mb-5">
+        <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center">
+          <Users size={13} className="text-stone-400" />
+        </div>
+        <p className="text-[10px] font-sans uppercase tracking-[4px] text-stone-400">
+          Family Sharing
+        </p>
+      </div>
 
       {memory.isLocked && (
-        <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-          <p className="text-sm font-sans text-amber-700">
-            This memory is locked. Sharing permissions cannot be changed until unlocked.
+        <div className="mb-5 px-4 py-3 bg-amber-50 border border-amber-200/60 rounded-xl flex items-center gap-3">
+          <Lock size={13} className="text-amber-500 flex-shrink-0" />
+          <p className="text-[12px] font-sans text-amber-700 leading-[1.5] tracking-wide">
+            Sharing is locked. Unlock this memory to change permissions.
           </p>
         </div>
       )}
 
-      <div className="space-y-6">
+      <div className="space-y-4">
         {/* Spouse sharing */}
-        <div className="flex items-start gap-4">
-          <input
-            type="checkbox"
-            id="share-spouse"
-            checked={isSharedWithSpouse}
-            onChange={() => handleToggle('spouse')}
-            disabled={memory.isLocked || isUpdating}
-            className="mt-1 w-5 h-5 rounded border-sand-300 text-teal-600 focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          />
-          <div className="flex-1">
-            <label
-              htmlFor="share-spouse"
-              className={`block text-sm font-sans font-medium mb-1 ${
-                memory.isLocked ? 'text-sand-400 cursor-not-allowed' : 'text-sand-700 cursor-pointer'
-              }`}
-            >
+        <button
+          onClick={() => handleToggle('spouse')}
+          disabled={memory.isLocked || isUpdating}
+          className={cn(
+            'w-full flex items-center gap-4 px-4 py-4 rounded-xl border transition-all text-left',
+            memory.isLocked
+              ? 'border-stone-200/40 opacity-50 cursor-not-allowed'
+              : isSharedWithSpouse
+              ? 'border-[#3d2024]/30 bg-rose-50/50'
+              : 'border-stone-200/60 hover:border-stone-300'
+          )}
+        >
+          {/* Custom toggle */}
+          <div
+            className={cn(
+              'w-10 h-6 rounded-full flex items-center px-0.5 transition-colors flex-shrink-0',
+              isSharedWithSpouse ? 'bg-[#3d2024]' : 'bg-stone-200'
+            )}
+          >
+            <div
+              className={cn(
+                'w-5 h-5 rounded-full bg-white shadow-sm transition-transform',
+                isSharedWithSpouse ? 'translate-x-4' : 'translate-x-0'
+              )}
+            />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-sans font-medium text-stone-700">
               Share with Spouse
-            </label>
-            <p className="text-xs font-sans text-sand-500">
-              Your spouse will be able to view this memory in their shared vault.
+            </p>
+            <p className="text-[11px] font-sans text-stone-400 leading-[1.5] tracking-wide mt-0.5">
+              Visible in their shared vault
             </p>
           </div>
-        </div>
+        </button>
 
         {/* Heir sharing */}
-        <div className="flex items-start gap-4">
-          <input
-            type="checkbox"
-            id="share-heir"
-            checked={isSharedWithHeir}
-            onChange={() => handleToggle('heir')}
-            disabled={memory.isLocked || isUpdating}
-            className="mt-1 w-5 h-5 rounded border-sand-300 text-teal-600 focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          />
-          <div className="flex-1">
-            <label
-              htmlFor="share-heir"
-              className={`block text-sm font-sans font-medium mb-1 ${
-                memory.isLocked ? 'text-sand-400 cursor-not-allowed' : 'text-sand-700 cursor-pointer'
-              }`}
-            >
+        <button
+          onClick={() => handleToggle('heir')}
+          disabled={memory.isLocked || isUpdating}
+          className={cn(
+            'w-full flex items-center gap-4 px-4 py-4 rounded-xl border transition-all text-left',
+            memory.isLocked
+              ? 'border-stone-200/40 opacity-50 cursor-not-allowed'
+              : isSharedWithHeir
+              ? 'border-[#3d2024]/30 bg-rose-50/50'
+              : 'border-stone-200/60 hover:border-stone-300'
+          )}
+        >
+          <div
+            className={cn(
+              'w-10 h-6 rounded-full flex items-center px-0.5 transition-colors flex-shrink-0',
+              isSharedWithHeir ? 'bg-[#3d2024]' : 'bg-stone-200'
+            )}
+          >
+            <div
+              className={cn(
+                'w-5 h-5 rounded-full bg-white shadow-sm transition-transform',
+                isSharedWithHeir ? 'translate-x-4' : 'translate-x-0'
+              )}
+            />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-sans font-medium text-stone-700">
               Share with Legacy Heir
-            </label>
-            <p className="text-xs font-sans text-sand-500">
-              Your designated heir will inherit access to this memory according to your legacy plan.
+            </p>
+            <p className="text-[11px] font-sans text-stone-400 leading-[1.5] tracking-wide mt-0.5">
+              Inherited according to your legacy plan
             </p>
           </div>
-        </div>
+        </button>
       </div>
     </motion.div>
   );

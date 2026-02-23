@@ -3,10 +3,10 @@
 /**
  * Emotional Tag Filter (VALT-02)
  * Predefined emotional taxonomy for filtering memories.
- * Pill-shaped toggle buttons -- luxury magazine aesthetic.
+ * Pill-shaped toggle buttons — luxury journal aesthetic.
  */
 
-import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils/cn';
 
 export const EMOTIONAL_TAGS = [
   'Joy',
@@ -35,22 +35,18 @@ export function EmotionalTagFilter({ selectedTags, onToggle }: EmotionalTagFilte
         const isSelected = selectedTags.includes(tag);
 
         return (
-          <motion.button
+          <button
             key={tag}
             onClick={() => onToggle(tag)}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className={`
-              px-4 py-2 rounded-full font-sans text-sm transition-all duration-200
-              ${
-                isSelected
-                  ? 'bg-teal-600 text-white ring-2 ring-teal-300'
-                  : 'bg-sand-100 text-sand-700 hover:bg-sand-200 hover:text-sand-900'
-              }
-            `}
+            className={cn(
+              'px-4 py-2 rounded-full font-sans text-[12px] tracking-wide transition-all duration-200',
+              isSelected
+                ? 'bg-[#3d2024] text-rose-100 shadow-sm'
+                : 'bg-white border border-stone-200/60 text-stone-500 hover:border-stone-300 hover:text-stone-700'
+            )}
           >
             {tag}
-          </motion.button>
+          </button>
         );
       })}
     </div>

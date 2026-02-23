@@ -2,13 +2,13 @@
 
 /**
  * Advisor Visibility Scope Component (PRIV-03, COLB-02)
- * Granular control over advisor access with per-journey and per-resource-type permissions
+ * Granular control over advisor access — luxury card style with custom toggles
  */
 
 import { useState } from 'react';
 import { AdvisorResourcePermissions } from '@/lib/types';
 import { cn } from '@/lib/utils/cn';
-import { ChevronDown, ChevronUp, Eye, EyeOff } from 'lucide-react';
+import { ChevronDown, ChevronUp, Eye, EyeOff, Users } from 'lucide-react';
 
 interface AdvisorVisibilityScopeProps {
   advisorIds: string[];
@@ -32,51 +32,29 @@ function AdvisorCard({ advisorId, advisorName, permissions, journeys, onChange }
 
   const handleMasterToggle = () => {
     if (masterEnabled) {
-      // Turn off all permissions
-      onChange({
-        journeys: 'none',
-        intelligence: false,
-        memories: false,
-      });
+      onChange({ journeys: 'none', intelligence: false, memories: false });
     } else {
-      // Turn on default permissions
-      onChange({
-        journeys: 'all',
-        intelligence: true,
-        memories: false,
-      });
+      onChange({ journeys: 'all', intelligence: true, memories: false });
     }
   };
 
   const handleJourneysChange = (value: 'all' | 'none' | string[]) => {
-    onChange({
-      ...permissions,
-      journeys: value,
-    });
+    onChange({ ...permissions, journeys: value });
   };
 
   const handleJourneyToggle = (journeyId: string) => {
-    if (permissions.journeys === 'all' || permissions.journeys === 'none') {
-      // Can't toggle individual journeys when set to all/none
-      return;
-    }
+    if (permissions.journeys === 'all' || permissions.journeys === 'none') return;
 
     const currentJourneys = permissions.journeys as string[];
     const newJourneys = currentJourneys.includes(journeyId)
-      ? currentJourneys.filter(id => id !== journeyId)
+      ? currentJourneys.filter((id) => id !== journeyId)
       : [...currentJourneys, journeyId];
 
-    onChange({
-      ...permissions,
-      journeys: newJourneys.length === 0 ? 'none' : newJourneys,
-    });
+    onChange({ ...permissions, journeys: newJourneys.length === 0 ? 'none' : newJourneys });
   };
 
   const handleResourceToggle = (resource: 'intelligence' | 'memories') => {
-    onChange({
-      ...permissions,
-      [resource]: !permissions[resource],
-    });
+    onChange({ ...permissions, [resource]: !permissions[resource] });
   };
 
   const allJourneysSelected = permissions.journeys === 'all';
@@ -88,21 +66,29 @@ function AdvisorCard({ advisorId, advisorName, permissions, journeys, onChange }
       : (permissions.journeys as string[]).length;
 
   return (
-    <div className="bg-white rounded-xl p-6 shadow-sm ring-1 ring-stone-200">
+    <div className={cn(
+      'bg-white border rounded-2xl shadow-sm transition-all overflow-hidden',
+      masterEnabled ? 'border-emerald-200/60' : 'border-stone-200/60'
+    )}>
       {/* Master Toggle */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          {masterEnabled ? (
-            <Eye className="w-5 h-5 text-teal-600" />
-          ) : (
-            <EyeOff className="w-5 h-5 text-stone-400" />
-          )}
+      <div className="flex items-center justify-between p-6 sm:p-7">
+        <div className="flex items-center gap-3.5">
+          <div className={cn(
+            'w-10 h-10 rounded-full flex items-center justify-center transition-colors',
+            masterEnabled ? 'bg-emerald-50' : 'bg-stone-100'
+          )}>
+            {masterEnabled ? (
+              <Eye size={16} className="text-emerald-600" />
+            ) : (
+              <EyeOff size={16} className="text-stone-400" />
+            )}
+          </div>
           <div>
             <h4 className="font-serif text-lg text-stone-900">{advisorName}</h4>
-            <p className="text-sm text-stone-500">
+            <p className="text-[11px] font-sans text-stone-400 tracking-wide mt-0.5">
               {masterEnabled
                 ? `Access to ${selectedJourneyCount} ${selectedJourneyCount === 1 ? 'journey' : 'journeys'}`
-                : 'No access'}
+                : 'No access granted'}
             </p>
           </div>
         </div>
@@ -110,15 +96,14 @@ function AdvisorCard({ advisorId, advisorName, permissions, journeys, onChange }
         <button
           onClick={handleMasterToggle}
           className={cn(
-            'relative w-14 h-8 rounded-full transition-colors',
-            masterEnabled ? 'bg-teal-600' : 'bg-stone-300'
+            'w-12 h-7 rounded-full flex items-center px-0.5 transition-colors flex-shrink-0',
+            masterEnabled ? 'bg-emerald-500' : 'bg-stone-200'
           )}
-          aria-label={masterEnabled ? 'Disable advisor access' : 'Enable advisor access'}
         >
           <div
             className={cn(
-              'absolute top-1 w-6 h-6 rounded-full bg-white shadow-md transition-transform',
-              masterEnabled ? 'translate-x-7' : 'translate-x-1'
+              'w-6 h-6 rounded-full bg-white shadow-sm transition-transform',
+              masterEnabled ? 'translate-x-5' : 'translate-x-0'
             )}
           />
         </button>
@@ -126,62 +111,90 @@ function AdvisorCard({ advisorId, advisorName, permissions, journeys, onChange }
 
       {/* Advanced Settings */}
       {masterEnabled && (
-        <>
+        <div className="border-t border-stone-200/60">
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="flex items-center gap-2 text-sm text-stone-600 hover:text-stone-900 transition-colors mb-3"
+            className="w-full flex items-center gap-2 px-7 py-3.5 text-[11px] font-sans text-stone-400 tracking-wide hover:text-stone-600 transition-colors"
           >
-            {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            {isExpanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
             Advanced Settings
           </button>
 
           {isExpanded && (
-            <div className="space-y-4 pt-4 border-t border-stone-200">
+            <div className="px-7 pb-7 space-y-6">
               {/* Journey Selection */}
               <div>
-                <div className="text-sm font-medium text-stone-700 mb-2">Journey Access</div>
-                <div className="space-y-2">
+                <p className="text-[10px] font-sans uppercase tracking-[4px] text-stone-400 mb-3">
+                  Journey Access
+                </p>
+                <div className="space-y-2.5">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <div className={cn(
+                      'w-4 h-4 rounded-full border-2 flex items-center justify-center',
+                      allJourneysSelected ? 'border-emerald-500' : 'border-stone-300'
+                    )}>
+                      {allJourneysSelected && <div className="w-2 h-2 rounded-full bg-emerald-500" />}
+                    </div>
+                    <span className="text-sm font-sans text-stone-700">All Journeys</span>
+                  </label>
+                  <div onClick={() => handleJourneysChange(allJourneysSelected ? [] : permissions.journeys)} />
+
                   <label className="flex items-center gap-3 cursor-pointer">
                     <input
                       type="radio"
                       checked={allJourneysSelected}
                       onChange={() => handleJourneysChange('all')}
-                      className="w-4 h-4 text-teal-600 focus:ring-teal-500"
+                      className="sr-only"
                     />
-                    <span className="text-stone-700">All Journeys</span>
                   </label>
 
-                  <label className="flex items-center gap-3 cursor-pointer">
-                    <input
-                      type="radio"
-                      checked={!allJourneysSelected}
-                      onChange={() =>
-                        handleJourneysChange(
-                          permissions.journeys === 'all' ? [] : permissions.journeys
-                        )
-                      }
-                      className="w-4 h-4 text-teal-600 focus:ring-teal-500"
-                    />
-                    <span className="text-stone-700">Selected Journeys</span>
-                  </label>
+                  <button
+                    onClick={() =>
+                      handleJourneysChange(
+                        permissions.journeys === 'all' ? [] : permissions.journeys
+                      )
+                    }
+                    className="flex items-center gap-3"
+                  >
+                    <div className={cn(
+                      'w-4 h-4 rounded-full border-2 flex items-center justify-center',
+                      !allJourneysSelected ? 'border-emerald-500' : 'border-stone-300'
+                    )}>
+                      {!allJourneysSelected && <div className="w-2 h-2 rounded-full bg-emerald-500" />}
+                    </div>
+                    <span className="text-sm font-sans text-stone-700">Selected Journeys</span>
+                  </button>
 
                   {!allJourneysSelected && journeys.length > 0 && (
-                    <div className="ml-7 space-y-1.5 mt-2">
-                      {journeys.map(journey => (
-                        <label key={journey.id} className="flex items-center gap-3 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={
-                              permissions.journeys !== 'none' &&
-                              permissions.journeys !== 'all' &&
-                              permissions.journeys.includes(journey.id)
-                            }
-                            onChange={() => handleJourneyToggle(journey.id)}
-                            className="w-4 h-4 text-teal-600 rounded focus:ring-teal-500"
-                          />
-                          <span className="text-sm text-stone-600">{journey.title}</span>
-                        </label>
-                      ))}
+                    <div className="ml-7 space-y-2 mt-2">
+                      {journeys.map((journey) => {
+                        const isChecked =
+                          permissions.journeys !== 'none' &&
+                          permissions.journeys !== 'all' &&
+                          permissions.journeys.includes(journey.id);
+
+                        return (
+                          <button
+                            key={journey.id}
+                            onClick={() => handleJourneyToggle(journey.id)}
+                            className="flex items-center gap-3 w-full text-left"
+                          >
+                            <div className={cn(
+                              'w-4 h-4 rounded border flex items-center justify-center transition-colors',
+                              isChecked
+                                ? 'bg-emerald-500 border-emerald-500'
+                                : 'border-stone-300'
+                            )}>
+                              {isChecked && (
+                                <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                                  <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                </svg>
+                              )}
+                            </div>
+                            <span className="text-sm font-sans text-stone-600">{journey.title}</span>
+                          </button>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -189,32 +202,42 @@ function AdvisorCard({ advisorId, advisorName, permissions, journeys, onChange }
 
               {/* Resource Type Permissions */}
               <div>
-                <div className="text-sm font-medium text-stone-700 mb-2">Additional Access</div>
-                <div className="space-y-2">
-                  <label className="flex items-center gap-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={permissions.intelligence}
-                      onChange={() => handleResourceToggle('intelligence')}
-                      className="w-4 h-4 text-teal-600 rounded focus:ring-teal-500"
-                    />
-                    <span className="text-stone-700">Intelligence Briefs</span>
-                  </label>
-
-                  <label className="flex items-center gap-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={permissions.memories}
-                      onChange={() => handleResourceToggle('memories')}
-                      className="w-4 h-4 text-teal-600 rounded focus:ring-teal-500"
-                    />
-                    <span className="text-stone-700">Shared Memories</span>
-                  </label>
+                <p className="text-[10px] font-sans uppercase tracking-[4px] text-stone-400 mb-3">
+                  Additional Access
+                </p>
+                <div className="space-y-2.5">
+                  {[
+                    { key: 'intelligence' as const, label: 'Intelligence Briefs' },
+                    { key: 'memories' as const, label: 'Shared Memories' },
+                  ].map((resource) => {
+                    const isChecked = permissions[resource.key];
+                    return (
+                      <button
+                        key={resource.key}
+                        onClick={() => handleResourceToggle(resource.key)}
+                        className="flex items-center gap-3 w-full text-left"
+                      >
+                        <div className={cn(
+                          'w-4 h-4 rounded border flex items-center justify-center transition-colors',
+                          isChecked
+                            ? 'bg-emerald-500 border-emerald-500'
+                            : 'border-stone-300'
+                        )}>
+                          {isChecked && (
+                            <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                              <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          )}
+                        </div>
+                        <span className="text-sm font-sans text-stone-700">{resource.label}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
           )}
-        </>
+        </div>
       )}
     </div>
   );
@@ -227,17 +250,17 @@ export function AdvisorVisibilityScope({
   onChange,
 }: AdvisorVisibilityScopeProps) {
   const handleAdvisorChange = (advisorId: string, permissions: AdvisorResourcePermissions) => {
-    onChange({
-      ...advisorResourcePermissions,
-      [advisorId]: permissions,
-    });
+    onChange({ ...advisorResourcePermissions, [advisorId]: permissions });
   };
 
   if (advisorIds.length === 0) {
     return (
-      <div className="bg-stone-50 rounded-xl p-8 text-center">
-        <p className="text-stone-600">No advisors in your circle yet.</p>
-        <p className="text-sm text-stone-500 mt-1">
+      <div className="bg-white border border-stone-200/60 rounded-2xl p-10 sm:p-12 text-center shadow-sm">
+        <div className="w-14 h-14 rounded-full bg-stone-100 flex items-center justify-center mx-auto mb-5">
+          <Users size={20} className="text-stone-400" />
+        </div>
+        <h3 className="font-serif text-xl text-stone-800 mb-2">No advisors in your circle</h3>
+        <p className="text-stone-400 font-sans text-sm leading-[1.7] tracking-wide max-w-sm mx-auto">
           Invite an advisor to grant them access to specific journeys and resources.
         </p>
       </div>
@@ -246,7 +269,7 @@ export function AdvisorVisibilityScope({
 
   return (
     <div className="space-y-4">
-      {advisorIds.map(advisorId => {
+      {advisorIds.map((advisorId) => {
         const permissions =
           advisorResourcePermissions[advisorId] || {
             journeys: 'none',
@@ -261,7 +284,7 @@ export function AdvisorVisibilityScope({
             advisorName={`Advisor ${advisorId.slice(0, 8)}`}
             permissions={permissions}
             journeys={journeys}
-            onChange={perms => handleAdvisorChange(advisorId, perms)}
+            onChange={(perms) => handleAdvisorChange(advisorId, perms)}
           />
         );
       })}

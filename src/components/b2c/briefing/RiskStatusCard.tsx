@@ -2,17 +2,17 @@
 
 /**
  * Risk Status Card (BREF-04)
- * Simplified risk indicator with plain-language narrative.
- * Color-coded: green (low), amber (medium), red (high/critical).
+ * Luxury editorial risk indicator with cinematic styling.
+ * Color-coded: emerald (low), amber (medium), rose (high).
  * Non-technical, reassuring tone for UHNI audience.
  */
 
+import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils/cn';
 
 type RiskLevel = 'low' | 'medium' | 'high';
 
 interface RiskStatusCardProps {
-  /** Override risk level for testing; defaults to 'low' */
   riskLevel?: RiskLevel;
   isLoading?: boolean;
 }
@@ -20,33 +20,37 @@ interface RiskStatusCardProps {
 const riskConfig: Record<RiskLevel, {
   label: string;
   narrative: string;
+  statusText: string;
   dotColor: string;
-  bgColor: string;
-  textColor: string;
+  accentColor: string;
+  barColor: string;
 }> = {
   low: {
     label: 'Low Exposure',
     narrative:
-      'All privacy protocols are active and no concerns require your attention. Your discretion shield is fully engaged.',
-    dotColor: 'bg-olive-500',
-    bgColor: 'bg-olive-50',
-    textColor: 'text-olive-700',
+      'All privacy protocols are active. Your discretion shield is fully engaged — no concerns require your attention.',
+    statusText: 'All Clear',
+    dotColor: 'bg-emerald-400',
+    accentColor: 'text-emerald-400',
+    barColor: 'from-emerald-500 to-teal-400',
   },
   medium: {
     label: 'Moderate Attention',
     narrative:
       'Some settings may benefit from a review. We recommend visiting your privacy controls to confirm your preferences.',
-    dotColor: 'bg-gold-500',
-    bgColor: 'bg-gold-50',
-    textColor: 'text-gold-700',
+    statusText: 'Review Advised',
+    dotColor: 'bg-amber-400',
+    accentColor: 'text-amber-400',
+    barColor: 'from-amber-500 to-yellow-400',
   },
   high: {
     label: 'Action Recommended',
     narrative:
-      'There are items that would benefit from your direct attention. Please review your privacy and access settings at your earliest convenience.',
-    dotColor: 'bg-rose-500',
-    bgColor: 'bg-rose-50',
-    textColor: 'text-rose-700',
+      'Items require your direct attention. Please review your privacy and access settings at your earliest convenience.',
+    statusText: 'Action Needed',
+    dotColor: 'bg-rose-400',
+    accentColor: 'text-rose-400',
+    barColor: 'from-rose-500 to-red-400',
   },
 };
 
@@ -55,45 +59,58 @@ export function RiskStatusCard({ riskLevel = 'low', isLoading }: RiskStatusCardP
 
   if (isLoading) {
     return (
-      <div className="animate-pulse space-y-3">
-        <div className="h-4 w-24 bg-sand-200 rounded" />
-        <div className="flex items-center gap-2">
-          <div className="h-3 w-3 bg-sand-200 rounded-full" />
-          <div className="h-4 w-32 bg-sand-200 rounded" />
-        </div>
-        <div className="h-3 w-full bg-sand-200 rounded" />
+      <div className="rounded-2xl bg-white border border-stone-100 p-6 sm:p-8 animate-pulse min-h-[200px]">
+        <div className="h-3 w-20 bg-stone-200 rounded mb-6" />
+        <div className="h-6 w-32 bg-stone-200 rounded mb-4" />
+        <div className="h-3 w-full bg-stone-200 rounded mb-2" />
+        <div className="h-3 w-2/3 bg-stone-200 rounded" />
       </div>
     );
   }
 
   return (
-    <div className="rounded-2xl bg-white border border-stone-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
-      {/* Top accent line */}
-      <div className={cn(
-        'h-1.5 w-full',
-        riskLevel === 'low'    ? 'bg-gradient-to-r from-emerald-400 to-teal-400' :
-        riskLevel === 'medium' ? 'bg-gradient-to-r from-amber-400 to-yellow-400' :
-        'bg-gradient-to-r from-rose-400 to-red-400'
-      )} />
+    <div className="rounded-2xl bg-white border border-stone-100 shadow-sm hover:shadow-lg transition-all duration-500 overflow-hidden group">
+      {/* Gradient accent bar */}
+      <div className={cn('h-1 w-full bg-gradient-to-r', config.barColor)} />
 
-      <div className="p-6">
-        <p className="text-amber-600 text-xs font-sans font-semibold uppercase tracking-widest mb-4">
+      <div className="p-6 sm:p-8">
+        {/* Header */}
+        <p className="text-stone-400 text-[10px] font-sans font-semibold uppercase tracking-[4px] mb-6">
           Risk Status
         </p>
 
-        {/* Status indicator */}
-        <div className="flex items-center gap-2.5 mb-3">
+        {/* Status row */}
+        <div className="flex items-center gap-3 mb-4">
           <div className="relative">
             <span className={cn('block w-3 h-3 rounded-full', config.dotColor)} />
-            {riskLevel === 'low' && (
-              <span className={cn('absolute inset-0 rounded-full animate-ping opacity-40', config.dotColor)} />
-            )}
+            <motion.span
+              className={cn('absolute inset-0 rounded-full', config.dotColor)}
+              animate={{ scale: [1, 2, 1], opacity: [0.5, 0, 0.5] }}
+              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+            />
           </div>
-          <span className={cn('font-serif text-lg', config.textColor)}>{config.label}</span>
+          <span className={cn('font-serif text-2xl', config.accentColor === 'text-emerald-400' ? 'text-stone-900' : config.accentColor === 'text-amber-400' ? 'text-amber-700' : 'text-rose-700')}>
+            {config.label}
+          </span>
         </div>
 
-        {/* Plain-language narrative */}
-        <p className="text-sm font-sans text-stone-500 leading-relaxed">{config.narrative}</p>
+        {/* Narrative */}
+        <p className="text-sm font-sans text-stone-500 leading-relaxed mb-5">
+          {config.narrative}
+        </p>
+
+        {/* Bottom status pill */}
+        <div className="flex items-center gap-2">
+          <span className={cn(
+            'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-sans font-medium',
+            riskLevel === 'low' ? 'bg-emerald-50 text-emerald-700' :
+            riskLevel === 'medium' ? 'bg-amber-50 text-amber-700' :
+            'bg-rose-50 text-rose-700'
+          )}>
+            <span className={cn('w-1.5 h-1.5 rounded-full', config.dotColor)} />
+            {config.statusText}
+          </span>
+        </div>
       </div>
     </div>
   );

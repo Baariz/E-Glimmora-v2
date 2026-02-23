@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation'
 import { Menu, X, LogOut } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { PageTransition } from '@/components/providers/PageTransition'
+import { SmoothScroll } from '@/components/providers/SmoothScroll'
 import { ContextSwitcher } from '@/components/auth/ContextSwitcher'
 import { AIChatWidget } from '@/components/b2c/chat/AIChatWidget'
 import { useAuth } from '@/lib/hooks/useAuth'
@@ -212,20 +213,22 @@ export default function B2CLayout({ children }: { children: React.ReactNode }) {
   const hideNav = NAV_HIDDEN_ROUTES.some((r) => pathname?.startsWith(r));
 
   return (
-    <div className="min-h-screen bg-sand-50 overflow-x-hidden">
-      {!hideNav && <B2CNav />}
-      <main
-        className={cn(
-          'aria-label-b2c',
-          hideNav
-            ? ''
-            : 'max-w-7xl mx-auto px-4 md:px-6 pt-[5.5rem] md:pt-24 pb-6 md:pb-8'
-        )}
-        aria-label="B2C content"
-      >
-        <PageTransition>{children}</PageTransition>
-      </main>
-      <AIChatWidget />
-    </div>
+    <SmoothScroll>
+      <div className="min-h-screen bg-sand-50 overflow-x-hidden">
+        {!hideNav && <B2CNav />}
+        <main
+          className={cn(
+            'aria-label-b2c',
+            hideNav
+              ? ''
+              : 'max-w-7xl mx-auto px-4 md:px-6 pt-[5.5rem] md:pt-24 pb-6 md:pb-8'
+          )}
+          aria-label="B2C content"
+        >
+          <PageTransition>{children}</PageTransition>
+        </main>
+        <AIChatWidget />
+      </div>
+    </SmoothScroll>
   )
 }

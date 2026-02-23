@@ -8,6 +8,7 @@ import { MOCK_UHNI_USER_ID } from '@/lib/hooks/useCurrentUser';
 import { generateNarrativeJourneys } from '@/lib/utils/narrative-generator';
 import { JourneyList } from '@/components/b2c/journeys/JourneyList';
 import { IMAGES } from '@/lib/constants/imagery';
+import { ParallaxSection } from '@/components/ui/ParallaxSection';
 
 type FilterTab = 'all' | 'active' | 'archived';
 
@@ -37,9 +38,9 @@ export default function JourneysPage() {
       style={{ width: '100vw', marginLeft: 'calc(-50vw + 50%)' }}
     >
       {/* ═══════ CINEMATIC HERO ═══════ */}
-      <div
-        className="relative min-h-[50vh] sm:min-h-[55vh] flex items-end bg-cover bg-center"
-        style={{ backgroundImage: `url(${IMAGES.heroMaldives})` }}
+      <ParallaxSection
+        imageUrl={IMAGES.heroMaldives}
+        className="min-h-[50vh] sm:min-h-[55vh] flex items-end"
       >
         <div className="absolute inset-0 bg-gradient-to-t from-[#f8f6f3] via-black/20 to-black/10" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-black/20 to-transparent" />
@@ -92,7 +93,7 @@ export default function JourneysPage() {
             </button>
           </motion.div>
         </div>
-      </div>
+      </ParallaxSection>
 
       {/* ═══════ FILTER BAR ═══════ */}
       <div className="sticky top-16 z-20 bg-[#f8f6f3]/95 backdrop-blur-md border-b border-stone-200/40">

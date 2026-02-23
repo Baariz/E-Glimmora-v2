@@ -8,6 +8,7 @@ import { MOCK_HOTELS } from '@/lib/mock/hotels.mock';
 import { cn } from '@/lib/utils/cn';
 import { ArrowRight, MapPin, Moon, Sparkles, Calendar } from 'lucide-react';
 import { IMAGES } from '@/lib/constants/imagery';
+import { ParallaxSection } from '@/components/ui/ParallaxSection';
 
 const HOTEL_IMAGES: Record<string, string> = {
   'hotel-001': IMAGES.heroVenice,
@@ -25,9 +26,9 @@ export default function ExperiencesPage() {
       style={{ width: '100vw', maxWidth: '100vw', marginLeft: 'calc(-50vw + 50%)' }}
     >
       {/* ═══════ CINEMATIC HERO ═══════ */}
-      <div
-        className="relative min-h-[52vh] sm:min-h-[58vh] flex items-end bg-cover bg-center"
-        style={{ backgroundImage: `url(${IMAGES.heroAerial})` }}
+      <ParallaxSection
+        imageUrl={IMAGES.heroAerial}
+        className="min-h-[52vh] sm:min-h-[58vh] flex items-end"
       >
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/10" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-black/20 to-transparent" />
@@ -63,7 +64,7 @@ export default function ExperiencesPage() {
             Nothing standard. Everything arranged privately.
           </motion.p>
         </div>
-      </div>
+      </ParallaxSection>
 
       {/* ═══════ INFO STRIP ═══════ */}
       <div className="sticky top-16 z-20 bg-[#f8f6f3]/95 backdrop-blur-md border-b border-stone-200/40">
@@ -199,9 +200,9 @@ export default function ExperiencesPage() {
           transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
           className="relative rounded-[20px] overflow-hidden"
         >
-          <div
-            className="relative min-h-[300px] bg-cover bg-center flex items-center justify-center"
-            style={{ backgroundImage: `url(${IMAGES.heroSuite})` }}
+          <ParallaxSection
+            imageUrl={IMAGES.heroSuite}
+            className="min-h-[300px] flex items-center justify-center rounded-[20px]"
           >
             <div className="absolute inset-0 bg-black/55" />
             <div className="relative text-center px-6 py-14">
@@ -219,7 +220,7 @@ export default function ExperiencesPage() {
                 Speak with Your Advisor <ArrowRight size={13} />
               </Link>
             </div>
-          </div>
+          </ParallaxSection>
         </motion.div>
       </div>
     </div>

@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils/cn';
 import { Edit2, RefreshCw, Loader2, Shield, Compass, Heart, Gem, Crown, Mountain, Palette, Key, ArrowRight } from 'lucide-react';
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer } from 'recharts';
 import { IMAGES } from '@/lib/constants/imagery';
+import { ParallaxSection } from '@/components/ui/ParallaxSection';
 import Link from 'next/link';
 
 interface IntentProfileViewProps {
@@ -120,9 +121,9 @@ export function IntentProfileView({ profile }: IntentProfileViewProps) {
   return (
     <div>
       {/* ═══════════════════════ FULL-BLEED HERO ═══ */}
-      <div
-        className="relative min-h-[50vh] sm:min-h-[55vh] bg-cover bg-center"
-        style={{ backgroundImage: `url(${IMAGES.heroAerial})` }}
+      <ParallaxSection
+        imageUrl={IMAGES.heroAerial}
+        className="min-h-[50vh] sm:min-h-[55vh]"
       >
         <div className="absolute inset-0 bg-black/50" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
@@ -154,7 +155,7 @@ export function IntentProfileView({ profile }: IntentProfileViewProps) {
             </button>
           </div>
         </div>
-      </div>
+      </ParallaxSection>
 
       {/* ═══════════════════════ EMOTIONAL DNA SECTION ═══ */}
       <div className="bg-sand-50">
@@ -469,11 +470,10 @@ export function IntentProfileView({ profile }: IntentProfileViewProps) {
       )}
 
       {/* ═══════════════════════ FOOTER CTA ═══ */}
-      <div className="relative py-28 sm:py-36 overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${IMAGES.heroMaldives})` }}
-        />
+      <ParallaxSection
+        imageUrl={IMAGES.heroMaldives}
+        className="py-28 sm:py-36"
+      >
         <div className="absolute inset-0 bg-black/55" />
         <div className="relative z-10 text-center px-6 max-w-2xl mx-auto">
           <div className="w-12 h-px bg-amber-400/50 mx-auto mb-8" />
@@ -501,7 +501,7 @@ export function IntentProfileView({ profile }: IntentProfileViewProps) {
             </button>
           </div>
         </div>
-      </div>
+      </ParallaxSection>
     </div>
   );
 }

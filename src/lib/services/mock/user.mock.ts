@@ -14,9 +14,8 @@ export class MockUserService extends BaseMockService implements IUserService {
 
   constructor() {
     super();
-    if (this.isClient) {
-      this.seedIfEmpty();
-    }
+    // Always seed — this service has a serverUsers fallback for server-side auth
+    this.seedIfEmpty();
   }
 
   private getUsers_(): User[] {

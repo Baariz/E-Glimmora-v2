@@ -23,6 +23,7 @@ import { PostJourneyFeedback } from '@/components/b2c/journeys/PostJourneyFeedba
 import { NextJourneyPanel } from '@/components/b2c/journeys/NextJourneyPanel';
 import { ItineraryViewer } from '@/components/b2c/journeys/ItineraryViewer';
 import { IMAGES } from '@/lib/constants/imagery';
+import { ParallaxSection } from '@/components/ui/ParallaxSection';
 import { cn } from '@/lib/utils/cn';
 
 import type { Journey } from '@/lib/types/entities';
@@ -122,9 +123,9 @@ export default function JourneyDetailPage() {
         className="-mx-4 md:-mx-6 -mt-[5.5rem] md:-mt-24 -mb-6 md:-mb-8"
         style={{ width: '100vw', marginLeft: 'calc(-50vw + 50%)' }}
       >
-        <div
-          className="relative min-h-[45vh] bg-cover bg-center flex items-end"
-          style={{ backgroundImage: `url(${IMAGES.heroJourney})` }}
+        <ParallaxSection
+          imageUrl={IMAGES.heroJourney}
+          className="min-h-[45vh] flex items-end"
         >
           <div className="absolute inset-0 bg-black/50" />
           <div className="relative z-10 max-w-5xl mx-auto px-6 sm:px-12 lg:px-16 pb-14 pt-32">
@@ -138,7 +139,7 @@ export default function JourneyDetailPage() {
               Back to Journeys
             </Link>
           </div>
-        </div>
+        </ParallaxSection>
       </div>
     );
   }
@@ -152,9 +153,9 @@ export default function JourneyDetailPage() {
       style={{ width: '100vw', marginLeft: 'calc(-50vw + 50%)' }}
     >
       {/* ═══════ FULL-BLEED HERO ═══════ */}
-      <div
-        className="relative min-h-[45vh] sm:min-h-[50vh] bg-cover bg-center flex items-end"
-        style={{ backgroundImage: `url(${heroImage})` }}
+      <ParallaxSection
+        imageUrl={heroImage}
+        className="min-h-[45vh] sm:min-h-[50vh] flex items-end"
       >
         <div className="absolute inset-0 bg-gradient-to-t from-sand-50 via-black/30 to-black/20" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/30 to-transparent" />
@@ -199,7 +200,7 @@ export default function JourneyDetailPage() {
             </div>
           </motion.div>
         </div>
-      </div>
+      </ParallaxSection>
 
       {/* ═══════ CONTENT ═══════ */}
       <div className="max-w-5xl mx-auto px-6 sm:px-12 lg:px-16 py-14 sm:py-20">

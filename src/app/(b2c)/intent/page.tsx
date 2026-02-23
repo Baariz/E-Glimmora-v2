@@ -14,6 +14,7 @@ import { IntentProfileView } from '@/components/b2c/intent/IntentProfileView';
 import { IntentProfile } from '@/lib/types';
 import { ArrowRight } from 'lucide-react';
 import { IMAGES } from '@/lib/constants/imagery';
+import { ParallaxSection } from '@/components/ui/ParallaxSection';
 
 export default function IntentPage() {
   const services = useServices();
@@ -62,9 +63,9 @@ export default function IntentPage() {
         style={{ width: '100vw', marginLeft: 'calc(-50vw + 50%)' }}
       >
         {/* Full-bleed cinematic hero */}
-        <div
-          className="relative min-h-[80vh] flex items-center justify-center bg-cover bg-center"
-          style={{ backgroundImage: `url(${IMAGES.heroVenice})` }}
+        <ParallaxSection
+          imageUrl={IMAGES.heroVenice}
+          className="min-h-[80vh] flex items-center justify-center"
         >
           <div className="absolute inset-0 bg-black/50" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
@@ -101,7 +102,7 @@ export default function IntentPage() {
               A private, 5-minute experience &middot; Your responses shape everything
             </p>
           </motion.div>
-        </div>
+        </ParallaxSection>
 
         {/* Bottom editorial strip */}
         <div className="bg-sand-50 border-t border-sand-200/60 py-20 sm:py-28 px-6">

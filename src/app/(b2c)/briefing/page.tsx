@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
@@ -10,6 +10,7 @@ import { useCurrentUser, MOCK_UHNI_USER_ID } from '@/lib/hooks/useCurrentUser';
 import { EmotionalPhaseCard } from '@/components/b2c/briefing/EmotionalPhaseCard';
 import { BalanceSummary } from '@/components/b2c/briefing/BalanceSummary';
 import { IMAGES } from '@/lib/constants/imagery';
+import { ParallaxSection } from '@/components/ui/ParallaxSection';
 import type { IntentProfile, Journey } from '@/lib/types/entities';
 
 function getGreeting() {
@@ -39,11 +40,6 @@ const lineDraw = {
 export default function BriefingPage() {
   const { user } = useCurrentUser();
   const services = useServices();
-  const heroRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
-  const heroY = useTransform(scrollYProgress, [0, 1], ['0%', '25%']);
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
-  const heroScale = useTransform(scrollYProgress, [0, 1], [1, 1.06]);
 
   const [intentProfile, setIntentProfile] = useState<IntentProfile | null>(null);
   const [journeys, setJourneys] = useState<Journey[]>([]);
@@ -82,25 +78,16 @@ export default function BriefingPage() {
     >
 
       {/* ═══════════════════════════════ CINEMATIC HERO ═══ */}
-      <div ref={heroRef} className="relative h-screen min-h-[600px] overflow-hidden">
-        <motion.div
-          style={{ y: heroY, scale: heroScale }}
-          className="absolute inset-[-12%]"
-          aria-hidden
-        >
-          <div
-            className="w-full h-full bg-cover bg-center"
-            style={{ backgroundImage: `url(${IMAGES.heroRiviera})` }}
-          />
-        </motion.div>
-
+      <ParallaxSection
+        imageUrl={IMAGES.heroRiviera}
+        className="h-screen min-h-[600px]"
+      >
         {/* Overlays */}
         <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/10" />
 
         {/* Content — vertically centered, left-aligned */}
-        <motion.div
-          style={{ opacity: heroOpacity }}
+        <div
           className="relative z-10 h-full flex flex-col justify-center px-6 sm:px-12 lg:px-20 max-w-7xl mx-auto"
         >
           <motion.div initial="hidden" animate="visible" variants={stagger}>
@@ -164,8 +151,8 @@ export default function BriefingPage() {
               </Link>
             </motion.div>
           </motion.div>
-        </motion.div>
-      </div>
+        </div>
+      </ParallaxSection>
 
       {/* ═══════════════════════ EMOTIONAL LANDSCAPE ═══ */}
       <div className="bg-sand-50">
@@ -300,11 +287,10 @@ export default function BriefingPage() {
       </div>
 
       {/* ═══════════════════════════ PHOTOGRAPHY DIVIDER ═══ */}
-      <div className="relative h-[50vh] min-h-[400px] overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${IMAGES.heroMaldives})` }}
-        />
+      <ParallaxSection
+        imageUrl={IMAGES.heroMaldives}
+        className="h-[50vh] min-h-[400px]"
+      >
         <div className="absolute inset-0 bg-black/40" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent" />
 
@@ -335,7 +321,7 @@ export default function BriefingPage() {
             </motion.div>
           </motion.div>
         </div>
-      </div>
+      </ParallaxSection>
 
       {/* ═══════════════════════ UPCOMING JOURNEYS ═══ */}
       {upcomingJourneys.length > 0 && (
@@ -405,11 +391,10 @@ export default function BriefingPage() {
       )}
 
       {/* ═══════════════════════════ FOOTER CTA ═══ */}
-      <div className="relative py-36 sm:py-44 overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${IMAGES.heroSuite})` }}
-        />
+      <ParallaxSection
+        imageUrl={IMAGES.heroSuite}
+        className="py-36 sm:py-44"
+      >
         <div className="absolute inset-0 bg-black/55" />
 
         <motion.div
@@ -439,7 +424,7 @@ export default function BriefingPage() {
             </Link>
           </motion.div>
         </motion.div>
-      </div>
+      </ParallaxSection>
 
     </div>
   );

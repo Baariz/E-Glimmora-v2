@@ -1,264 +1,235 @@
 'use client';
 
-/**
- * B2C Experiences Page
- * Curated, magazine-style view of available luxury travel packages.
- * UHNI sees beautiful editorial-quality cards — no pricing, no admin data.
- */
-
-import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, Calendar, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
+import Link from 'next/link';
+import { useState } from 'react';
 import { MOCK_PACKAGES } from '@/lib/mock/packages.mock';
 import { MOCK_HOTELS } from '@/lib/mock/hotels.mock';
-import type { Package, Hotel, ItineraryDay } from '@/lib/types/entities';
+import { cn } from '@/lib/utils/cn';
+import { ArrowRight, MapPin, Moon, Sparkles } from 'lucide-react';
 
+const DESTINATION_IMAGES: Record<string, string> = {
+  'hotel-001': 'https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?auto=format&fit=crop&w=1200&q=80',
+  'hotel-002': 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=1200&q=80',
+  'hotel-003': 'https://images.unsplash.com/photo-1533929736458-ca588d08c8be?auto=format&fit=crop&w=1200&q=80',
+  'hotel-004': 'https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&w=1200&q=80',
+};
+
+const GRADIENT_FALLBACK: Record<string, string> = {
+  'hotel-001': 'linear-gradient(135deg, #8B6F5E 0%, #C4956A 50%, #7B4F3A 100%)',
+  'hotel-002': 'linear-gradient(135deg, #78716C 0%, #A8956E 50%, #57534E 100%)',
+  'hotel-003': 'linear-gradient(135deg, #3B82F6 0%, #60A5FA 50%, #1D4ED8 100%)',
+  'hotel-004': 'linear-gradient(135deg, #0EA5E9 0%, #06B6D4 50%, #0284C7 100%)',
+};
+
+const stagger = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.15 } },
+};
 const fadeUp = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] },
-  },
+  hidden: { opacity: 0, y: 30 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] } },
 };
 
 export default function ExperiencesPage() {
-  const [expandedExperience, setExpandedExperience] = useState<string | null>(null);
-  const [regionFilter, setRegionFilter] = useState<string>('All');
-
-  const activePackages = MOCK_PACKAGES.filter((p) => p.isActive);
-  const regions = Array.from(new Set(activePackages.map((p) => p.region)));
-
-  const filtered =
-    regionFilter === 'All'
-      ? activePackages
-      : activePackages.filter((p) => p.region === regionFilter);
-
-  const getHotel = (hotelId: string): Hotel | undefined =>
-    MOCK_HOTELS.find((h) => h.id === hotelId);
+  const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
+  const packages = MOCK_PACKAGES.filter(p => p.isActive);
 
   return (
-    <motion.div
-      className="max-w-5xl mx-auto"
-      initial="hidden"
-      animate="visible"
-      variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
-    >
-      {/* Hero */}
-      <motion.div variants={fadeUp} className="mb-10">
-        <div className="flex items-center gap-3 mb-3">
-          <Sparkles className="w-8 h-8 text-rose-900" />
-          <h1 className="text-4xl font-serif font-light text-rose-900">
-            Curated Experiences
-          </h1>
-        </div>
-        <p className="text-base font-sans text-sand-600 leading-relaxed max-w-2xl">
-          Each experience has been designed around a single idea: that the most
-          extraordinary moments happen when every detail has been considered, and
-          then made invisible.
-        </p>
-      </motion.div>
+    <div className="min-h-screen bg-stone-50">
 
-      {/* Region filter pills */}
-      <motion.div variants={fadeUp} className="flex flex-wrap gap-2 mb-8">
-        <button
-          onClick={() => setRegionFilter('All')}
-          className={`px-4 py-1.5 rounded-full text-sm font-sans transition-colors ${
-            regionFilter === 'All'
-              ? 'bg-rose-900 text-white'
-              : 'bg-sand-100 text-sand-600 hover:bg-sand-200'
-          }`}
+      {/* ── CINEMATIC HERO ── */}
+      <div
+        className="relative min-h-[70vh] flex items-end bg-cover bg-center"
+        style={{ backgroundImage: `url(https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1600&q=80)` }}
+      >
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/20 to-black/75" />
+
+        {/* Hero content */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+          className="relative z-10 w-full max-w-5xl mx-auto px-6 sm:px-10 pb-16 sm:pb-24"
         >
-          All Regions
-        </button>
-        {regions.map((r) => (
-          <button
-            key={r}
-            onClick={() => setRegionFilter(r)}
-            className={`px-4 py-1.5 rounded-full text-sm font-sans transition-colors ${
-              regionFilter === r
-                ? 'bg-rose-900 text-white'
-                : 'bg-sand-100 text-sand-600 hover:bg-sand-200'
-            }`}
-          >
-            {r}
-          </button>
-        ))}
-      </motion.div>
+          <p className="text-amber-300 text-xs font-sans font-semibold uppercase tracking-[4px] mb-5">
+            Your Private Collection
+          </p>
+          <h1 className="font-serif text-5xl sm:text-6xl md:text-7xl text-white leading-[1.05] mb-6 max-w-3xl">
+            Experiences curated only for you.
+          </h1>
+          <p className="text-white/75 font-sans text-lg sm:text-xl max-w-xl leading-relaxed">
+            Each destination selected by our intelligence against your profile.
+            Nothing standard. Everything arranged privately.
+          </p>
+        </motion.div>
+      </div>
 
-      {/* Experience Cards */}
-      <div className="space-y-8">
-        {filtered.map((pkg) => {
-          const isExpanded = expandedExperience === pkg.id;
-          const hotel = getHotel(pkg.hotelId);
+      {/* ── INTRO STRIP ── */}
+      <div className="bg-white border-b border-stone-100 px-6 py-6">
+        <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-4">
+          <p className="text-stone-500 font-sans text-sm">
+            Showing <span className="text-rose-800 font-semibold">{packages.length} curated experiences</span> matched to your profile
+          </p>
+          <div className="flex items-center gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-4 py-2">
+            <Sparkles size={12} />
+            <span>Ranked by your intelligence profile</span>
+          </div>
+        </div>
+      </div>
+
+      {/* ── EXPERIENCE CARDS ── */}
+      <motion.div
+        className="max-w-5xl mx-auto px-4 sm:px-6 py-14 sm:py-20 space-y-20"
+        variants={stagger}
+        initial="hidden"
+        animate="visible"
+      >
+        {packages.map((pkg, i) => {
+          const hotel = MOCK_HOTELS.find(h => h.id === pkg.hotelId);
+          const imageUrl = DESTINATION_IMAGES[pkg.hotelId];
+          const gradient = GRADIENT_FALLBACK[pkg.hotelId];
+          const isReversed = i % 2 !== 0;
 
           return (
             <motion.div
               key={pkg.id}
               variants={fadeUp}
-              className="border border-sand-200 rounded-2xl overflow-hidden bg-white hover:shadow-lg transition-shadow"
+              className={cn(
+                'flex flex-col lg:flex-row gap-0 rounded-3xl overflow-hidden shadow-2xl',
+                isReversed && 'lg:flex-row-reverse'
+              )}
             >
-              {/* Card Header — editorial style */}
-              <div className="p-6 sm:p-8">
-                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
-                  <div>
-                    <span className="text-xs font-sans font-medium tracking-widest text-rose-700 uppercase mb-2 block">
+              {/* Photography Panel */}
+              <div
+                className="relative lg:w-1/2 min-h-[300px] sm:min-h-[400px] bg-cover bg-center"
+                style={{
+                  backgroundImage: imgErrors[pkg.hotelId]
+                    ? gradient
+                    : `url(${imageUrl})`,
+                  background: imgErrors[pkg.hotelId] ? gradient : undefined,
+                }}
+              >
+                {/* Preload image and catch error */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={imageUrl}
+                  alt=""
+                  className="hidden"
+                  onError={() => setImgErrors(prev => ({ ...prev, [pkg.hotelId]: true }))}
+                />
+
+                {/* Subtle overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
+
+                {/* Bottom info on photo */}
+                <div className="absolute bottom-0 left-0 right-0 p-6">
+                  <div className="flex items-center gap-2 text-white/90 text-sm font-sans mb-1">
+                    <MapPin size={13} />
+                    <span>{hotel?.location}, {hotel?.country}</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-medium border border-white/30">
                       {pkg.category}
                     </span>
-                    <h2 className="font-serif text-2xl sm:text-3xl text-rose-900 font-light leading-tight">
-                      {pkg.clientTitle}
-                    </h2>
-                  </div>
-                  <div className="flex items-center gap-4 text-sand-500 shrink-0">
-                    <div className="flex items-center gap-1.5">
-                      <Calendar className="w-4 h-4" />
-                      <span className="text-sm font-sans">{pkg.duration} nights</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <MapPin className="w-4 h-4" />
-                      <span className="text-sm font-sans">{pkg.region}</span>
-                    </div>
+                    <span className="text-xs px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-medium border border-white/30 flex items-center gap-1">
+                      <Moon size={10} /> {pkg.duration} nights
+                    </span>
                   </div>
                 </div>
-
-                {/* Tagline */}
-                <p className="font-serif text-lg text-sand-600 italic leading-relaxed mb-4">
-                  &ldquo;{pkg.tagline}&rdquo;
-                </p>
-
-                {/* Hotel info */}
-                {hotel && (
-                  <div className="flex flex-wrap items-center gap-3 mb-4">
-                    <span className="text-sm font-sans text-sand-700 font-medium">
-                      {hotel.name}
-                    </span>
-                    <span className="text-sand-300">&middot;</span>
-                    <span className="text-sm font-sans text-sand-500">
-                      {hotel.location}, {hotel.country}
-                    </span>
-                    <span className="text-sand-300">&middot;</span>
-                    <span className="text-sm font-sans text-sand-500">{hotel.tier}</span>
-                  </div>
-                )}
-
-                {/* Hotel amenities */}
-                {hotel && (
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {hotel.amenities.map((a, i) => (
-                      <span
-                        key={i}
-                        className="px-3 py-1 bg-sand-50 border border-sand-100 rounded-full text-xs font-sans text-sand-600"
-                      >
-                        {a.icon} {a.label}
-                      </span>
-                    ))}
-                  </div>
-                )}
-
-                {/* Hotel client description */}
-                {hotel && (
-                  <p className="text-sm font-sans text-sand-600 leading-relaxed">
-                    {hotel.clientDescription}
-                  </p>
-                )}
-
-                {/* Expand itinerary */}
-                <button
-                  onClick={() => setExpandedExperience(isExpanded ? null : pkg.id)}
-                  className="mt-4 flex items-center gap-2 text-sm font-sans font-medium text-rose-900 hover:text-rose-700 transition-colors"
-                >
-                  {isExpanded ? (
-                    <>
-                      <ChevronUp className="w-4 h-4" /> Hide itinerary
-                    </>
-                  ) : (
-                    <>
-                      <ChevronDown className="w-4 h-4" /> View day-by-day itinerary
-                    </>
-                  )}
-                </button>
               </div>
 
-              {/* Expanded Itinerary */}
-              {isExpanded && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="border-t border-sand-100 bg-sand-50/50"
-                >
-                  <div className="p-6 sm:p-8">
-                    <h3 className="font-serif text-lg text-rose-900 mb-6">
-                      Your {pkg.duration}-Day Journey
-                    </h3>
+              {/* Content Panel */}
+              <div className="lg:w-1/2 bg-white p-8 sm:p-10 flex flex-col justify-between">
+                <div>
+                  {/* Region */}
+                  <p className="text-amber-600 text-xs font-sans font-semibold uppercase tracking-widest mb-3">
+                    {pkg.region}
+                  </p>
 
-                    <div className="relative pl-6 border-l-2 border-rose-200 space-y-6">
-                      {pkg.itinerary.map((day: ItineraryDay) => (
-                        <div key={day.day} className="relative">
-                          {/* Timeline dot */}
-                          <div className="absolute -left-[25px] w-3 h-3 rounded-full bg-rose-400 border-2 border-white shadow-sm" />
+                  {/* Title */}
+                  <h2 className="font-serif text-3xl sm:text-4xl text-stone-900 leading-tight mb-4">
+                    {pkg.clientTitle}
+                  </h2>
 
-                          <div>
-                            <div className="flex items-center gap-3 mb-2">
-                              <span className="px-2.5 py-0.5 bg-rose-100 text-rose-900 rounded text-xs font-sans font-bold">
-                                Day {day.day}
-                              </span>
-                              <h4 className="font-serif text-base text-sand-800">
-                                {day.title}
-                              </h4>
-                            </div>
+                  {/* Tagline */}
+                  <p className="text-stone-500 font-sans text-base leading-relaxed italic mb-8 border-l-2 border-rose-200 pl-4">
+                    &ldquo;{pkg.tagline}&rdquo;
+                  </p>
 
-                            <p className="font-sans text-sm text-sand-600 leading-relaxed mb-3">
-                              {day.description}
-                            </p>
-
-                            {/* Activities */}
-                            <div className="space-y-1.5 mb-2">
-                              {day.activities.map((activity, i) => (
-                                <div
-                                  key={i}
-                                  className="flex items-start gap-2 text-sm font-sans text-sand-600"
-                                >
-                                  <span className="text-rose-400 mt-0.5">&bull;</span>
-                                  {activity}
-                                </div>
-                              ))}
-                            </div>
-
-                            {/* Meals & Transport */}
-                            {(day.meals || day.transport) && (
-                              <div className="flex flex-wrap gap-4 mt-2 text-xs font-sans text-sand-500">
-                                {day.meals && (
-                                  <span className="flex items-center gap-1">
-                                    Dining: {day.meals}
-                                  </span>
-                                )}
-                                {day.transport && (
-                                  <span className="flex items-center gap-1">
-                                    Transport: {day.transport}
-                                  </span>
-                                )}
-                              </div>
-                            )}
-                          </div>
+                  {/* Day highlights */}
+                  <div className="space-y-4 mb-8">
+                    {pkg.itinerary.slice(0, 3).map(day => (
+                      <div key={day.day} className="flex gap-4">
+                        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-rose-50 border border-rose-100 flex items-center justify-center">
+                          <span className="font-serif text-sm text-rose-700 font-medium">{day.day}</span>
                         </div>
+                        <div className="pt-1.5">
+                          <p className="font-sans text-sm font-semibold text-stone-800 mb-0.5">{day.title}</p>
+                          <p className="text-stone-400 text-sm leading-relaxed">{day.description}</p>
+                        </div>
+                      </div>
+                    ))}
+                    {pkg.itinerary.length > 3 && (
+                      <p className="text-stone-400 text-xs font-sans pl-14">
+                        + {pkg.itinerary.length - 3} more days of curated experience
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Amenity tags */}
+                  {hotel && (
+                    <div className="flex flex-wrap gap-2 mb-8">
+                      {hotel.amenities.slice(0, 4).map(a => (
+                        <span key={a.label} className="text-xs px-3 py-1.5 rounded-full bg-stone-50 border border-stone-200 text-stone-600 font-sans">
+                          {a.icon} {a.label}
+                        </span>
                       ))}
                     </div>
-                  </div>
-                </motion.div>
-              )}
+                  )}
+                </div>
+
+                {/* CTA */}
+                <Link
+                  href="/intent"
+                  className="group inline-flex items-center justify-between w-full px-6 py-4 bg-rose-900 text-white font-sans text-sm font-medium rounded-2xl hover:bg-rose-800 transition-all hover:shadow-lg hover:shadow-rose-900/20"
+                >
+                  <span>Begin Curation</span>
+                  <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </div>
             </motion.div>
           );
         })}
-      </div>
 
-      {filtered.length === 0 && (
-        <motion.div variants={fadeUp} className="text-center py-16">
-          <p className="text-sand-500 font-sans text-lg">
-            No experiences available for this region yet.
-          </p>
+        {/* ── BOTTOM CTA ── */}
+        <motion.div
+          variants={fadeUp}
+          className="relative rounded-3xl overflow-hidden"
+        >
+          <div
+            className="min-h-[280px] bg-cover bg-center flex items-center justify-center"
+            style={{ backgroundImage: `url(https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=1200&q=80)` }}
+          >
+            <div className="absolute inset-0 bg-black/50" />
+            <div className="relative text-center px-6 py-12">
+              <p className="text-white/70 font-sans text-sm mb-3">
+                Don&apos;t see what you have in mind?
+              </p>
+              <h3 className="font-serif text-3xl text-white mb-6">
+                Something entirely bespoke awaits.
+              </h3>
+              <Link
+                href="/messages"
+                className="inline-flex items-center gap-2 px-8 py-3.5 bg-white text-rose-900 font-sans text-sm font-semibold rounded-full hover:bg-rose-50 transition-all"
+              >
+                Speak with your Advisor <ArrowRight size={14} />
+              </Link>
+            </div>
+          </div>
         </motion.div>
-      )}
-    </motion.div>
+      </motion.div>
+    </div>
   );
 }

@@ -114,58 +114,63 @@ export function EmotionalPhaseCard({ intentProfile, isLoading }: EmotionalPhaseC
   const offset = circumference - (intensity / 100) * circumference;
 
   return (
-    <div className={`rounded-2xl ${phase.bgColor} p-8`}>
-      <p className="text-xs font-sans uppercase tracking-widest text-sand-500 mb-6">
-        Emotional Phase
-      </p>
+    <div className="rounded-2xl bg-white border border-stone-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+      {/* Decorative top accent */}
+      <div className={`h-1.5 w-full bg-gradient-to-r ${
+        phase.name === 'Exploration' ? 'from-rose-400 to-amber-400' :
+        phase.name === 'Ascendance' ? 'from-amber-400 to-yellow-400' :
+        'from-teal-400 to-emerald-400'
+      }`} />
 
-      {/* Circular indicator */}
-      <div className="flex justify-center mb-6">
-        <div className="relative">
-          <svg width="88" height="88" viewBox="0 0 88 88" className="transform -rotate-90">
-            {/* Background ring */}
-            <circle
-              cx="44"
-              cy="44"
-              r={radius}
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="4"
-              className="text-sand-200"
-            />
-            {/* Phase ring */}
-            <motion.circle
-              cx="44"
-              cy="44"
-              r={radius}
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="4"
-              strokeLinecap="round"
-              className={phase.color}
-              strokeDasharray={circumference}
-              initial={{ strokeDashoffset: circumference }}
-              animate={{ strokeDashoffset: offset }}
-              transition={{ duration: 1.2, ease: 'easeOut' }}
-            />
-          </svg>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className={`text-lg font-serif ${phase.color}`}>
-              {intensity}
-            </span>
+      <div className="p-8">
+        <p className="text-amber-600 text-xs font-sans font-semibold uppercase tracking-widest mb-6">
+          Emotional Phase
+        </p>
+
+        {/* Circular indicator */}
+        <div className="flex justify-center mb-6">
+          <div className="relative">
+            <svg width="100" height="100" viewBox="0 0 100 100" className="transform -rotate-90">
+              <circle
+                cx="50"
+                cy="50"
+                r={radius}
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="6"
+                className="text-stone-100"
+              />
+              <motion.circle
+                cx="50"
+                cy="50"
+                r={radius}
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="6"
+                strokeLinecap="round"
+                className={phase.color}
+                strokeDasharray={circumference}
+                initial={{ strokeDashoffset: circumference }}
+                animate={{ strokeDashoffset: offset }}
+                transition={{ duration: 1.2, ease: 'easeOut' }}
+              />
+            </svg>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className={`text-xl font-serif font-semibold ${phase.color}`}>
+                {intensity}
+              </span>
+            </div>
           </div>
         </div>
+
+        <h3 className={`text-2xl font-serif text-center ${phase.color} mb-3`}>
+          {phase.name}
+        </h3>
+
+        <p className="text-sm font-sans text-stone-500 leading-relaxed text-center italic">
+          &ldquo;{phase.description}&rdquo;
+        </p>
       </div>
-
-      {/* Phase name */}
-      <h3 className={`text-2xl font-serif text-center ${phase.color} mb-3`}>
-        {phase.name}
-      </h3>
-
-      {/* Narrative description */}
-      <p className="text-sm font-sans text-sand-600 leading-relaxed text-center">
-        {phase.description}
-      </p>
     </div>
   );
 }

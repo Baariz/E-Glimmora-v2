@@ -167,12 +167,28 @@ export function IntentWizard() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-stone-50 to-white">
-      <div className="max-w-6xl mx-auto px-4 py-12 md:py-20">
-        {/* Step Indicator */}
-        <div className="mb-12">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <span className="text-sm text-stone-500">Step {wizard.currentStep} of {wizard.totalSteps}</span>
+    <div className="min-h-screen bg-stone-50">
+      {/* Cinematic top banner with photography */}
+      <div
+        className="relative h-36 sm:h-48 bg-cover bg-center"
+        style={{ backgroundImage: `url(https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1600&q=80)` }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-b from-black/30 to-black/60" />
+        <div className="relative z-10 flex flex-col items-center justify-center h-full px-4 text-center">
+          <p className="text-amber-300 text-xs font-sans uppercase tracking-[3px] mb-2">
+            Begin Your Intent
+          </p>
+          <h1 className="font-serif text-2xl sm:text-3xl text-white">
+            Shape your next experience
+          </h1>
+        </div>
+      </div>
+
+      {/* Step progress bar — sticky below photo */}
+      <div className="bg-white border-b border-stone-100 px-4 py-4 sticky top-0 z-20 shadow-sm">
+        <div className="max-w-3xl mx-auto">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <span className="text-xs text-stone-500 font-sans">Step {wizard.currentStep} of {wizard.totalSteps}</span>
           </div>
           <div className="flex items-center justify-center gap-2">
             {Array.from({ length: wizard.totalSteps }, (_, i) => i + 1).map((step) => (
@@ -207,8 +223,10 @@ export function IntentWizard() {
             ))}
           </div>
         </div>
+      </div>
 
-        {/* Step Content */}
+      {/* Step Content */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         <form onSubmit={onSubmit}>
           <AnimatePresence mode="wait">
             <motion.div

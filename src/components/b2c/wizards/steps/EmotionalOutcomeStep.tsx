@@ -56,11 +56,19 @@ export function EmotionalOutcomeStep({ form }: EmotionalOutcomeStepProps) {
 
   return (
     <div className="space-y-8">
-      <div className="text-center max-w-2xl mx-auto">
-        <h2 className="font-serif text-3xl md:text-4xl text-stone-900 mb-4">
-          What drives your decisions?
-        </h2>
-        <p className="text-stone-600 text-lg">
+      <div className="text-center max-w-2xl mx-auto mb-8">
+        <div
+          className="relative rounded-2xl overflow-hidden mb-6 h-32 bg-cover bg-center"
+          style={{ backgroundImage: `url(https://images.unsplash.com/photo-1600334129128-685c5582fd35?auto=format&fit=crop&w=800&q=80)` }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/30" />
+          <div className="relative z-10 flex items-center h-full px-8">
+            <h2 className="font-serif text-2xl sm:text-3xl text-white">
+              What do you seek from this journey?
+            </h2>
+          </div>
+        </div>
+        <p className="text-stone-500 text-base">
           Adjust each slider to reflect the emotional priorities that guide your choices.
         </p>
       </div>

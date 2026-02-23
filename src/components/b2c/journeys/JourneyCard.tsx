@@ -77,15 +77,24 @@ export function JourneyCard({ journey, className }: JourneyCardProps) {
   return (
     <motion.article
       className={cn(
-        'group relative bg-white border border-sand-200 rounded-lg overflow-hidden',
+        'group relative bg-white border border-stone-100 rounded-2xl overflow-hidden',
         'cursor-pointer transition-all duration-300',
-        'hover:shadow-xl hover:border-rose-200',
+        'hover:shadow-xl hover:-translate-y-0.5',
         className
       )}
       onClick={handleClick}
       whileHover={{ scale: 1.02, y: -4 }}
       transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
     >
+      {/* Gradient accent bar */}
+      <div className={cn(
+        'h-1 w-full',
+        journey.status === 'EXECUTED'  ? 'bg-gradient-to-r from-emerald-400 to-teal-400' :
+        journey.status === 'PRESENTED' ? 'bg-gradient-to-r from-rose-400 to-amber-400' :
+        journey.status === 'APPROVED'  ? 'bg-gradient-to-r from-amber-400 to-yellow-300' :
+        'bg-gradient-to-r from-stone-200 to-stone-300'
+      )} />
+
       {/* Top badges row */}
       <div className="absolute top-4 left-4 right-4 flex items-start justify-between gap-2 z-10">
         <div className="flex gap-2 flex-wrap">
@@ -161,7 +170,7 @@ export function JourneyCard({ journey, className }: JourneyCardProps) {
       </div>
 
       {/* Hover overlay effect */}
-      <div className="absolute inset-0 border-2 border-rose-500 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+      <div className="absolute inset-0 border-2 border-rose-500 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
     </motion.article>
   );
 }

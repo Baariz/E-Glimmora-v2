@@ -38,22 +38,21 @@ export function ItineraryViewer({ journeyTitle, packageId }: ItineraryViewerProp
 
   return (
     <div className="border border-sand-200 rounded-2xl overflow-hidden bg-white">
-      {/* Header */}
-      <div className="p-6 sm:p-8">
-        <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="w-full text-left"
-        >
-          <div className="flex items-start justify-between gap-4">
+      {/* Cinematic Header */}
+      <div
+        className="relative min-h-[200px] sm:min-h-[260px] bg-cover bg-center flex items-end cursor-pointer"
+        style={{ backgroundImage: `url(https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?auto=format&fit=crop&w=1200&q=80)` }}
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+        <div className="relative z-10 px-6 sm:px-8 py-6 w-full">
+          <div className="flex items-end justify-between gap-4">
             <div>
-              <span className="text-xs font-sans font-medium tracking-widest text-rose-700 uppercase mb-1 block">
-                Your Itinerary
-              </span>
-              <h2 className="font-serif text-2xl text-rose-900 font-light">
-                {pkg.clientTitle}
-              </h2>
+              <p className="text-amber-300 text-xs font-sans uppercase tracking-widest mb-2">Your Experience</p>
+              <h3 className="font-serif text-2xl sm:text-3xl text-white">{pkg.clientTitle}</h3>
+              <p className="text-white/70 font-sans text-sm mt-1 italic">&ldquo;{pkg.tagline}&rdquo;</p>
               {hotel && (
-                <div className="flex flex-wrap items-center gap-3 mt-2 text-sm font-sans text-sand-500">
+                <div className="flex flex-wrap items-center gap-3 mt-2 text-sm font-sans text-white/60">
                   <span className="flex items-center gap-1">
                     <MapPin className="w-3.5 h-3.5" />
                     {hotel.name} &middot; {hotel.location}
@@ -66,17 +65,12 @@ export function ItineraryViewer({ journeyTitle, packageId }: ItineraryViewerProp
               )}
             </div>
             {isExpanded ? (
-              <ChevronUp className="w-5 h-5 text-sand-400 shrink-0 mt-1" />
+              <ChevronUp className="w-5 h-5 text-white/60 shrink-0" />
             ) : (
-              <ChevronDown className="w-5 h-5 text-sand-400 shrink-0 mt-1" />
+              <ChevronDown className="w-5 h-5 text-white/60 shrink-0" />
             )}
           </div>
-        </button>
-
-        {/* Tagline — always visible */}
-        <p className="font-serif text-base text-sand-600 italic leading-relaxed mt-3">
-          &ldquo;{pkg.tagline}&rdquo;
-        </p>
+        </div>
       </div>
 
       {/* Itinerary timeline — collapsible */}
@@ -100,10 +94,10 @@ export function ItineraryViewer({ journeyTitle, packageId }: ItineraryViewerProp
                   <div className="absolute -left-[25px] w-3 h-3 rounded-full bg-rose-400 border-2 border-white shadow-sm" />
 
                   <div>
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className="px-2.5 py-0.5 bg-rose-100 text-rose-900 rounded text-xs font-sans font-bold">
-                        Day {day.day}
-                      </span>
+                    <div className="flex items-center gap-4 mb-2">
+                      <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-rose-100 to-amber-50 border border-rose-200 flex items-center justify-center shadow-sm">
+                        <span className="font-serif text-sm text-rose-800 font-semibold">{day.day}</span>
+                      </div>
                       <h3 className="font-serif text-base text-sand-800">
                         {day.title}
                       </h3>

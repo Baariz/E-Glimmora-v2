@@ -9,7 +9,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageCircle, X, Send } from 'lucide-react';
+import { MessageCircle, X, Send, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 
 interface ChatMessage {
@@ -95,12 +95,23 @@ export function AIChatWidget() {
             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
             className="w-[calc(100vw-2rem)] sm:w-80 bg-white rounded-2xl shadow-2xl border border-sand-200 overflow-hidden"
           >
-            <div className="bg-rose-900 px-4 py-3 flex items-center justify-between">
-              <div>
-                <p className="font-sans text-sm font-medium text-white">Élan Assistant</p>
-                <p className="font-sans text-xs text-rose-300">Always here for you</p>
+            <div
+              className="relative h-20 bg-cover bg-center flex items-center px-4 gap-3"
+              style={{ backgroundImage: `url(https://images.unsplash.com/photo-1600334129128-685c5582fd35?auto=format&fit=crop&w=400&q=80)` }}
+            >
+              <div className="absolute inset-0 bg-rose-900/80" />
+              <div className="relative z-10 flex items-center justify-between w-full">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                    <Sparkles size={14} className="text-amber-300" />
+                  </div>
+                  <div>
+                    <p className="text-white font-sans text-sm font-semibold">Elan Assistant</p>
+                    <p className="text-white/60 text-xs">Always here for you</p>
+                  </div>
+                </div>
+                <button onClick={() => setIsOpen(false)} className="text-white/60 hover:text-white transition-colors"><X size={18} /></button>
               </div>
-              <button onClick={() => setIsOpen(false)} className="text-rose-300 hover:text-white transition-colors"><X size={18} /></button>
             </div>
 
             <div className="h-72 overflow-y-auto px-4 py-4 space-y-3 bg-sand-50">
@@ -147,7 +158,7 @@ export function AIChatWidget() {
 
       <motion.button
         onClick={() => { setIsOpen(!isOpen); setHasChatted(true); }}
-        className="w-12 h-12 bg-rose-900 text-white rounded-full shadow-lg hover:bg-rose-800 transition-colors flex items-center justify-center"
+        className="w-14 h-14 bg-gradient-to-br from-rose-800 to-rose-950 text-white rounded-full shadow-xl shadow-rose-900/40 hover:shadow-rose-900/60 hover:scale-105 transition-all flex items-center justify-center border border-rose-700/50"
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         animate={!isOpen && !hasChatted ? { boxShadow: ['0 0 0 0 rgba(136,19,55,0.4)', '0 0 0 8px rgba(136,19,55,0)', '0 0 0 0 rgba(136,19,55,0)'] } : {}}

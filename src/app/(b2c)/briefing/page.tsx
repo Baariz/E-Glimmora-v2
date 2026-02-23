@@ -130,23 +130,39 @@ export default function BriefingPage() {
       animate={prefersReducedMotion ? undefined : "visible"}
     >
       {/* ------------------------------------------------------------------ */}
-      {/* Hero: Greeting + Date                                               */}
+      {/* Cinematic Greeting Hero                                             */}
       {/* ------------------------------------------------------------------ */}
       <motion.header variants={fadeUp} className="mb-16">
-        <p className="text-sm font-sans text-sand-500 mb-2">{todayFormatted}</p>
-        <h1 className="text-4xl md:text-5xl font-serif font-light text-rose-900 mb-3">
-          {getGreeting()}, {firstName}
-        </h1>
-        <p className="text-lg font-sans text-sand-600 max-w-2xl">
-          Your Sovereign Briefing -- a personal view of your emotional landscape,
-          upcoming journeys, and the state of your world.
-        </p>
+        <div
+          className="relative rounded-3xl overflow-hidden min-h-[240px] sm:min-h-[300px] flex items-end bg-cover bg-center"
+          style={{ backgroundImage: `url(https://images.unsplash.com/photo-1600334129128-685c5582fd35?auto=format&fit=crop&w=1200&q=80)` }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/20 to-transparent" />
+          <div className="relative z-10 px-6 sm:px-10 py-8 sm:py-10 w-full">
+            <p className="text-amber-300 text-xs font-sans uppercase tracking-[3px] mb-3">Your Private Briefing</p>
+            <h1 className="font-serif text-3xl sm:text-4xl text-white mb-2">
+              {getGreeting()}, {firstName}
+            </h1>
+            <p className="text-white/70 font-sans text-base">
+              Here is everything your Élan team has prepared for you.
+            </p>
+            <p className="text-white/40 font-sans text-sm mt-2">{todayFormatted}</p>
+          </div>
+        </div>
       </motion.header>
 
       {/* ------------------------------------------------------------------ */}
-      {/* Primary Row: Emotional Phase + Balance (left) / Journeys (right)   */}
+      {/* Section: Your Emotional Landscape                                  */}
       {/* ------------------------------------------------------------------ */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 mb-12">
+      <motion.div variants={fadeUp} className="mb-4">
+        <div className="flex items-center gap-4 mb-8">
+          <div className="h-px flex-1 bg-gradient-to-r from-stone-200 to-transparent" />
+          <span className="text-stone-400 text-xs font-sans uppercase tracking-[3px] shrink-0">Your Emotional Landscape</span>
+          <div className="h-px flex-1 bg-gradient-to-l from-stone-200 to-transparent" />
+        </div>
+      </motion.div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 mb-16">
         {/* Left column: Phase + Balance */}
         <div className="lg:col-span-2 space-y-8">
           <motion.div variants={fadeUp}>
@@ -165,8 +181,16 @@ export default function BriefingPage() {
       </div>
 
       {/* ------------------------------------------------------------------ */}
-      {/* Secondary Row: Risk + Discretion + Advisor Messages                */}
+      {/* Section: Your Private Shield                                       */}
       {/* ------------------------------------------------------------------ */}
+      <motion.div variants={fadeUp} className="mb-4">
+        <div className="flex items-center gap-4 mb-8">
+          <div className="h-px flex-1 bg-gradient-to-r from-stone-200 to-transparent" />
+          <span className="text-stone-400 text-xs font-sans uppercase tracking-[3px] shrink-0">Your Private Shield</span>
+          <div className="h-px flex-1 bg-gradient-to-l from-stone-200 to-transparent" />
+        </div>
+      </motion.div>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
         <motion.div variants={fadeUp}>
           <RiskStatusCard riskLevel="low" isLoading={isLoading} />

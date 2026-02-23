@@ -76,13 +76,13 @@ export function AdvisorMessagePreview({
 
   if (!latestThread) {
     return (
-      <div className="rounded-2xl bg-white border border-sand-200 p-6">
-        <p className="text-xs font-sans uppercase tracking-widest text-sand-500 mb-4">
-          Advisor Messages
+      <div className="rounded-2xl bg-white border border-stone-100 shadow-sm p-6">
+        <p className="text-amber-600 text-xs font-sans font-semibold uppercase tracking-widest mb-4">
+          Your Advisor
         </p>
         <div className="text-center py-4">
-          <p className="font-serif text-lg text-sand-400 mb-1">No messages yet</p>
-          <p className="text-sm font-sans text-sand-400">
+          <p className="font-serif text-lg text-stone-400 mb-1">No messages yet</p>
+          <p className="text-sm font-sans text-stone-400">
             Conversations with your advisor will appear here.
           </p>
         </div>
@@ -97,9 +97,9 @@ export function AdvisorMessagePreview({
     : '';
 
   return (
-    <div className="rounded-2xl bg-white border border-sand-200 p-6">
-      <p className="text-xs font-sans uppercase tracking-widest text-sand-500 mb-4">
-        Advisor Messages
+    <div className="rounded-2xl bg-white border border-stone-100 shadow-sm hover:shadow-md transition-shadow p-6">
+      <p className="text-amber-600 text-xs font-sans font-semibold uppercase tracking-widest mb-4">
+        Your Advisor
       </p>
 
       <Link href="/messages" className="block group">
@@ -109,29 +109,29 @@ export function AdvisorMessagePreview({
             {advisorName}
           </span>
           {timestamp && (
-            <span className="text-xs font-sans text-sand-400">{timestamp}</span>
+            <span className="text-xs font-sans text-stone-400">{timestamp}</span>
           )}
         </div>
 
         {/* Subject line */}
         {latestThread.subject && (
-          <p className="text-sm font-sans font-medium text-sand-700 mb-1">
+          <p className="text-sm font-sans font-medium text-stone-700 mb-1">
             {latestThread.subject}
           </p>
         )}
 
         {/* Last message snippet */}
         {lastMessage ? (
-          <p className="text-sm font-sans text-sand-500 line-clamp-2 leading-relaxed">
+          <p className="text-sm font-sans text-stone-500 line-clamp-2 leading-relaxed">
             {lastMessage.content}
           </p>
         ) : (
-          <p className="text-sm font-sans text-sand-400 italic">No messages in this thread</p>
+          <p className="text-sm font-sans text-stone-400 italic">No messages in this thread</p>
         )}
 
         {/* Thread count indicator */}
         {sortedThreads.length > 1 && (
-          <p className="mt-3 text-xs font-sans text-rose-500">
+          <p className="mt-3 text-xs font-sans text-rose-700 font-medium">
             +{sortedThreads.length - 1} more{' '}
             {sortedThreads.length - 1 === 1 ? 'conversation' : 'conversations'}
           </p>

@@ -66,13 +66,19 @@ export function LifePhaseStep({ form }: LifePhaseStepProps) {
               type="button"
               onClick={() => form.setValue('lifeStage', stage.value)}
               className={cn(
-                'group relative p-8 rounded-lg border-2 text-left transition-all duration-300',
-                'hover:shadow-lg hover:scale-[1.02]',
+                'group relative p-8 rounded-2xl border-2 text-left transition-all duration-300 overflow-hidden',
+                'hover:shadow-lg hover:scale-[1.01]',
                 isSelected
-                  ? 'border-rose-500 bg-rose-50/50 shadow-md'
-                  : 'border-stone-200 bg-white hover:border-stone-300'
+                  ? 'border-rose-400 bg-gradient-to-br from-rose-50 to-amber-50 shadow-lg scale-[1.02]'
+                  : 'border-stone-200 bg-white hover:border-rose-300 hover:shadow-md'
               )}
             >
+              {/* Decorative circle */}
+              <div className={cn(
+                'absolute top-0 right-0 w-20 h-20 rounded-bl-full opacity-10 transition-opacity group-hover:opacity-20',
+                isSelected ? 'bg-rose-400' : 'bg-stone-400'
+              )} />
+
               <div className="flex items-start gap-4">
                 <div
                   className={cn(

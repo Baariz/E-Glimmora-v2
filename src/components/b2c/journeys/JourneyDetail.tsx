@@ -48,41 +48,37 @@ export function JourneyDetail({ journey, className }: JourneyDetailProps) {
       }}
     >
       {/* ------------------------------------------------------------------ */}
-      {/* Header: Title + Metadata Row                                       */}
+      {/* Cinematic Header with Photography                                  */}
       {/* ------------------------------------------------------------------ */}
       <motion.header variants={fadeUp} className="mb-8">
-        {/* Category + Discretion Badges */}
-        <div className="flex gap-3 mb-4">
-          <span className="px-4 py-1.5 bg-rose-50 text-rose-900 text-sm font-sans font-medium rounded-full">
-            {journey.category}
-          </span>
-          {journey.discretionLevel && (
-            <span
-              className={cn(
-                'px-4 py-1.5 text-sm font-sans font-medium rounded-full flex items-center gap-2',
-                DISCRETION_COLORS[journey.discretionLevel]
+        <div
+          className="relative rounded-3xl overflow-hidden min-h-[280px] sm:min-h-[340px]"
+          style={{
+            backgroundImage: `url(https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?auto=format&fit=crop&w=1200&q=80)`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10" />
+          <div className="relative z-10 flex flex-col justify-end h-full p-6 sm:p-10 pt-16 sm:pt-24 min-h-[280px] sm:min-h-[340px]">
+            <p className="text-amber-300 text-xs font-sans uppercase tracking-widest mb-3">Your Journey</p>
+            <h1 className="font-serif text-3xl sm:text-4xl text-white mb-3">{journey.title}</h1>
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="text-xs px-3 py-1.5 rounded-full bg-white/20 backdrop-blur-sm text-white border border-white/30 font-sans font-medium capitalize">
+                {journey.status.toLowerCase().replace('_', ' ')}
+              </span>
+              {journey.category && (
+                <span className="text-xs px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white border border-white/30 font-sans">
+                  {journey.category}
+                </span>
               )}
-            >
-              <Shield className="w-4 h-4" />
-              {journey.discretionLevel} Discretion
-            </span>
-          )}
-        </div>
-
-        {/* Title */}
-        <h1 className="text-4xl md:text-5xl font-serif font-light text-rose-900 leading-tight mb-4">
-          {journey.title}
-        </h1>
-
-        {/* Metadata row */}
-        <div className="flex flex-wrap gap-6 text-sm font-sans text-sand-600">
-          <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4" />
-            <span>Created {format(new Date(journey.createdAt), 'MMM d, yyyy')}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <MapPin className="w-4 h-4" />
-            <span className="capitalize">{journey.status.toLowerCase().replace('_', ' ')}</span>
+              {journey.discretionLevel && (
+                <span className="text-xs px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white border border-white/30 font-sans flex items-center gap-1">
+                  <Shield className="w-3 h-3" />
+                  {journey.discretionLevel}
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </motion.header>

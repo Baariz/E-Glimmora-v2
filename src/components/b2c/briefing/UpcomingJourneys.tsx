@@ -75,9 +75,10 @@ export function UpcomingJourneys({ journeys, isLoading }: UpcomingJourneysProps)
 
   return (
     <div>
-      <p className="text-xs font-sans uppercase tracking-widest text-sand-500 mb-6">
-        Upcoming Journeys
+      <p className="text-amber-600 text-xs font-sans font-semibold uppercase tracking-widest mb-2">
+        On Your Horizon
       </p>
+      <h3 className="font-serif text-lg text-stone-900 mb-6">Upcoming Journeys</h3>
 
       {upcoming.length === 0 ? (
         <div className="rounded-2xl border-2 border-dashed border-sand-300 p-8 text-center">
@@ -103,24 +104,35 @@ export function UpcomingJourneys({ journeys, isLoading }: UpcomingJourneysProps)
               transition={{ delay: index * 0.1, duration: 0.4, ease: 'easeOut' }}
             >
               <Link href={`/journeys/${journey.id}`} className="block group">
-                <div className="rounded-2xl bg-white border border-sand-200 p-6 transition-shadow hover:shadow-lg">
-                  {/* Category + Status */}
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs font-sans uppercase tracking-wider text-sand-500">
-                      {categoryIcons[journey.category] || journey.category}
-                    </span>
-                    <StatusBadge status={journey.status} />
+                <div className="rounded-2xl bg-white border border-stone-100 shadow-sm overflow-hidden transition-all hover:shadow-md hover:-translate-y-0.5">
+                  {/* Status gradient accent */}
+                  <div className={cn(
+                    'h-1 w-full',
+                    journey.status === JourneyStatus.EXECUTED  ? 'bg-gradient-to-r from-emerald-400 to-teal-400' :
+                    journey.status === JourneyStatus.PRESENTED ? 'bg-gradient-to-r from-rose-400 to-amber-400' :
+                    journey.status === JourneyStatus.APPROVED  ? 'bg-gradient-to-r from-amber-400 to-yellow-300' :
+                    'bg-gradient-to-r from-stone-200 to-stone-300'
+                  )} />
+
+                  <div className="p-6">
+                    {/* Category + Status */}
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-xs font-sans uppercase tracking-wider text-stone-400">
+                        {categoryIcons[journey.category] || journey.category}
+                      </span>
+                      <StatusBadge status={journey.status} />
+                    </div>
+
+                    {/* Title */}
+                    <h4 className="font-serif text-lg text-rose-900 group-hover:text-rose-700 transition-colors mb-2">
+                      {journey.title}
+                    </h4>
+
+                    {/* Narrative excerpt */}
+                    <p className="text-sm font-sans text-stone-500 line-clamp-2 leading-relaxed">
+                      {journey.narrative}
+                    </p>
                   </div>
-
-                  {/* Title */}
-                  <h4 className="font-serif text-lg text-rose-900 group-hover:text-rose-700 transition-colors mb-2">
-                    {journey.title}
-                  </h4>
-
-                  {/* Narrative excerpt */}
-                  <p className="text-sm font-sans text-sand-600 line-clamp-2 leading-relaxed">
-                    {journey.narrative}
-                  </p>
                 </div>
               </Link>
             </motion.div>

@@ -60,8 +60,8 @@ export function DiscretionTierBadge({ tier = 'High', isLoading }: DiscretionTier
   }
 
   return (
-    <div className="rounded-2xl bg-white border border-sand-200 p-6">
-      <p className="text-xs font-sans uppercase tracking-widest text-sand-500 mb-4">
+    <div className="rounded-2xl bg-white border border-stone-100 shadow-sm hover:shadow-md transition-shadow p-6">
+      <p className="text-amber-600 text-xs font-sans font-semibold uppercase tracking-widest mb-4">
         Discretion Tier
       </p>
 
@@ -69,9 +69,12 @@ export function DiscretionTierBadge({ tier = 'High', isLoading }: DiscretionTier
       <div className="mb-3">
         <span
           className={cn(
-            'inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-sans font-medium',
-            config.badgeBg,
-            config.badgeText
+            'inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-sans font-medium border',
+            tier === 'High'
+              ? 'bg-gradient-to-r from-teal-50 to-emerald-50 text-teal-800 border-teal-200'
+              : tier === 'Medium'
+              ? 'bg-gradient-to-r from-stone-50 to-stone-100 text-stone-700 border-stone-200'
+              : 'bg-stone-50 text-stone-500 border-stone-200'
           )}
         >
           <svg
@@ -92,14 +95,14 @@ export function DiscretionTierBadge({ tier = 'High', isLoading }: DiscretionTier
       </div>
 
       {/* Description */}
-      <p className="text-sm font-sans text-sand-600 leading-relaxed mb-4">
+      <p className="text-sm font-sans text-stone-500 leading-relaxed mb-4">
         {config.description}
       </p>
 
       {/* Link to privacy settings */}
       <Link
         href="/privacy"
-        className="text-xs font-sans text-rose-600 hover:text-rose-500 transition-colors"
+        className="text-xs font-sans text-rose-700 hover:text-rose-600 font-medium transition-colors"
       >
         Manage privacy settings &rarr;
       </Link>

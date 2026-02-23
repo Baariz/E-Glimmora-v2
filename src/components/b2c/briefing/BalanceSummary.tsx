@@ -84,19 +84,20 @@ export function BalanceSummary({ intentProfile, isLoading }: BalanceSummaryProps
   }
 
   return (
-    <div className="rounded-2xl bg-white border border-sand-200 p-8">
-      <p className="text-xs font-sans uppercase tracking-widest text-sand-500 mb-6">
+    <div className="rounded-2xl bg-white border border-stone-100 shadow-sm hover:shadow-md transition-shadow p-8">
+      <p className="text-amber-600 text-xs font-sans font-semibold uppercase tracking-widest mb-2">
         Emotional Balance
       </p>
+      <h3 className="font-serif text-lg text-stone-900 mb-6">Your inner compass</h3>
 
       {/* Radar chart */}
       <div className="mb-6">
         <ResponsiveContainer width="100%" height={220}>
           <RadarChart data={chartData} outerRadius="75%">
-            <PolarGrid stroke="#e7e2db" />
+            <PolarGrid stroke="#e7e5e4" strokeDasharray="3 3" />
             <PolarAngleAxis
               dataKey="driver"
-              tick={{ fill: '#6d514c', fontSize: 11, fontFamily: 'inherit' }}
+              tick={{ fill: '#78716c', fontSize: 11, fontFamily: 'inherit' }}
             />
             <PolarRadiusAxis
               angle={90}
@@ -107,9 +108,9 @@ export function BalanceSummary({ intentProfile, isLoading }: BalanceSummaryProps
             <Radar
               name="Emotional DNA"
               dataKey="value"
-              stroke="#b5877e"
-              fill="#b5877e"
-              fillOpacity={0.3}
+              stroke="#9f1239"
+              fill="#9f1239"
+              fillOpacity={0.15}
               strokeWidth={2}
             />
           </RadarChart>
@@ -117,9 +118,11 @@ export function BalanceSummary({ intentProfile, isLoading }: BalanceSummaryProps
       </div>
 
       {/* Narrative */}
-      <p className="text-sm font-sans text-sand-600 leading-relaxed italic">
-        &ldquo;{narrative}&rdquo;
-      </p>
+      <div className="border-l-2 border-rose-200 pl-4">
+        <p className="text-sm font-sans text-stone-500 leading-relaxed italic">
+          &ldquo;{narrative}&rdquo;
+        </p>
+      </div>
     </div>
   );
 }

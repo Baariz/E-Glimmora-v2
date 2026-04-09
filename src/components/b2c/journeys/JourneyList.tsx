@@ -10,7 +10,7 @@ import { motion } from 'framer-motion';
 import { Compass } from 'lucide-react';
 
 import { useServices } from '@/lib/hooks/useServices';
-import { MOCK_UHNI_USER_ID } from '@/lib/hooks/useCurrentUser';
+import { useCurrentUser } from '@/lib/hooks/useCurrentUser';
 import { JourneyCard } from './JourneyCard';
 
 import type { Journey } from '@/lib/types/entities';
@@ -23,6 +23,7 @@ interface JourneyListProps {
 
 export function JourneyList({ filter = 'all', onGenerateClick }: JourneyListProps) {
   const services = useServices();
+  const { user: currentUser } = useCurrentUser();
   const [journeys, setJourneys] = useState<Journey[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -30,11 +31,12 @@ export function JourneyList({ filter = 'all', onGenerateClick }: JourneyListProp
     let cancelled = false;
 
     async function fetchJourneys() {
+      if (!currentUser) return;
       setIsLoading(true);
 
       try {
         const allJourneys = await services.journey.getJourneys(
-          MOCK_UHNI_USER_ID,
+          currentUser.id,
           'b2c'
         );
 
@@ -66,7 +68,7 @@ export function JourneyList({ filter = 'all', onGenerateClick }: JourneyListProp
     return () => {
       cancelled = true;
     };
-  }, [services, filter]);
+  }, [services, filter, currentUser]);
 
   // Loading skeleton
   if (isLoading) {

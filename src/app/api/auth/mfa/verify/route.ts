@@ -1,13 +1,14 @@
 /**
  * MFA Verification API Route
  * POST /api/auth/mfa/verify
- * Verifies a TOTP code and enables MFA for the user
+ * Proxies to real backend API for TOTP code verification
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { verifyMFAToken } from '@/lib/auth/mfa';
-import { services } from '@/lib/services';
+
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || 'https://elan-glimmora-api.onrender.com';
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,40 +32,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get user from service to retrieve mfaSecret
-    const user = await services.user.getUserById(session.user.id);
-    if (!user || !user.mfaSecret) {
+    const apiToken = (session as any).apiToken;
+    if (!apiToken) {
       return NextResponse.json(
-        { error: 'MFA not set up for this user' },
-        { status: 400 }
+        { error: 'No API token in session' },
+        { status: 401 }
       );
     }
 
-    // Verify the TOTP code
-    const isValid = verifyMFAToken(user.mfaSecret, code);
-
-    if (!isValid) {
-      return NextResponse.json(
-        { error: 'Invalid verification code' },
-        { status: 400 }
-      );
-    }
-
-    // Enable MFA for the user
-    await services.user.updateUser(session.user.id, {
-      mfaEnabled: true,
+    // Call real backend
+    const response = await fetch(`${API_BASE_URL}/api/auth/mfa/verify`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ token: code }),
     });
 
-    // TODO: Log audit event
-    // await services.audit.logEvent({
-    //   event: 'mfa.enabled',
-    //   userId: session.user.id,
-    //   resourceType: 'user',
-    //   resourceId: session.user.id,
-    //   action: 'UPDATE',
-    //   context: 'b2c',
-    //   timestamp: new Date().toISOString(),
-    // });
+    const result = await response.json();
+
+    if (!response.ok) {
+      const errorMsg = result.detail?.error?.message || result.error?.message || 'Invalid verification code';
+      return NextResponse.json(
+        { error: errorMsg },
+        { status: response.status }
+      );
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

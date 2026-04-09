@@ -7,6 +7,7 @@
 
 import { useState, useEffect } from 'react';
 import { useServices } from '@/lib/hooks/useServices';
+import { useCurrentUser } from '@/lib/hooks/useCurrentUser';
 import { RiskRecord } from '@/lib/types/entities';
 import { Modal } from '@/components/shared/Modal';
 import { StatusBadge } from '@/components/b2b/layouts/StatusBadge';
@@ -22,6 +23,7 @@ interface FlaggedClient {
 
 export function ComplianceFlags() {
   const { risk } = useServices();
+  const { user: currentUser } = useCurrentUser();
   const [flaggedClients, setFlaggedClients] = useState<FlaggedClient[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -35,7 +37,7 @@ export function ComplianceFlags() {
   const loadFlaggedClients = async () => {
     try {
       setLoading(true);
-      const mockInstitutionId = 'inst-001-uuid-placeholder';
+      const mockInstitutionId = currentUser?.institutionId ?? '';
       const records = await risk.getRiskRecords(mockInstitutionId);
 
       // Filter to only clients with flags

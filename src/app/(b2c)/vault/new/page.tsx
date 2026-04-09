@@ -12,7 +12,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, BookOpen, Feather } from 'lucide-react';
 
 import { useServices } from '@/lib/hooks/useServices';
-import { MOCK_UHNI_USER_ID } from '@/lib/hooks/useCurrentUser';
+import { useCurrentUser } from '@/lib/hooks/useCurrentUser';
 import { MemoryForm } from '@/components/b2c/vault/MemoryForm';
 
 import type { MemoryItem } from '@/lib/types/entities';
@@ -22,6 +22,7 @@ function NewMemoryContent() {
   const searchParams = useSearchParams();
   const services = useServices();
 
+  const { user: currentUser } = useCurrentUser();
   const editId = searchParams.get('edit');
   const isEditMode = !!editId;
 
@@ -77,14 +78,15 @@ function NewMemoryContent() {
           fileUrl: data.fileUrl,
         });
       } else {
+        if (!currentUser) return;
         await services.memory.createMemory({
-          userId: MOCK_UHNI_USER_ID,
+          userId: currentUser.id,
           title: data.title,
           description: data.description,
           type: data.type,
         });
 
-        const memories = await services.memory.getMemories(MOCK_UHNI_USER_ID);
+        const memories = await services.memory.getMemories(currentUser.id);
         const newMemory = memories[memories.length - 1];
 
         if (newMemory) {

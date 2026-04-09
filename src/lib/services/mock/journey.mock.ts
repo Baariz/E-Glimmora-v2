@@ -374,4 +374,20 @@ export class MockJourneyService extends BaseMockService implements IJourneyServi
 
     return version;
   }
+
+  async transitionJourney(
+    journeyId: string,
+    _event: string,
+    _rejectionReason?: string
+  ): Promise<Journey> {
+    // Mock: just return the journey as-is (real transitions handled by backend)
+    const journey = await this.getJourneyById(journeyId);
+    if (!journey) throw new Error('Journey not found');
+    return journey;
+  }
+
+  async generateJourneys(_userId: string, _count?: number): Promise<Journey[]> {
+    // Mock: no-op — local narrative generator handles this in mock mode
+    return [];
+  }
 }

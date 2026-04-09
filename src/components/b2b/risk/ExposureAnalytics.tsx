@@ -7,6 +7,7 @@
 
 import { useState, useEffect } from 'react';
 import { useServices } from '@/lib/hooks/useServices';
+import { useCurrentUser } from '@/lib/hooks/useCurrentUser';
 import { PieChart, Pie, BarChart, Bar, Cell, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { TrendingUp, Users, AlertTriangle } from 'lucide-react';
 
@@ -26,6 +27,7 @@ interface RiskDistribution {
 
 export function ExposureAnalytics() {
   const { risk } = useServices();
+  const { user: currentUser } = useCurrentUser();
   const [analytics, setAnalytics] = useState<RiskDistribution | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -36,7 +38,7 @@ export function ExposureAnalytics() {
   const loadAnalytics = async () => {
     try {
       setLoading(true);
-      const mockInstitutionId = 'inst-001-uuid-placeholder';
+      const mockInstitutionId = currentUser?.institutionId ?? '';
       const data = await risk.getPortfolioRisk(mockInstitutionId);
       setAnalytics(data);
     } catch (error) {

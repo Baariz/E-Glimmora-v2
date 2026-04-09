@@ -12,7 +12,7 @@ import { useRouter } from 'next/navigation';
 import { MessageCircle, ArrowRight, Clock, User as UserIcon } from 'lucide-react';
 
 import { cn } from '@/lib/utils/cn';
-import { MOCK_UHNI_USER_ID } from '@/lib/hooks/useCurrentUser';
+import { useCurrentUser } from '@/lib/hooks/useCurrentUser';
 
 import type { MessageThread, Message, User, Journey } from '@/lib/types/entities';
 
@@ -30,16 +30,18 @@ export function ThreadList({
   relatedJourneys,
 }: ThreadListProps) {
   const router = useRouter();
+  const { user: currentUser } = useCurrentUser();
+  const currentUserId = currentUser?.id ?? '';
 
   const hasUnreadMessages = (thread: MessageThread, lastMessage: Message | null | undefined): boolean => {
     if (!lastMessage) return false;
-    return !lastMessage.readBy.includes(MOCK_UHNI_USER_ID);
+    return !lastMessage.readBy.includes(currentUserId);
   };
 
   const getThreadParticipantNames = (thread: MessageThread): string => {
     const threadParticipants = participants[thread.id] || [];
     const otherParticipants = threadParticipants.filter(
-      (p) => p.id !== MOCK_UHNI_USER_ID
+      (p) => p.id !== currentUserId
     );
     return otherParticipants.map((p) => p.name).join(', ') || 'Your Advisor';
   };

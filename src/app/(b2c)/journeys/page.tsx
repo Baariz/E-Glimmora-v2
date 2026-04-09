@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
 import { useServices } from '@/lib/hooks/useServices';
-import { MOCK_UHNI_USER_ID } from '@/lib/hooks/useCurrentUser';
+import { useCurrentUser } from '@/lib/hooks/useCurrentUser';
 import { generateNarrativeJourneys } from '@/lib/utils/narrative-generator';
 import { JourneyList } from '@/components/b2c/journeys/JourneyList';
 import { IMAGES } from '@/lib/constants/imagery';
@@ -14,14 +14,16 @@ type FilterTab = 'all' | 'active' | 'archived';
 
 export default function JourneysPage() {
   const services = useServices();
+  const { user } = useCurrentUser();
   const [activeFilter, setActiveFilter] = useState<FilterTab>('all');
   const [isGenerating, setIsGenerating] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
   const handleGenerate = async () => {
+    if (!user) return;
     setIsGenerating(true);
     try {
-      const profile = await services.intent.getIntentProfile(MOCK_UHNI_USER_ID);
+      const profile = await services.intent.getIntentProfile(user.id);
       if (!profile) { alert('Please complete your Intent Profile first.'); return; }
       await generateNarrativeJourneys(profile);
       setRefreshKey(k => k + 1);

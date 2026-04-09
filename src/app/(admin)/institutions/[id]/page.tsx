@@ -12,6 +12,7 @@ import { formatDistanceToNow, format } from 'date-fns';
 import { StatusBadge } from '@/components/b2b/layouts/StatusBadge';
 import { InstitutionActions } from '@/components/admin/institutions/InstitutionActions';
 import { useServices } from '@/lib/hooks/useServices';
+import { useCurrentUser } from '@/lib/hooks/useCurrentUser';
 import type { Institution, InstitutionType, InstitutionTier, AuditEvent, User } from '@/lib/types';
 import { toast } from 'sonner';
 
@@ -19,6 +20,7 @@ export default function InstitutionDetailPage() {
   const params = useParams();
   const router = useRouter();
   const services = useServices();
+  const { user: currentUser } = useCurrentUser();
   const [loading, setLoading] = useState(true);
   const [institution, setInstitution] = useState<Institution | null>(null);
   const [auditHistory, setAuditHistory] = useState<AuditEvent[]>([]);
@@ -77,7 +79,7 @@ export default function InstitutionDetailPage() {
 
       services.audit.log({
         event: 'institution.update',
-        userId: 'admin-super-001',
+        userId: currentUser?.id ?? '',
         resourceId: institution.id,
         resourceType: 'institution',
         context: 'admin',

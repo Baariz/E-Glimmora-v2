@@ -8,6 +8,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { SessionProvider, useSession } from 'next-auth/react';
 import { DomainContext, UserRoles } from '@/lib/types';
+import { setAuthToken } from '@/lib/services/api/client';
 
 interface DomainContextValue {
   context: DomainContext;
@@ -20,6 +21,14 @@ function DomainContextProvider({ children }: { children: ReactNode }) {
   const [context, setContext] = useState<DomainContext>('b2c');
   const [initialized, setInitialized] = useState(false);
   const { data: session } = useSession();
+
+  // Sync API token from NextAuth session to localStorage for API client
+  useEffect(() => {
+    const apiToken = (session as any)?.apiToken;
+    if (apiToken) {
+      setAuthToken(apiToken);
+    }
+  }, [session]);
 
   // Auto-detect initial context from user's roles on first load
   useEffect(() => {

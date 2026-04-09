@@ -6,7 +6,7 @@ import { format } from 'date-fns';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { useServices } from '@/lib/hooks/useServices';
-import { useCurrentUser, MOCK_UHNI_USER_ID } from '@/lib/hooks/useCurrentUser';
+import { useCurrentUser } from '@/lib/hooks/useCurrentUser';
 import { EmotionalPhaseCard } from '@/components/b2c/briefing/EmotionalPhaseCard';
 import { BalanceSummary } from '@/components/b2c/briefing/BalanceSummary';
 import { IMAGES } from '@/lib/constants/imagery';
@@ -49,9 +49,10 @@ export default function BriefingPage() {
     let cancelled = false;
     async function load() {
       try {
+        if (!user) return;
         const [profile, userJourneys] = await Promise.all([
-          services.intent.getIntentProfile(MOCK_UHNI_USER_ID),
-          services.journey.getJourneys(MOCK_UHNI_USER_ID, 'b2c'),
+          services.intent.getIntentProfile(user.id),
+          services.journey.getJourneys(user.id, 'b2c'),
         ]);
         if (cancelled) return;
         setIntentProfile(profile);
@@ -64,10 +65,10 @@ export default function BriefingPage() {
     }
     load();
     return () => { cancelled = true; };
-  }, [services]);
+  }, [services, user]);
 
-  const firstName = user.name.split(' ')[0];
-  const initials = user.name.split(' ').map(n => n[0]).join('');
+  const firstName = user?.name?.split(' ')[0] ?? '';
+  const initials = user?.name?.split(' ').map(n => n[0]).join('') ?? '';
   const today = format(new Date(), 'EEEE, MMMM d, yyyy');
   const upcomingJourneys = journeys.filter(j => j.status !== 'ARCHIVED').slice(0, 3);
 

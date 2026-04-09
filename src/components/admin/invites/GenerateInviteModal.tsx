@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Modal } from '@/components/shared/Modal/Modal'
 import { useServices } from '@/lib/hooks/useServices'
+import { useCurrentUser } from '@/lib/hooks/useCurrentUser'
 import { B2BRole } from '@/lib/types'
 import { toast } from 'sonner'
 import { Copy } from 'lucide-react'
@@ -17,6 +18,7 @@ type InviteType = 'b2c' | 'b2b' | 'admin'
 
 export function GenerateInviteModal({ open, onOpenChange, onSuccess }: GenerateInviteModalProps) {
   const services = useServices()
+  const { user: currentUser } = useCurrentUser()
   const [loading, setLoading] = useState(false)
   const [generatedCode, setGeneratedCode] = useState<string | null>(null)
 
@@ -53,7 +55,7 @@ export function GenerateInviteModal({ open, onOpenChange, onSuccess }: GenerateI
 
       const inviteCode = await services.inviteCode.createInviteCode({
         type: inviteType,
-        createdBy: 'super-admin',
+        createdBy: currentUser?.id ?? '',
         assignedRoles,
         maxUses,
         expiresAt,

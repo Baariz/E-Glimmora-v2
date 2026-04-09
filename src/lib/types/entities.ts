@@ -20,6 +20,7 @@ export interface User {
   passwordHash?: string; // For auth - stored internally only
   mfaEnabled?: boolean; // Whether MFA is enabled for this user
   mfaSecret?: string; // Stored encrypted in production, plain in mock
+  status?: string;
   createdAt: string;
   updatedAt: string;
   erasedAt?: string;

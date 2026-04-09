@@ -13,7 +13,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, X, Sparkles } from 'lucide-react';
 
 import { useServices } from '@/lib/hooks/useServices';
-import { MOCK_UHNI_USER_ID } from '@/lib/hooks/useCurrentUser';
+import { useCurrentUser } from '@/lib/hooks/useCurrentUser';
 import { JourneyStatus } from '@/lib/types/entities';
 import { cn } from '@/lib/utils/cn';
 
@@ -31,6 +31,7 @@ export function ConfirmJourneyFlow({
   trigger,
 }: ConfirmJourneyFlowProps) {
   const services = useServices();
+  const { user: currentUser } = useCurrentUser();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -50,10 +51,11 @@ export function ConfirmJourneyFlow({
     setIsConfirming(true);
 
     try {
-      // Update journey status to APPROVED
-      const updatedJourney = await services.journey.updateJourney(journey.id, {
-        status: JourneyStatus.APPROVED,
-      });
+      // Transition journey status via state machine
+      const updatedJourney = await services.journey.transitionJourney(
+        journey.id,
+        'PRESENT_TO_CLIENT'
+      );
 
       // Create system messages in all threads linked to this journey (COLB-04)
       await createSystemMessagesForJourney(journey.id, JourneyStatus.APPROVED);
@@ -80,7 +82,7 @@ export function ConfirmJourneyFlow({
   ) => {
     try {
       // Get all threads for this user
-      const threads = await services.message.getThreads(MOCK_UHNI_USER_ID);
+      const threads = await services.message.getThreads(currentUser?.id ?? '');
 
       // Filter threads linked to this journey
       const relatedThreads = threads.filter(
@@ -92,7 +94,7 @@ export function ConfirmJourneyFlow({
         relatedThreads.map((thread) =>
           services.message.sendMessage({
             threadId: thread.id,
-            senderId: 'system',
+            senderId: currentUser?.id ?? '',
             content: `Journey status changed to ${newStatus}`,
           })
         )

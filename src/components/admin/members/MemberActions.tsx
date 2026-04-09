@@ -8,6 +8,7 @@
 import { useState } from 'react';
 import { CheckCircle, XCircle, PlayCircle, Trash2 } from 'lucide-react';
 import { useServices } from '@/lib/hooks/useServices';
+import { useCurrentUser } from '@/lib/hooks/useCurrentUser';
 import type { User } from '@/lib/types';
 import { toast } from 'sonner';
 
@@ -18,6 +19,7 @@ interface MemberActionsProps {
 
 export function MemberActions({ user, onAction }: MemberActionsProps) {
   const services = useServices();
+  const { user: currentUser } = useCurrentUser();
   const [loading, setLoading] = useState(false);
 
   // Determine user state
@@ -35,7 +37,7 @@ export function MemberActions({ user, onAction }: MemberActionsProps) {
       // Audit log
       services.audit.log({
         event: 'member.approve',
-        userId: 'admin-super-001', // Current admin user
+        userId: currentUser?.id ?? '', // Current admin user
         resourceId: user.id,
         resourceType: 'user',
         context: 'admin',
@@ -71,7 +73,7 @@ export function MemberActions({ user, onAction }: MemberActionsProps) {
       // Audit log
       services.audit.log({
         event: 'member.suspend',
-        userId: 'admin-super-001',
+        userId: currentUser?.id ?? '',
         resourceId: user.id,
         resourceType: 'user',
         context: 'admin',
@@ -102,7 +104,7 @@ export function MemberActions({ user, onAction }: MemberActionsProps) {
       // Audit log
       services.audit.log({
         event: 'member.reactivate',
-        userId: 'admin-super-001',
+        userId: currentUser?.id ?? '',
         resourceId: user.id,
         resourceType: 'user',
         context: 'admin',
@@ -138,7 +140,7 @@ export function MemberActions({ user, onAction }: MemberActionsProps) {
       // Audit log
       services.audit.log({
         event: 'member.remove',
-        userId: 'admin-super-001',
+        userId: currentUser?.id ?? '',
         resourceId: user.id,
         resourceType: 'user',
         context: 'admin',

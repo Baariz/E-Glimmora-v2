@@ -11,6 +11,7 @@ import { useAuth } from '@/lib/hooks/useAuth';
 import { useCan } from '@/lib/rbac/usePermission';
 import { Permission } from '@/lib/types/permissions';
 import { useServices } from '@/lib/hooks/useServices';
+import { useCurrentUser } from '@/lib/hooks/useCurrentUser';
 import {
   getAvailableTransitions,
   executeTransition,
@@ -28,12 +29,11 @@ interface JourneyGovernancePanelProps {
   onStateChange: () => void;
 }
 
-const MOCK_RM_USER_ID = 'b2b-rm-001-uuid-placeholder';
-
 export function JourneyGovernancePanel({ journey, onStateChange }: JourneyGovernancePanelProps) {
   const { currentRole, context } = useAuth();
   const { can } = useCan();
   const services = useServices();
+  const { user: currentUser } = useCurrentUser();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTransition, setSelectedTransition] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
@@ -70,10 +70,10 @@ export function JourneyGovernancePanel({ journey, onStateChange }: JourneyGovern
         title: journey.title,
         narrative: journey.narrative,
         status: nextState,
-        modifiedBy: MOCK_RM_USER_ID,
+        modifiedBy: (currentUser?.id ?? ''),
         rejectionReason: reason,
-        ...(event === 'APPROVE' && { approvedBy: MOCK_RM_USER_ID }),
-        ...(event === 'REJECT' && { rejectedBy: MOCK_RM_USER_ID }),
+        ...(event === 'APPROVE' && { approvedBy: (currentUser?.id ?? '') }),
+        ...(event === 'REJECT' && { rejectedBy: (currentUser?.id ?? '') }),
       });
 
       // Update journey status
@@ -84,7 +84,7 @@ export function JourneyGovernancePanel({ journey, onStateChange }: JourneyGovern
       // Log audit event
       await services.audit.log({
         event: `journey_${event.toLowerCase()}`,
-        userId: MOCK_RM_USER_ID,
+        userId: (currentUser?.id ?? ''),
         resourceId: journey.id,
         resourceType: 'journey',
         context: 'b2b',

@@ -6,6 +6,7 @@ import { Tabs } from '@/components/shared/Tabs';
 import { useCan } from '@/lib/rbac/usePermission';
 import { Permission } from '@/lib/types/permissions';
 import { useServices } from '@/lib/hooks/useServices';
+import { useCurrentUser } from '@/lib/hooks/useCurrentUser';
 import { Shield } from 'lucide-react';
 import { StatsRow, StatCard } from '@/components/b2b/layouts/StatsRow';
 import { ConflictAlertList } from '@/components/b2b/conflicts/ConflictAlertList';
@@ -14,11 +15,10 @@ import { ResolutionTracker } from '@/components/b2b/conflicts/ResolutionTracker'
 import type { ConflictAlert, ConflictMatrixEntry } from '@/lib/types';
 import type { ConflictStats } from '@/lib/services/interfaces/IConflictService';
 
-const MOCK_INSTITUTION_ID = 'inst-001-uuid-placeholder';
-
 export default function ConflictDetectionPage() {
   const { can } = useCan();
   const services = useServices();
+  const { user: currentUser } = useCurrentUser();
   const [loading, setLoading] = useState(true);
   const [conflicts, setConflicts] = useState<ConflictAlert[]>([]);
   const [matrix, setMatrix] = useState<ConflictMatrixEntry[]>([]);
@@ -28,9 +28,9 @@ export default function ConflictDetectionPage() {
     setLoading(true);
     try {
       const [conflictData, matrixData, statsData] = await Promise.all([
-        services.conflict.getConflictAlerts(MOCK_INSTITUTION_ID),
-        services.conflict.getConflictMatrix(MOCK_INSTITUTION_ID),
-        services.conflict.getConflictStats(MOCK_INSTITUTION_ID),
+        services.conflict.getConflictAlerts(currentUser?.institutionId ?? ''),
+        services.conflict.getConflictMatrix(currentUser?.institutionId ?? ''),
+        services.conflict.getConflictStats(currentUser?.institutionId ?? ''),
       ]);
       setConflicts(conflictData);
       setMatrix(matrixData);

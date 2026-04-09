@@ -12,10 +12,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/shared/Button';
 import { useServices } from '@/lib/hooks/useServices';
+import { useCurrentUser } from '@/lib/hooks/useCurrentUser';
 import { ClientRecord, JourneyCategory, DiscretionLevel } from '@/lib/types/entities';
 import { toast } from 'sonner';
-
-const MOCK_RM_USER_ID = 'b2b-rm-001-uuid-placeholder';
 
 const journeyCategories: JourneyCategory[] = [
   'Travel',
@@ -55,6 +54,7 @@ type JourneySimulatorFormData = z.infer<typeof journeySimulatorSchema>;
 export function JourneySimulatorForm() {
   const router = useRouter();
   const services = useServices();
+  const { user: currentUser } = useCurrentUser();
   const [clients, setClients] = useState<ClientRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -81,7 +81,7 @@ export function JourneySimulatorForm() {
   const loadClients = async () => {
     try {
       setLoading(true);
-      const rmClients = await services.client.getClientsByRM(MOCK_RM_USER_ID);
+      const rmClients = await services.client.getClientsByRM((currentUser?.id ?? ''));
       // Filter to active clients only
       setClients(rmClients.filter((c) => c.status === 'Active'));
     } catch (error) {
@@ -118,7 +118,7 @@ export function JourneySimulatorForm() {
       await services.journey.updateJourney(journey.id, {
         emotionalObjective: data.emotionalObjective,
         discretionLevel: data.discretionLevel,
-        assignedRM: MOCK_RM_USER_ID,
+        assignedRM: (currentUser?.id ?? ''),
         institutionId: client.institutionId,
         strategicReasoning: generateStrategicReasoning(data, client),
         riskSummary: generateRiskSummary(data, client),

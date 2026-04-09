@@ -11,7 +11,7 @@ import { motion } from 'framer-motion';
 import { Shield, Plus } from 'lucide-react';
 
 import { useServices } from '@/lib/hooks/useServices';
-import { MOCK_UHNI_USER_ID } from '@/lib/hooks/useCurrentUser';
+import { useCurrentUser } from '@/lib/hooks/useCurrentUser';
 import { ThreadList } from '@/components/b2c/messaging/ThreadList';
 import { NewThreadModal } from '@/components/b2c/messaging/NewThreadModal';
 
@@ -19,6 +19,7 @@ import type { MessageThread, Message, User, Journey } from '@/lib/types/entities
 
 export default function MessagesPage() {
   const services = useServices();
+  const { user: currentUser } = useCurrentUser();
   const [threads, setThreads] = useState<MessageThread[]>([]);
   const [lastMessages, setLastMessages] = useState<Record<string, Message | null>>({});
   const [participants, setParticipants] = useState<Record<string, User[]>>({});
@@ -28,9 +29,10 @@ export default function MessagesPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   const loadThreads = async () => {
+    if (!currentUser) return;
     setIsLoading(true);
     try {
-      const fetchedThreads = await services.message.getThreads(MOCK_UHNI_USER_ID);
+      const fetchedThreads = await services.message.getThreads(currentUser.id);
       fetchedThreads.sort(
         (a, b) =>
           new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime()
@@ -53,7 +55,7 @@ export default function MessagesPage() {
             thread.participants.map(async (userId) => {
               return {
                 id: userId,
-                name: userId === MOCK_UHNI_USER_ID ? 'You' : 'Advisor',
+                name: userId === currentUser.id ? 'You' : 'Advisor',
                 email: `${userId}@example.com`,
                 roles: {},
                 createdAt: new Date().toISOString(),
@@ -78,27 +80,19 @@ export default function MessagesPage() {
       setParticipants(participantsMap);
       setRelatedJourneys(journeysMap);
 
-      const journeys = await services.journey.getJourneys(MOCK_UHNI_USER_ID, 'b2c');
+      const journeys = await services.journey.getJourneys(currentUser.id, 'b2c');
       setAvailableJourneys(journeys);
 
-      setAdvisors([
-        {
-          id: 'advisor-1',
-          name: 'Sarah Chen',
-          email: 'sarah.chen@elan.private',
-          roles: { b2b: 'RelationshipManager' as any },
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        {
-          id: 'advisor-2',
-          name: 'Michael Torres',
-          email: 'michael.torres@elan.private',
-          roles: { b2b: 'PrivateBanker' as any },
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-      ]);
+      // Fetch real users and filter for advisors (B2B roles)
+      try {
+        const allUsers = await services.user.getUsers();
+        const advisorUsers = allUsers.filter(
+          (u) => u.roles?.b2b && u.id !== currentUser.id
+        );
+        setAdvisors(advisorUsers);
+      } catch {
+        setAdvisors([]);
+      }
     } catch (error) {
       console.error('Failed to load threads:', error);
     } finally {
@@ -109,7 +103,7 @@ export default function MessagesPage() {
   useEffect(() => {
     loadThreads();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [currentUser]);
 
   return (
     <div

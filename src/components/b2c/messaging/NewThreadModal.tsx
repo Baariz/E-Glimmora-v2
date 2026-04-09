@@ -11,7 +11,7 @@ import { X, Plus, MessageCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 import { useServices } from '@/lib/hooks/useServices';
-import { MOCK_UHNI_USER_ID } from '@/lib/hooks/useCurrentUser';
+import { useCurrentUser } from '@/lib/hooks/useCurrentUser';
 import { cn } from '@/lib/utils/cn';
 
 import type { Journey, User } from '@/lib/types/entities';
@@ -30,6 +30,8 @@ export function NewThreadModal({
   onThreadCreated,
 }: NewThreadModalProps) {
   const services = useServices();
+  const { user: currentUser } = useCurrentUser();
+  const currentUserId = currentUser?.id ?? '';
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [selectedJourneyId, setSelectedJourneyId] = useState('');
@@ -56,14 +58,14 @@ export function NewThreadModal({
       if (!selectedJourney) throw new Error('Journey not found');
 
       const thread = await services.message.createThread(
-        [MOCK_UHNI_USER_ID, selectedAdvisorId],
+        [currentUserId, selectedAdvisorId],
         'b2c',
         selectedJourneyId
       );
 
       await services.message.sendMessage({
         threadId: thread.id,
-        senderId: 'system',
+        senderId: currentUserId,
         content: `Conversation started about journey: ${selectedJourney.title}`,
       });
 
@@ -172,26 +174,32 @@ export function NewThreadModal({
                   >
                     Advisor
                   </label>
-                  <select
-                    id="advisor-select"
-                    value={selectedAdvisorId}
-                    onChange={(e) => setSelectedAdvisorId(e.target.value)}
-                    disabled={isCreating}
-                    className={cn(
-                      'w-full px-4 py-3.5 bg-stone-50 border border-stone-200/60 rounded-xl',
-                      'font-sans text-sm text-stone-700',
-                      'focus:outline-none focus:ring-2 focus:ring-stone-300/50 focus:border-stone-300',
-                      'disabled:opacity-40 disabled:cursor-not-allowed',
-                      'appearance-none'
-                    )}
-                  >
-                    <option value="">Choose an advisor...</option>
-                    {advisors.map((advisor) => (
-                      <option key={advisor.id} value={advisor.id}>
-                        {advisor.name}
-                      </option>
-                    ))}
-                  </select>
+                  {advisors.length === 0 ? (
+                    <p className="text-stone-400 text-sm font-sans px-1 py-3">
+                      No advisors available at this time.
+                    </p>
+                  ) : (
+                    <select
+                      id="advisor-select"
+                      value={selectedAdvisorId}
+                      onChange={(e) => setSelectedAdvisorId(e.target.value)}
+                      disabled={isCreating}
+                      className={cn(
+                        'w-full px-4 py-3.5 bg-stone-50 border border-stone-200/60 rounded-xl',
+                        'font-sans text-sm text-stone-700',
+                        'focus:outline-none focus:ring-2 focus:ring-stone-300/50 focus:border-stone-300',
+                        'disabled:opacity-40 disabled:cursor-not-allowed',
+                        'appearance-none'
+                      )}
+                    >
+                      <option value="">Choose an advisor...</option>
+                      {advisors.map((advisor) => (
+                        <option key={advisor.id} value={advisor.id}>
+                          {advisor.name}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                 </div>
               </div>
 

@@ -12,13 +12,14 @@ import Link from 'next/link';
 import { Plus, BookOpen } from 'lucide-react';
 
 import { useServices } from '@/lib/hooks/useServices';
-import { MOCK_UHNI_USER_ID } from '@/lib/hooks/useCurrentUser';
+import { useCurrentUser } from '@/lib/hooks/useCurrentUser';
 import { MemoryTimeline } from '@/components/b2c/vault/MemoryTimeline';
 
 import type { MemoryItem } from '@/lib/types/entities';
 
 export default function VaultPage() {
   const services = useServices();
+  const { user } = useCurrentUser();
   const [memories, setMemories] = useState<MemoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -26,9 +27,10 @@ export default function VaultPage() {
     let cancelled = false;
 
     async function fetchMemories() {
+      if (!user) return;
       setIsLoading(true);
       try {
-        const data = await services.memory.getMemories(MOCK_UHNI_USER_ID);
+        const data = await services.memory.getMemories(user.id);
         if (!cancelled) setMemories(data);
       } catch (error) {
         console.error('Failed to fetch memories:', error);
@@ -39,7 +41,7 @@ export default function VaultPage() {
 
     fetchMemories();
     return () => { cancelled = true; };
-  }, [services]);
+  }, [services, user]);
 
   return (
     <div

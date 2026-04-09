@@ -81,6 +81,12 @@ export async function isTrustedDevice(userId: string): Promise<boolean> {
   const deviceToken = localStorage.getItem('elan:device_token');
   if (!deviceToken) return false;
 
-  const device = await services.device.getDeviceByToken(deviceToken);
-  return device?.userId === userId && device?.status === 'active';
+  try {
+    // Backend has no get-by-token endpoint, so fetch all user devices and filter
+    const devices = await services.device.getDevicesByUserId(userId);
+    const device = devices.find((d) => d.deviceToken === deviceToken);
+    return device?.status === 'active';
+  } catch {
+    return false;
+  }
 }

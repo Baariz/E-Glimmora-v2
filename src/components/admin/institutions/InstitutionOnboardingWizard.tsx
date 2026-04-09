@@ -10,6 +10,7 @@ import { ArrowLeft, ArrowRight, CheckCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useWizard } from '@/lib/hooks/useWizard';
 import { useServices } from '@/lib/hooks/useServices';
+import { useCurrentUser } from '@/lib/hooks/useCurrentUser';
 import type { InstitutionType, InstitutionTier } from '@/lib/types';
 import { toast } from 'sonner';
 
@@ -25,6 +26,7 @@ interface InstitutionFormData {
 export function InstitutionOnboardingWizard() {
   const router = useRouter();
   const services = useServices();
+  const { user: currentUser } = useCurrentUser();
   const [submitting, setSubmitting] = useState(false);
   const [createdInstitutionId, setCreatedInstitutionId] = useState<string | null>(null);
 
@@ -50,7 +52,7 @@ export function InstitutionOnboardingWizard() {
       // Audit log
       services.audit.log({
         event: 'institution.create',
-        userId: 'admin-super-001',
+        userId: currentUser?.id ?? '',
         resourceId: institution.id,
         resourceType: 'institution',
         context: 'admin',

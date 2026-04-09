@@ -15,6 +15,7 @@ import { SLAMonitor } from '@/components/b2b/revenue/SLAMonitor';
 import { UsageMetrics } from '@/components/b2b/revenue/UsageMetrics';
 import { ContractRenewals } from '@/components/b2b/revenue/ContractRenewals';
 import { services } from '@/lib/services';
+import { useCurrentUser } from '@/lib/hooks/useCurrentUser';
 import { Contract, RevenueRecord } from '@/lib/types';
 import { UsageMetrics as UsageMetricsType, SLAMetrics } from '@/lib/services/interfaces/IContractService';
 
@@ -22,6 +23,7 @@ type TabId = 'licenses' | 'billing' | 'sla' | 'usage' | 'renewals';
 
 export default function RevenuePage() {
   const { can } = useCan();
+  const { user: currentUser } = useCurrentUser();
   const [activeTab, setActiveTab] = useState<TabId>('licenses');
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [revenueRecords, setRevenueRecords] = useState<RevenueRecord[]>([]);
@@ -35,8 +37,7 @@ export default function RevenuePage() {
   useEffect(() => {
     async function loadData() {
       try {
-        // Mock institution ID (in real app, get from auth context)
-        const institutionId = 'inst-001-uuid-placeholder';
+        const institutionId = currentUser?.institutionId ?? '';
 
         const [contractsData, revenueData, usage, sla] = await Promise.all([
           services.contract.getContracts(institutionId),

@@ -12,7 +12,7 @@ import { ArrowLeft, Shield } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 import { useServices } from '@/lib/hooks/useServices';
-import { MOCK_UHNI_USER_ID } from '@/lib/hooks/useCurrentUser';
+import { useCurrentUser } from '@/lib/hooks/useCurrentUser';
 import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';
 
@@ -34,6 +34,8 @@ export function ThreadView({
   onMessagesUpdated,
 }: ThreadViewProps) {
   const services = useServices();
+  const { user: currentUser } = useCurrentUser();
+  const currentUserId = currentUser?.id ?? '';
   const router = useRouter();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [messages, setMessages] = useState(initialMessages);
@@ -45,7 +47,7 @@ export function ThreadView({
   useEffect(() => {
     const markRead = async () => {
       try {
-        await services.message.markAsRead(thread.id, MOCK_UHNI_USER_ID);
+        await services.message.markAsRead(thread.id, currentUserId);
       } catch (error) {
         console.error('Failed to mark messages as read:', error);
       }
@@ -57,10 +59,10 @@ export function ThreadView({
     const optimisticMessage: Message = {
       id: `temp-${Date.now()}`,
       threadId: thread.id,
-      senderId: MOCK_UHNI_USER_ID,
+      senderId: currentUserId,
       content,
       type: 'user',
-      readBy: [MOCK_UHNI_USER_ID],
+      readBy: [currentUserId],
       sentAt: new Date().toISOString(),
     };
 
@@ -69,7 +71,7 @@ export function ThreadView({
     try {
       const sentMessage = await services.message.sendMessage({
         threadId: thread.id,
-        senderId: MOCK_UHNI_USER_ID,
+        senderId: currentUserId,
         content,
       });
 
@@ -142,7 +144,7 @@ export function ThreadView({
                 key={message.id}
                 message={message}
                 sender={getSenderForMessage(message)}
-                isOwnMessage={message.senderId === MOCK_UHNI_USER_ID}
+                isOwnMessage={message.senderId === currentUserId}
               />
             ))}
             <div ref={messagesEndRef} />

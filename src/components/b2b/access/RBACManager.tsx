@@ -6,6 +6,7 @@
  */
 
 import { useState } from 'react';
+import { useCurrentUser } from '@/lib/hooks/useCurrentUser';
 import { DataTable } from '@/components/b2b/tables/DataTable';
 import { Modal } from '@/components/shared/Modal';
 import { B2BRole } from '@/lib/types/roles';
@@ -24,7 +25,7 @@ interface InstitutionalUser {
 // Mock data
 const MOCK_USERS: InstitutionalUser[] = [
   {
-    id: 'b2b-rm-001-uuid-placeholder',
+    id: 'b2b-rm-001',
     name: 'Sarah Chen',
     email: 'sarah.chen@institution.com',
     roles: [B2BRole.RelationshipManager],
@@ -83,6 +84,7 @@ const B2B_ROLE_OPTIONS = [
 ];
 
 export function RBACManager() {
+  const { user: currentUser } = useCurrentUser();
   const [users, setUsers] = useState<InstitutionalUser[]>(MOCK_USERS);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<InstitutionalUser | null>(null);

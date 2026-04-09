@@ -10,15 +10,13 @@ import { useRouter } from 'next/navigation';
 import { z } from 'zod';
 import { useWizard } from '@/lib/hooks/useWizard';
 import { useServices } from '@/lib/hooks/useServices';
+import { useCurrentUser } from '@/lib/hooks/useCurrentUser';
 import { Card } from '@/components/shared/Card';
 import { Button } from '@/components/shared/Button';
 import { Input } from '@/components/shared/Input';
 import { Select } from '@/components/shared/Select';
 import { ArrowLeft, ArrowRight, Check, Loader2 } from 'lucide-react';
 import { RiskCategory } from '@/lib/types';
-
-const MOCK_RM_USER_ID = 'b2b-rm-001-uuid-placeholder';
-const MOCK_INSTITUTION_ID = 'inst-001-uuid-placeholder';
 
 // Validation schemas for each step
 const Step1Schema = z.object({
@@ -61,6 +59,7 @@ const EMPTY_INITIAL_DATA: WizardData = {};
 
 export function ClientOnboardingWizard({ onComplete }: ClientOnboardingWizardProps) {
   const services = useServices();
+  const { user: currentUser } = useCurrentUser();
   const router = useRouter();
   const initialDataRef = useRef(EMPTY_INITIAL_DATA);
 
@@ -137,8 +136,8 @@ export function ClientOnboardingWizard({ onComplete }: ClientOnboardingWizardPro
       // Create client record
       const client = await services.client.createClient({
         userId,
-        institutionId: MOCK_INSTITUTION_ID,
-        assignedRM: MOCK_RM_USER_ID,
+        institutionId: (currentUser?.institutionId ?? ''),
+        assignedRM: (currentUser?.id ?? ''),
         name: wizard.formData.name!,
         email: wizard.formData.email!,
       });
@@ -146,13 +145,13 @@ export function ClientOnboardingWizard({ onComplete }: ClientOnboardingWizardPro
       // Create initial risk record
       await services.risk.createRiskRecord({
         userId,
-        institutionId: MOCK_INSTITUTION_ID,
+        institutionId: (currentUser?.institutionId ?? ''),
         riskScore: wizard.formData.initialRiskCategory === 'Low' ? 20 :
                   wizard.formData.initialRiskCategory === 'Medium' ? 50 :
                   wizard.formData.initialRiskCategory === 'High' ? 75 : 90,
         riskCategory: wizard.formData.initialRiskCategory || 'Low',
         flags: wizard.formData.complianceFlags || [],
-        assessedBy: MOCK_RM_USER_ID,
+        assessedBy: (currentUser?.id ?? ''),
       });
 
       // Update client with NDA and risk info

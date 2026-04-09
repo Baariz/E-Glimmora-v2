@@ -8,6 +8,7 @@
 import { useState } from 'react';
 import { CheckCircle, XCircle, PlayCircle, Trash2, Edit } from 'lucide-react';
 import { useServices } from '@/lib/hooks/useServices';
+import { useCurrentUser } from '@/lib/hooks/useCurrentUser';
 import type { Institution } from '@/lib/types';
 import { toast } from 'sonner';
 
@@ -19,6 +20,7 @@ interface InstitutionActionsProps {
 
 export function InstitutionActions({ institution, onAction, onEditToggle }: InstitutionActionsProps) {
   const services = useServices();
+  const { user: currentUser } = useCurrentUser();
   const [loading, setLoading] = useState(false);
 
   const isPending = institution.status === 'Pending';
@@ -32,7 +34,7 @@ export function InstitutionActions({ institution, onAction, onEditToggle }: Inst
 
       services.audit.log({
         event: 'institution.activate',
-        userId: 'admin-super-001',
+        userId: currentUser?.id ?? '',
         resourceId: institution.id,
         resourceType: 'institution',
         context: 'admin',
@@ -66,7 +68,7 @@ export function InstitutionActions({ institution, onAction, onEditToggle }: Inst
 
       services.audit.log({
         event: 'institution.suspend',
-        userId: 'admin-super-001',
+        userId: currentUser?.id ?? '',
         resourceId: institution.id,
         resourceType: 'institution',
         context: 'admin',
@@ -95,7 +97,7 @@ export function InstitutionActions({ institution, onAction, onEditToggle }: Inst
 
       services.audit.log({
         event: 'institution.reactivate',
-        userId: 'admin-super-001',
+        userId: currentUser?.id ?? '',
         resourceId: institution.id,
         resourceType: 'institution',
         context: 'admin',
@@ -129,7 +131,7 @@ export function InstitutionActions({ institution, onAction, onEditToggle }: Inst
 
       services.audit.log({
         event: 'institution.remove',
-        userId: 'admin-super-001',
+        userId: currentUser?.id ?? '',
         resourceId: institution.id,
         resourceType: 'institution',
         context: 'admin',

@@ -21,15 +21,19 @@ import { ICrisisService } from './interfaces/ICrisisService';
 import { IVendorService } from './interfaces/IVendorService';
 import { IConflictService } from './interfaces/IConflictService';
 import { IIntegrationService } from './interfaces/IIntegrationService';
+import { IPrivacyService } from './interfaces/IPrivacyService';
+import { MockPrivacyService } from './mock/privacy.mock';
 
 import { MockJourneyService } from './mock/journey.mock';
 import { MockMemoryService } from './mock/memory.mock';
 import { MockMessageService } from './mock/message.mock';
-import { MockIntentService } from './mock/intent.mock';
-import { MockUserService } from './mock/user.mock';
 import { MockInstitutionService } from './mock/institution.mock';
-import { MockInviteCodeService } from './mock/invite-code.mock';
-import { MockDeviceService } from './mock/device.mock';
+import { ApiUserService } from './api/user.api';
+import { ApiInviteCodeService } from './api/invite-code.api';
+import { ApiDeviceService } from './api/device.api';
+import { ApiIntentService } from './api/intent.api';
+import { ApiJourneyService } from './api/journey.api';
+import { ApiMessageService } from './api/message.api';
 import { MockClientService } from './mock/client.mock';
 import { MockRiskService } from './mock/risk.mock';
 import { MockContractService } from './mock/contract.mock';
@@ -51,80 +55,32 @@ const USE_MOCK_SERVICES =
 
 /**
  * Service Registry
- * Provides access to all services through a single object
+ * Services with real API implementations always use them.
+ * Services without real API implementations fall back to mock.
  */
 export const services = {
-  journey: USE_MOCK_SERVICES
-    ? new MockJourneyService()
-    : null, // TODO: Implement real API service
+  // === Real API services (always use real backend) ===
+  user: new ApiUserService(),
+  inviteCode: new ApiInviteCodeService(),
+  device: new ApiDeviceService(),
+  intent: new ApiIntentService(),
+  journey: new ApiJourneyService(),
+  message: new ApiMessageService(),
 
-  memory: USE_MOCK_SERVICES
-    ? new MockMemoryService()
-    : null, // TODO: Implement real API service
-
-  message: USE_MOCK_SERVICES
-    ? new MockMessageService()
-    : null, // TODO: Implement real API service
-
-  intent: USE_MOCK_SERVICES
-    ? new MockIntentService()
-    : null, // TODO: Implement real API service
-
-  user: USE_MOCK_SERVICES
-    ? new MockUserService()
-    : null, // TODO: Implement real API service
-
-  institution: USE_MOCK_SERVICES
-    ? new MockInstitutionService()
-    : null, // TODO: Implement real API service
-
-  inviteCode: USE_MOCK_SERVICES
-    ? new MockInviteCodeService()
-    : null, // TODO: Implement real API service
-
-  device: USE_MOCK_SERVICES
-    ? new MockDeviceService()
-    : null, // TODO: Implement real API service
-
-  client: USE_MOCK_SERVICES
-    ? new MockClientService()
-    : null, // TODO: Implement real API service
-
-  risk: USE_MOCK_SERVICES
-    ? new MockRiskService()
-    : null, // TODO: Implement real API service
-
-  contract: USE_MOCK_SERVICES
-    ? new MockContractService()
-    : null, // TODO: Implement real API service
-
-  audit: USE_MOCK_SERVICES
-    ? new MockAuditService()
-    : null, // TODO: Implement real API service
-
-  systemHealth: USE_MOCK_SERVICES
-    ? new MockSystemHealthService()
-    : null, // TODO: Implement real API service
-
-  predictive: USE_MOCK_SERVICES
-    ? new MockPredictiveService()
-    : null, // TODO: Implement real API service
-
-  crisis: USE_MOCK_SERVICES
-    ? new MockCrisisService()
-    : null, // TODO: Implement real API service
-
-  vendor: USE_MOCK_SERVICES
-    ? new MockVendorService()
-    : null, // TODO: Implement real API service
-
-  conflict: USE_MOCK_SERVICES
-    ? new MockConflictService()
-    : null, // TODO: Implement real API service
-
-  integration: USE_MOCK_SERVICES
-    ? new MockIntegrationService()
-    : null // TODO: Implement real API service
+  // === Mock-only services (real API not yet implemented) ===
+  memory: new MockMemoryService(),
+  institution: new MockInstitutionService(),
+  client: new MockClientService(),
+  risk: new MockRiskService(),
+  contract: new MockContractService(),
+  audit: new MockAuditService(),
+  systemHealth: new MockSystemHealthService(),
+  predictive: new MockPredictiveService(),
+  crisis: new MockCrisisService(),
+  vendor: new MockVendorService(),
+  conflict: new MockConflictService(),
+  integration: new MockIntegrationService(),
+  privacy: new MockPrivacyService(),
 } as {
   journey: IJourneyService;
   memory: IMemoryService;
@@ -144,6 +100,7 @@ export const services = {
   vendor: IVendorService;
   conflict: IConflictService;
   integration: IIntegrationService;
+  privacy: IPrivacyService;
 };
 
 /**

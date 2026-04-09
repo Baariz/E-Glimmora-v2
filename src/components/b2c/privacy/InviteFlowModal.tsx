@@ -8,6 +8,7 @@
 import { useState } from 'react';
 import { B2CRole } from '@/lib/types/roles';
 import { useServices } from '@/lib/hooks/useServices';
+import { useCurrentUser } from '@/lib/hooks/useCurrentUser';
 import { cn } from '@/lib/utils/cn';
 import { X, Mail, Check, UserPlus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -41,6 +42,7 @@ type InviteStatus = 'form' | 'sending' | 'success';
 
 export function InviteFlowModal({ isOpen, onClose, role, onInviteComplete }: InviteFlowModalProps) {
   const services = useServices();
+  const { user: currentUser } = useCurrentUser();
   const config = ROLE_CONFIG[role];
 
   const [status, setStatus] = useState<InviteStatus>('form');
@@ -58,7 +60,7 @@ export function InviteFlowModal({ isOpen, onClose, role, onInviteComplete }: Inv
     try {
       const invite = await services.inviteCode.createInviteCode({
         type: 'b2c',
-        createdBy: 'mock-uhni-user-id',
+        createdBy: currentUser?.id ?? '',
         assignedRoles: { b2c: role as B2CRole },
         maxUses: 1,
       });

@@ -7,6 +7,7 @@
 
 import { useState, useEffect } from 'react';
 import { useServices } from '@/lib/hooks/useServices';
+import { useCurrentUser } from '@/lib/hooks/useCurrentUser';
 import { InsuranceLog } from '@/lib/types/entities';
 import { DataTable } from '@/components/b2b/tables/DataTable';
 import { Modal } from '@/components/shared/Modal';
@@ -15,6 +16,7 @@ import { Plus, FileText } from 'lucide-react';
 
 export function InsuranceLogs() {
   const { risk } = useServices();
+  const { user: currentUser } = useCurrentUser();
   const [logs, setLogs] = useState<InsuranceLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -47,8 +49,8 @@ export function InsuranceLogs() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const mockInstitutionId = 'inst-001-uuid-placeholder';
-      const mockCreatedBy = 'b2b-rm-001-uuid-placeholder';
+      const mockInstitutionId = currentUser?.institutionId ?? '';
+      const mockCreatedBy = currentUser?.id ?? '';
 
       await risk.createInsuranceLog({
         ...formData,

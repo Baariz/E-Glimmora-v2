@@ -6,6 +6,7 @@ import { Tabs } from '@/components/shared/Tabs';
 import { useCan } from '@/lib/rbac/usePermission';
 import { Permission } from '@/lib/types/permissions';
 import { useServices } from '@/lib/hooks/useServices';
+import { useCurrentUser } from '@/lib/hooks/useCurrentUser';
 import { Shield } from 'lucide-react';
 import { StatsRow, StatCard } from '@/components/b2b/layouts/StatsRow';
 import { ActiveCrisesDashboard } from '@/components/b2b/crisis/ActiveCrisesDashboard';
@@ -14,11 +15,10 @@ import { ExtractionProtocolList } from '@/components/b2b/crisis/ExtractionProtoc
 import { CrisisResources } from '@/components/b2b/crisis/CrisisResources';
 import type { AviationDisruption, ExtractionProtocol, SafeHouse, EmergencyContact } from '@/lib/types';
 
-const MOCK_INSTITUTION_ID = 'inst-001-uuid-placeholder';
-
 export default function CrisisResponsePage() {
   const { can } = useCan();
   const services = useServices();
+  const { user: currentUser } = useCurrentUser();
   const [loading, setLoading] = useState(true);
   const [disruptions, setDisruptions] = useState<AviationDisruption[]>([]);
   const [protocols, setProtocols] = useState<ExtractionProtocol[]>([]);
@@ -29,8 +29,8 @@ export default function CrisisResponsePage() {
     setLoading(true);
     try {
       const [disruptionData, protocolData, safeHouseData, contactData] = await Promise.all([
-        services.crisis.getDisruptions(MOCK_INSTITUTION_ID),
-        services.crisis.getProtocols(MOCK_INSTITUTION_ID),
+        services.crisis.getDisruptions(currentUser?.institutionId ?? ''),
+        services.crisis.getProtocols(currentUser?.institutionId ?? ''),
         services.crisis.getSafeHouses(),
         services.crisis.getEmergencyContacts(),
       ]);

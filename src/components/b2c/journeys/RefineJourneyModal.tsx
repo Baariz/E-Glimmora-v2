@@ -13,7 +13,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { PenLine, X, Save } from 'lucide-react';
 
 import { useServices } from '@/lib/hooks/useServices';
-import { MOCK_UHNI_USER_ID } from '@/lib/hooks/useCurrentUser';
+import { useCurrentUser } from '@/lib/hooks/useCurrentUser';
 import { cn } from '@/lib/utils/cn';
 
 import type { Journey } from '@/lib/types/entities';
@@ -30,6 +30,7 @@ export function RefineJourneyModal({
   trigger,
 }: RefineJourneyModalProps) {
   const services = useServices();
+  const { user: currentUser } = useCurrentUser();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -63,7 +64,7 @@ export function RefineJourneyModal({
         title,
         narrative,
         status: journey.status,
-        modifiedBy: MOCK_UHNI_USER_ID,
+        modifiedBy: currentUser?.id ?? '',
       });
 
       // Update journey main fields

@@ -6,6 +6,7 @@ import { Tabs } from '@/components/shared/Tabs';
 import { useCan } from '@/lib/rbac/usePermission';
 import { Permission } from '@/lib/types/permissions';
 import { useServices } from '@/lib/hooks/useServices';
+import { useCurrentUser } from '@/lib/hooks/useCurrentUser';
 import { Shield } from 'lucide-react';
 import { StatsRow, StatCard } from '@/components/b2b/layouts/StatsRow';
 import { IntegrationOverview } from '@/components/b2b/integrations/IntegrationOverview';
@@ -15,11 +16,10 @@ import { IntegrationConfigPanel } from '@/components/b2b/integrations/Integratio
 import type { ExternalIntegration } from '@/lib/types';
 import type { IntegrationDashboardStats } from '@/lib/services/interfaces/IIntegrationService';
 
-const MOCK_INSTITUTION_ID = 'inst-001-uuid-placeholder';
-
 export default function ExternalIntegrationsPage() {
   const { can } = useCan();
   const services = useServices();
+  const { user: currentUser } = useCurrentUser();
   const [loading, setLoading] = useState(true);
   const [integrations, setIntegrations] = useState<ExternalIntegration[]>([]);
   const [dashStats, setDashStats] = useState<IntegrationDashboardStats | null>(null);
@@ -28,8 +28,8 @@ export default function ExternalIntegrationsPage() {
     setLoading(true);
     try {
       const [integrationData, statsData] = await Promise.all([
-        services.integration.getIntegrations(MOCK_INSTITUTION_ID),
-        services.integration.getDashboardStats(MOCK_INSTITUTION_ID),
+        services.integration.getIntegrations(currentUser?.institutionId ?? ''),
+        services.integration.getDashboardStats(currentUser?.institutionId ?? ''),
       ]);
       setIntegrations(integrationData);
       setDashStats(statsData);

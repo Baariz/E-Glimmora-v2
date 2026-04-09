@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, BarChart, Bar } from 'recharts';
 
 import { useServices } from '@/lib/hooks/useServices';
+import { useCurrentUser } from '@/lib/hooks/useCurrentUser';
 import { useCan } from '@/lib/rbac/usePermission';
 import { Permission } from '@/lib/types/permissions';
 import { ClientRecord, Journey, JourneyStatus, RiskCategory } from '@/lib/types';
@@ -21,13 +22,10 @@ import { DataTable } from '@/components/b2b/tables/DataTable';
 import { StatsRow } from '@/components/b2b/layouts/StatsRow';
 import { StatusBadge } from '@/components/b2b/layouts/StatusBadge';
 
-// Hardcoded mock IDs for development
-const MOCK_RM_USER_ID = 'b2b-rm-001-uuid-placeholder';
-const MOCK_INSTITUTION_ID = 'inst-001-uuid-placeholder';
-
 export default function PortfolioPage() {
   const router = useRouter();
   const services = useServices();
+  const { user: currentUser } = useCurrentUser();
   const { can } = useCan();
   const canReadRisk = can(Permission.READ, 'risk');
   const canReadRevenue = can(Permission.READ, 'revenue');
@@ -48,7 +46,7 @@ export default function PortfolioPage() {
       setLoading(true);
 
       // Load clients
-      const clientData = await services.client.getClientsByRM(MOCK_RM_USER_ID);
+      const clientData = await services.client.getClientsByRM((currentUser?.id ?? ''));
       setClients(clientData);
 
       // Load journeys for all clients
@@ -63,13 +61,13 @@ export default function PortfolioPage() {
 
       // Load risk metrics
       if (canReadRisk) {
-        const risk = await services.risk.getPortfolioRisk(MOCK_INSTITUTION_ID);
+        const risk = await services.risk.getPortfolioRisk((currentUser?.institutionId ?? ''));
         setRiskMetrics(risk);
       }
 
       // Load revenue records
       if (canReadRevenue) {
-        const revenue = await services.contract.getRevenueRecords(MOCK_INSTITUTION_ID);
+        const revenue = await services.contract.getRevenueRecords((currentUser?.institutionId ?? ''));
         setRevenueRecords(revenue);
       }
     } catch (error) {

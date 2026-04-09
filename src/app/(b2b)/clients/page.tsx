@@ -12,15 +12,13 @@ import { formatDistanceToNow } from 'date-fns';
 import { useCan } from '@/lib/rbac/usePermission';
 import { Permission } from '@/lib/types/permissions';
 import { useServices } from '@/lib/hooks/useServices';
+import { useCurrentUser } from '@/lib/hooks/useCurrentUser';
 import { ClientRecord } from '@/lib/types';
 import { DataTable } from '@/components/b2b/tables/DataTable';
 import { StatsRow, StatCard } from '@/components/b2b/layouts/StatsRow';
 import { StatusBadge } from '@/components/b2b/layouts/StatusBadge';
 import { Button } from '@/components/shared/Button';
 import { Users } from 'lucide-react';
-
-// Hardcoded mock RM ID for development
-const MOCK_RM_USER_ID = 'b2b-rm-001-uuid-placeholder';
 
 // Risk category color map
 const RISK_COLOR_MAP: Record<string, string> = {
@@ -41,6 +39,7 @@ const NDA_COLOR_MAP: Record<string, string> = {
 export default function ClientsPage() {
   const router = useRouter();
   const services = useServices();
+  const { user: currentUser } = useCurrentUser();
   const { can } = useCan();
   const canReadClient = can(Permission.READ, 'client');
   const canWriteClient = can(Permission.WRITE, 'client');
@@ -55,7 +54,7 @@ export default function ClientsPage() {
   async function loadClients() {
     try {
       setLoading(true);
-      const data = await services.client.getClientsByRM(MOCK_RM_USER_ID);
+      const data = await services.client.getClientsByRM((currentUser?.id ?? ''));
       setClients(data);
     } catch (error) {
       console.error('Failed to load clients:', error);

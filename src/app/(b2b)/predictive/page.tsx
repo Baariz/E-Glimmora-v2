@@ -6,6 +6,7 @@ import { Tabs } from '@/components/shared/Tabs';
 import { useCan } from '@/lib/rbac/usePermission';
 import { Permission } from '@/lib/types/permissions';
 import { useServices } from '@/lib/hooks/useServices';
+import { useCurrentUser } from '@/lib/hooks/useCurrentUser';
 import { Shield } from 'lucide-react';
 import { StatsRow, StatCard } from '@/components/b2b/layouts/StatsRow';
 import { TravelFatigueDashboard } from '@/components/b2b/intelligence/TravelFatigueDashboard';
@@ -14,11 +15,10 @@ import { PredictiveAlertsList } from '@/components/b2b/intelligence/PredictiveAl
 import { PredictiveTrends } from '@/components/b2b/intelligence/PredictiveTrends';
 import type { TravelFatigueAssessment, FamilyAlignmentAssessment, PredictiveAlert } from '@/lib/types';
 
-const MOCK_INSTITUTION_ID = 'inst-001-uuid-placeholder';
-
 export default function PredictiveIntelligencePage() {
   const { can } = useCan();
   const services = useServices();
+  const { user: currentUser } = useCurrentUser();
   const [loading, setLoading] = useState(true);
   const [fatigueData, setFatigueData] = useState<TravelFatigueAssessment[]>([]);
   const [alignmentData, setAlignmentData] = useState<FamilyAlignmentAssessment[]>([]);
@@ -28,9 +28,9 @@ export default function PredictiveIntelligencePage() {
     setLoading(true);
     try {
       const [fatigue, alignment, alertsData] = await Promise.all([
-        services.predictive.getTravelFatigueAssessments(MOCK_INSTITUTION_ID),
-        services.predictive.getFamilyAlignmentAssessments(MOCK_INSTITUTION_ID),
-        services.predictive.getPredictiveAlerts(MOCK_INSTITUTION_ID),
+        services.predictive.getTravelFatigueAssessments(currentUser?.institutionId ?? ''),
+        services.predictive.getFamilyAlignmentAssessments(currentUser?.institutionId ?? ''),
+        services.predictive.getPredictiveAlerts(currentUser?.institutionId ?? ''),
       ]);
       setFatigueData(fatigue);
       setAlignmentData(alignment);

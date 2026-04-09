@@ -1,14 +1,17 @@
 /**
  * Single Device API Route
  * DELETE /api/auth/devices/[id] - Revoke a trusted device
+ * Proxies to real backend API
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { services } from '@/lib/services';
+
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || 'https://elan-glimmora-api.onrender.com';
 
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -21,21 +24,30 @@ export async function DELETE(
       );
     }
 
-    const { id: deviceId } = await params;
-
-    // Get all devices for this user to verify ownership
-    const devices = await services.device.getDevicesByUserId(session.user.id);
-    const device = devices.find((d) => d.id === deviceId);
-
-    if (!device) {
+    const apiToken = (session as any).apiToken;
+    if (!apiToken) {
       return NextResponse.json(
-        { error: 'Device not found or unauthorized' },
-        { status: 404 }
+        { error: 'No API token in session' },
+        { status: 401 }
       );
     }
 
-    // Revoke the device
-    await services.device.revokeDevice(deviceId);
+    const { id: deviceId } = await params;
+
+    // Call real backend
+    const response = await fetch(`${API_BASE_URL}/api/auth/devices/${deviceId}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${apiToken}` },
+    });
+
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+      return NextResponse.json(
+        { error: result.error?.message || 'Device not found or unauthorized' },
+        { status: response.status }
+      );
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

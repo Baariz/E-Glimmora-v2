@@ -16,17 +16,17 @@ import { useCan } from '@/lib/rbac/usePermission';
 import { Permission } from '@/lib/types/permissions';
 import { Journey, JourneyStatus } from '@/lib/types/entities';
 import { useServices } from '@/lib/hooks/useServices';
+import { useCurrentUser } from '@/lib/hooks/useCurrentUser';
 import { getStateLabel, getStateColor } from '@/lib/state-machines/journey-workflow';
 import { formatDistanceToNow } from 'date-fns';
 
 type ViewMode = 'pipeline' | 'table';
 
-const MOCK_RM_USER_ID = 'b2b-rm-001-uuid-placeholder';
-
 export default function GovernancePage() {
   const router = useRouter();
   const { can } = useCan();
   const services = useServices();
+  const { user: currentUser } = useCurrentUser();
   const [viewMode, setViewMode] = useState<ViewMode>('pipeline');
   const [journeys, setJourneys] = useState<Journey[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,7 +39,7 @@ export default function GovernancePage() {
     try {
       setLoading(true);
       // For mock, get all journeys from localStorage (filter by institution in production)
-      const allJourneys = await services.journey.getJourneys(MOCK_RM_USER_ID, 'b2b');
+      const allJourneys = await services.journey.getJourneys(currentUser?.id ?? '', 'b2b');
       setJourneys(allJourneys);
     } catch (error) {
       console.error('Failed to load journeys:', error);

@@ -11,7 +11,7 @@ import { motion } from 'framer-motion';
 import { AlertCircle, ArrowLeft } from 'lucide-react';
 
 import { useServices } from '@/lib/hooks/useServices';
-import { MOCK_UHNI_USER_ID } from '@/lib/hooks/useCurrentUser';
+import { useCurrentUser } from '@/lib/hooks/useCurrentUser';
 import { ThreadView } from '@/components/b2c/messaging/ThreadView';
 
 import type { MessageThread, Message, User, Journey } from '@/lib/types/entities';
@@ -20,6 +20,7 @@ export default function ThreadDetailPage() {
   const params = useParams();
   const router = useRouter();
   const services = useServices();
+  const { user: currentUser } = useCurrentUser();
   const threadId = params.threadId as string;
 
   const [thread, setThread] = useState<MessageThread | null>(null);
@@ -30,6 +31,7 @@ export default function ThreadDetailPage() {
   const [error, setError] = useState<string | null>(null);
 
   const loadThread = async () => {
+    if (!currentUser) return;
     setIsLoading(true);
     setError(null);
 
@@ -42,7 +44,7 @@ export default function ThreadDetailPage() {
         return;
       }
 
-      if (!fetchedThread.participants.includes(MOCK_UHNI_USER_ID)) {
+      if (!fetchedThread.participants.includes(currentUser.id)) {
         setError('You do not have access to this conversation');
         setIsLoading(false);
         return;
@@ -58,7 +60,7 @@ export default function ThreadDetailPage() {
 
       const threadParticipants = fetchedThread.participants.map((userId) => ({
         id: userId,
-        name: userId === MOCK_UHNI_USER_ID ? 'James Duchamp' : 'Sarah Chen',
+        name: userId === currentUser?.id ? 'James Duchamp' : 'Sarah Chen',
         email: `${userId}@example.com`,
         roles: {},
         createdAt: new Date().toISOString(),
@@ -85,11 +87,11 @@ export default function ThreadDetailPage() {
   };
 
   useEffect(() => {
-    if (threadId) {
+    if (threadId && currentUser) {
       loadThread();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [threadId]);
+  }, [threadId, currentUser]);
 
   if (isLoading) {
     return (

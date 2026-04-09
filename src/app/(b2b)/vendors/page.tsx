@@ -6,6 +6,7 @@ import { Tabs } from '@/components/shared/Tabs';
 import { useCan } from '@/lib/rbac/usePermission';
 import { Permission } from '@/lib/types/permissions';
 import { useServices } from '@/lib/hooks/useServices';
+import { useCurrentUser } from '@/lib/hooks/useCurrentUser';
 import { Shield } from 'lucide-react';
 import { StatsRow, StatCard } from '@/components/b2b/layouts/StatsRow';
 import { VendorDirectory } from '@/components/b2b/vendors/VendorDirectory';
@@ -14,11 +15,10 @@ import { ScorecardDashboard } from '@/components/b2b/vendors/ScorecardDashboard'
 import { VendorAlertsList } from '@/components/b2b/vendors/VendorAlertsList';
 import type { Vendor, VendorScreening, VendorScorecard, VendorAlert } from '@/lib/types';
 
-const MOCK_INSTITUTION_ID = 'inst-001-uuid-placeholder';
-
 export default function VendorGovernancePage() {
   const { can } = useCan();
   const services = useServices();
+  const { user: currentUser } = useCurrentUser();
   const [loading, setLoading] = useState(true);
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [screenings, setScreenings] = useState<VendorScreening[]>([]);
@@ -29,10 +29,10 @@ export default function VendorGovernancePage() {
     setLoading(true);
     try {
       const [vendorData, screeningData, scorecardData, alertData] = await Promise.all([
-        services.vendor.getVendors(MOCK_INSTITUTION_ID),
-        services.vendor.getScreenings(MOCK_INSTITUTION_ID),
-        services.vendor.getScorecards(MOCK_INSTITUTION_ID),
-        services.vendor.getVendorAlerts(MOCK_INSTITUTION_ID),
+        services.vendor.getVendors(currentUser?.institutionId ?? ''),
+        services.vendor.getScreenings(currentUser?.institutionId ?? ''),
+        services.vendor.getScorecards(currentUser?.institutionId ?? ''),
+        services.vendor.getVendorAlerts(currentUser?.institutionId ?? ''),
       ]);
       setVendors(vendorData);
       setScreenings(screeningData);

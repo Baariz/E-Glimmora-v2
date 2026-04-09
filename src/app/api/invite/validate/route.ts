@@ -1,45 +1,50 @@
-import { NextResponse } from 'next/server'
-import { validateInviteCode } from '@/lib/auth/invite-codes'
-
 /**
  * POST /api/invite/validate
- *
- * Validates invite code against backend (existence, status, usage limits, expiry)
- *
- * Upgraded from format-only stub (02-01) to real backend validation (02-03)
+ * Validates invite code against real backend API
  */
+
+import { NextResponse } from 'next/server';
+
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || 'https://elan-glimmora-api.onrender.com';
+
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
-    const { code } = body
+    const body = await request.json();
+    const { code } = body;
 
     // Validate request body
     if (!code || typeof code !== 'string') {
       return NextResponse.json(
         { valid: false, error: 'Invite code is required' },
         { status: 400 }
-      )
+      );
     }
 
-    // Real backend validation via service layer
-    const validation = await validateInviteCode(code)
+    // Call real backend validation endpoint (public, no auth needed)
+    const response = await fetch(
+      `${API_BASE_URL}/api/invites/validate?code=${encodeURIComponent(code)}`,
+      { method: 'GET', headers: { 'Accept': 'application/json' } }
+    );
 
-    if (!validation.valid) {
+    const result = await response.json();
+
+    if (!response.ok || !result.success || !result.data?.valid) {
       return NextResponse.json(
-        { valid: false, error: validation.error },
+        { valid: false, error: result.data?.message || result.error?.message || 'Invalid invite code' },
         { status: 422 }
-      )
+      );
     }
 
     return NextResponse.json(
-      { valid: true, type: validation.inviteCode!.type },
+      { valid: true, type: result.data.type },
       { status: 200 }
-    )
+    );
   } catch (error) {
-    console.error('Invite validation error:', error)
+    console.error('Invite validation error:', error);
     return NextResponse.json(
       { valid: false, error: 'Internal server error' },
       { status: 500 }
-    )
+    );
   }
 }

@@ -1,13 +1,14 @@
 /**
  * MFA Setup API Route
  * POST /api/auth/mfa/setup
- * Generates a new MFA secret for the authenticated user
+ * Proxies to real backend API for MFA secret generation
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { generateMFASecret } from '@/lib/auth/mfa';
-import { services } from '@/lib/services';
+
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || 'https://elan-glimmora-api.onrender.com';
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,17 +21,34 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate MFA secret
-    const { secret, uri } = generateMFASecret(session.user.email);
+    const apiToken = (session as any).apiToken;
+    if (!apiToken) {
+      return NextResponse.json(
+        { error: 'No API token in session' },
+        { status: 401 }
+      );
+    }
 
-    // Store secret on user (mfaEnabled will be false until verified)
-    await services.user.updateUser(session.user.id, {
-      mfaSecret: secret,
-      mfaEnabled: false,
+    // Call real backend
+    const response = await fetch(`${API_BASE_URL}/api/auth/mfa/setup`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiToken}`,
+        'Content-Type': 'application/json',
+      },
     });
 
-    // Return only the otpauth URI (never return the secret to client)
-    return NextResponse.json({ otpauthUri: uri });
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+      return NextResponse.json(
+        { error: result.error?.message || 'Failed to setup MFA' },
+        { status: response.status }
+      );
+    }
+
+    // Return the otpauth URI for QR code generation
+    return NextResponse.json({ otpauthUri: result.data.uri });
   } catch (error) {
     console.error('MFA setup error:', error);
     return NextResponse.json(

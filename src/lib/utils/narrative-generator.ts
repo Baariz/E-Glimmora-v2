@@ -1,15 +1,14 @@
 /**
- * Mock AI Narrative Generator (JRNY-01)
+ * AI Narrative Generator (JRNY-01)
  * Generates 3-5 personalized journey narratives from an intent profile.
- * Template-based approach with variation based on life stage and emotional drivers.
  *
- * This simulates the "Journey Intelligence" AI that creates bespoke travel
- * proposals from the UHNI's emotional landscape.
+ * Uses the backend /api/journeys/generate endpoint (AI-powered with OpenAI).
+ * Falls back to local template matching if the API call fails.
  */
 
 import type { IntentProfile, Journey, JourneyCategory, DiscretionLevel } from '@/lib/types/entities';
 import { JourneyStatus } from '@/lib/types/entities';
-import { MockJourneyService } from '@/lib/services/mock/journey.mock';
+import { services } from '@/lib/services/singleton';
 
 interface NarrativeTemplate {
   category: JourneyCategory;
@@ -141,12 +140,21 @@ const NARRATIVE_TEMPLATES: NarrativeTemplate[] = [
 
 /**
  * Generate 3-5 narrative journeys tailored to the user's intent profile.
- * Uses template matching based on emotional drivers and life stage.
+ * Calls the backend AI generation endpoint first; falls back to local
+ * template matching if the API is unavailable.
  */
 export async function generateNarrativeJourneys(
   intentProfile: IntentProfile
 ): Promise<Journey[]> {
-  const journeyService = new MockJourneyService();
+  // Try backend AI-powered generation first
+  try {
+    const generated = await services.journey.generateJourneys(intentProfile.userId, 4);
+    if (generated.length > 0) return generated;
+  } catch (err) {
+    console.warn('API journey generation failed, falling back to local templates:', err);
+  }
+
+  // ── Fallback: local template matching ──────────────────────────────────────
 
   // Score each template based on alignment with intent profile
   const scoredTemplates = NARRATIVE_TEMPLATES.map((template) => {
@@ -173,28 +181,31 @@ export async function generateNarrativeJourneys(
   const count = 3 + Math.floor(Math.random() * 3); // 3-5 journeys
   const selectedTemplates = scoredTemplates.slice(0, count).map((s) => s.template);
 
-  // Create Journey entities from templates
+  // Create Journey entities from templates via the API
   const journeys: Journey[] = [];
 
   for (const template of selectedTemplates) {
-    const journey = await journeyService.createJourney({
-      userId: intentProfile.userId,
-      title: template.title,
-      narrative: template.narrative,
-      category: template.category,
-      context: 'b2c',
-    });
+    try {
+      const journey = await services.journey.createJourney({
+        userId: intentProfile.userId,
+        title: template.title,
+        narrative: template.narrative,
+        category: template.category,
+        context: 'b2c',
+      });
 
-    // Update with additional fields not in CreateJourneyInput
-    const enrichedJourney = await journeyService.updateJourney(journey.id, {
-      emotionalObjective: template.emotionalObjective,
-      strategicReasoning: template.strategicReasoning,
-      riskSummary: template.riskSummary,
-      discretionLevel: template.discretionLevel,
-      status: JourneyStatus.DRAFT,
-    });
+      // Update with additional fields not in CreateJourneyInput
+      const enrichedJourney = await services.journey.updateJourney(journey.id, {
+        emotionalObjective: template.emotionalObjective,
+        strategicReasoning: template.strategicReasoning,
+        riskSummary: template.riskSummary,
+        discretionLevel: template.discretionLevel,
+      });
 
-    journeys.push(enrichedJourney);
+      journeys.push(enrichedJourney);
+    } catch (err) {
+      console.error('Failed to create journey from template:', template.title, err);
+    }
   }
 
   return journeys;

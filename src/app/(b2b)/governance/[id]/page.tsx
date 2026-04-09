@@ -13,6 +13,7 @@ import { useCan } from '@/lib/rbac/usePermission';
 import { Permission } from '@/lib/types/permissions';
 import { Journey, ClientRecord } from '@/lib/types/entities';
 import { useServices } from '@/lib/hooks/useServices';
+import { useCurrentUser } from '@/lib/hooks/useCurrentUser';
 import { getStateLabel, getStateColor } from '@/lib/state-machines/journey-workflow';
 import { Card, CardHeader, CardContent } from '@/components/shared/Card';
 import { Button } from '@/components/shared/Button';
@@ -32,6 +33,7 @@ export default function GovernanceDetailPage() {
   const router = useRouter();
   const { can } = useCan();
   const services = useServices();
+  const { user: currentUser } = useCurrentUser();
   const journeyId = params.id as string;
 
   const [journey, setJourney] = useState<Journey | null>(null);
@@ -59,7 +61,7 @@ export default function GovernanceDetailPage() {
       // Load client info
       if (journeyData.userId) {
         // In mock, we need to find client by userId
-        const clients = await services.client.getClientsByRM('b2b-rm-001-uuid-placeholder');
+        const clients = await services.client.getClientsByRM(currentUser?.id ?? '');
         const clientData = clients.find((c) => c.userId === journeyData.userId);
         if (clientData) {
           setClient(clientData);
@@ -82,7 +84,7 @@ export default function GovernanceDetailPage() {
         title: journey.title,
         narrative: editedNarrative,
         status: journey.status,
-        modifiedBy: 'b2b-rm-001-uuid-placeholder',
+        modifiedBy: (currentUser?.id ?? ''),
       });
 
       toast.success('Journey narrative updated');

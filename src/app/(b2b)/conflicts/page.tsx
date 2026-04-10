@@ -25,6 +25,7 @@ export default function ConflictDetectionPage() {
   const [conflictStats, setConflictStats] = useState<ConflictStats | null>(null);
 
   const loadData = async () => {
+    if (!currentUser) return;
     setLoading(true);
     try {
       const [conflictData, matrixData, statsData] = await Promise.all([
@@ -43,7 +44,7 @@ export default function ConflictDetectionPage() {
   };
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => { loadData(); }, [currentUser]);
 
   const handleAcknowledge = async (conflictId: string) => {
     await services.conflict.acknowledgeConflict(conflictId, 'current-user');

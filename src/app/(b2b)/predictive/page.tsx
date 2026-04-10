@@ -25,6 +25,7 @@ export default function PredictiveIntelligencePage() {
   const [alerts, setAlerts] = useState<PredictiveAlert[]>([]);
 
   const loadData = async () => {
+    if (!currentUser) return;
     setLoading(true);
     try {
       const [fatigue, alignment, alertsData] = await Promise.all([
@@ -43,7 +44,7 @@ export default function PredictiveIntelligencePage() {
   };
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => { loadData(); }, [currentUser]);
 
   const handleAcknowledge = async (alertId: string) => {
     await services.predictive.acknowledgeAlert(alertId);

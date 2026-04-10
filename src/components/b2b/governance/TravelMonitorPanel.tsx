@@ -55,7 +55,7 @@ export function TravelMonitorPanel({ journeyId }: TravelMonitorPanelProps) {
     <div className="bg-slate-900 rounded-xl border border-slate-700 overflow-hidden">
       <div className="px-5 py-3 border-b border-slate-700 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <div className={cn('w-2 h-2 rounded-full', loading ? 'bg-amber-400 animate-pulse' : 'bg-emerald-400 animate-pulse')} />
           <span className="text-slate-300 font-sans text-sm font-medium">Live Journey Monitor</span>
         </div>
         <span className="text-slate-500 text-xs font-sans">Internal — Not visible to client</span>

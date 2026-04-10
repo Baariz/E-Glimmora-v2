@@ -32,14 +32,15 @@ export default function GovernancePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadJourneys();
-  }, []);
+    if (currentUser) loadJourneys();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser]);
 
   const loadJourneys = async () => {
+    if (!currentUser) return;
     try {
       setLoading(true);
-      // For mock, get all journeys from localStorage (filter by institution in production)
-      const allJourneys = await services.journey.getJourneys(currentUser?.id ?? '', 'b2b');
+      const allJourneys = await services.journey.getJourneys(currentUser.id, 'b2b');
       setJourneys(allJourneys);
     } catch (error) {
       console.error('Failed to load journeys:', error);

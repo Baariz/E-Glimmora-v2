@@ -6,6 +6,9 @@
 import type {
   Journey,
   JourneyVersion,
+  JourneyFeedback,
+  PreDepartureBrief,
+  TravelMonitor,
   JourneyCategory,
   JourneyStatus,
   DiscretionLevel,

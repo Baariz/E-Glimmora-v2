@@ -25,6 +25,7 @@ export default function ExternalIntegrationsPage() {
   const [dashStats, setDashStats] = useState<IntegrationDashboardStats | null>(null);
 
   const loadData = async () => {
+    if (!currentUser) return;
     setLoading(true);
     try {
       const [integrationData, statsData] = await Promise.all([
@@ -41,7 +42,7 @@ export default function ExternalIntegrationsPage() {
   };
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => { loadData(); }, [currentUser]);
 
   if (!can(Permission.READ, 'integration')) {
     return (

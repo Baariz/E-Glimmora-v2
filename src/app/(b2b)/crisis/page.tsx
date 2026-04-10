@@ -26,6 +26,7 @@ export default function CrisisResponsePage() {
   const [contacts, setContacts] = useState<EmergencyContact[]>([]);
 
   const loadData = async () => {
+    if (!currentUser) return;
     setLoading(true);
     try {
       const [disruptionData, protocolData, safeHouseData, contactData] = await Promise.all([
@@ -46,7 +47,7 @@ export default function CrisisResponsePage() {
   };
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => { loadData(); }, [currentUser]);
 
   if (!can(Permission.READ, 'crisis')) {
     return (

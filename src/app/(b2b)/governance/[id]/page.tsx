@@ -258,11 +258,11 @@ export default function GovernanceDetailPage() {
           )}
 
           {/* Travel Monitor — only when EXECUTED */}
-          {journey.status === JourneyStatus.EXECUTED && <TravelMonitorPanel />}
+          {journey.status === JourneyStatus.EXECUTED && <TravelMonitorPanel journeyId={journey.id} />}
 
           {/* Pre-Departure Brief — only when APPROVED or PRESENTED */}
           {(journey.status === JourneyStatus.APPROVED || journey.status === JourneyStatus.PRESENTED) && (
-            <PreDepartureBrief clientName={client?.name || 'Client'} journeyTitle={journey.title} />
+            <PreDepartureBrief journeyId={journey.id} clientName={client?.name || 'Client'} journeyTitle={journey.title} />
           )}
         </div>
 

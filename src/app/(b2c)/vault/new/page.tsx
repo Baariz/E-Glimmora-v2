@@ -79,21 +79,21 @@ function NewMemoryContent() {
         });
       } else {
         if (!currentUser) return;
-        await services.memory.createMemory({
-          userId: currentUser.id,
-          title: data.title,
-          description: data.description,
-          type: data.type,
-        });
+        const newMemory = await services.memory.createMemory(
+          {
+            userId: currentUser.id,
+            title: data.title,
+            description: data.description,
+            type: data.type,
+          },
+          data.file
+        );
 
-        const memories = await services.memory.getMemories(currentUser.id);
-        const newMemory = memories[memories.length - 1];
-
-        if (newMemory) {
+        // Update with additional fields not supported in create
+        if (data.emotionalTags?.length || data.isMilestone) {
           await services.memory.updateMemory(newMemory.id, {
             emotionalTags: data.emotionalTags,
             isMilestone: data.isMilestone,
-            fileUrl: data.fileUrl,
           });
         }
       }

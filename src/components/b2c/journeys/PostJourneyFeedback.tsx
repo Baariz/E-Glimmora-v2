@@ -10,6 +10,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
+import { useServices } from '@/lib/hooks/useServices';
 
 const MOODS = [
   { emoji: '\uD83D\uDE14', label: 'Disappointing', value: 1 },
@@ -20,19 +21,33 @@ const MOODS = [
 ];
 
 interface PostJourneyFeedbackProps {
+  journeyId: string;
   journeyTitle: string;
   onSubmitted?: () => void;
 }
 
-export function PostJourneyFeedback({ journeyTitle, onSubmitted }: PostJourneyFeedbackProps) {
+export function PostJourneyFeedback({ journeyId, journeyTitle, onSubmitted }: PostJourneyFeedbackProps) {
+  const services = useServices();
   const [selectedMood, setSelectedMood] = useState<number | null>(null);
   const [reflection, setReflection] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!selectedMood) return;
-    setSubmitted(true);
-    onSubmitted?.();
+    setSubmitting(true);
+    try {
+      await services.journey.submitFeedback(journeyId, {
+        mood: selectedMood,
+        reflection: reflection || undefined,
+      });
+      setSubmitted(true);
+      onSubmitted?.();
+    } catch (error) {
+      console.error('Failed to submit feedback:', error);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (submitted) {

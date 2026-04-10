@@ -102,7 +102,7 @@ export function InviteFlowModal({ isOpen, onClose, role, onInviteComplete }: Inv
         onClick={handleClose}
       >
         <motion.div
-          className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden"
+          className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto"
           initial={{ opacity: 0, scale: 0.96, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.96, y: 20 }}

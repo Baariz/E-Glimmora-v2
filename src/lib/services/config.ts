@@ -22,18 +22,18 @@ import { IVendorService } from './interfaces/IVendorService';
 import { IConflictService } from './interfaces/IConflictService';
 import { IIntegrationService } from './interfaces/IIntegrationService';
 import { IPrivacyService } from './interfaces/IPrivacyService';
-import { MockPrivacyService } from './mock/privacy.mock';
 
 import { MockJourneyService } from './mock/journey.mock';
-import { MockMemoryService } from './mock/memory.mock';
 import { MockMessageService } from './mock/message.mock';
-import { MockInstitutionService } from './mock/institution.mock';
 import { ApiUserService } from './api/user.api';
 import { ApiInviteCodeService } from './api/invite-code.api';
 import { ApiDeviceService } from './api/device.api';
 import { ApiIntentService } from './api/intent.api';
 import { ApiJourneyService } from './api/journey.api';
 import { ApiMessageService } from './api/message.api';
+import { ApiPrivacyService } from './api/privacy.api';
+import { ApiMemoryService } from './api/memory.api';
+import { ApiInstitutionService } from './api/institution.api';
 import { MockClientService } from './mock/client.mock';
 import { MockRiskService } from './mock/risk.mock';
 import { MockContractService } from './mock/contract.mock';
@@ -66,10 +66,11 @@ export const services = {
   intent: new ApiIntentService(),
   journey: new ApiJourneyService(),
   message: new ApiMessageService(),
+  privacy: new ApiPrivacyService(),
+  memory: new ApiMemoryService(),
+  institution: new ApiInstitutionService(),
 
   // === Mock-only services (real API not yet implemented) ===
-  memory: new MockMemoryService(),
-  institution: new MockInstitutionService(),
   client: new MockClientService(),
   risk: new MockRiskService(),
   contract: new MockContractService(),
@@ -80,7 +81,6 @@ export const services = {
   vendor: new MockVendorService(),
   conflict: new MockConflictService(),
   integration: new MockIntegrationService(),
-  privacy: new MockPrivacyService(),
 } as {
   journey: IJourneyService;
   memory: IMemoryService;

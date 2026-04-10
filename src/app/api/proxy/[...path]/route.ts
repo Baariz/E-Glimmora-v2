@@ -33,10 +33,18 @@ async function proxyRequest(request: NextRequest, { params }: { params: Promise<
     headers['Authorization'] = `Bearer ${apiToken}`;
   }
 
-  // Only set Content-Type for non-GET requests with body
   const hasBody = request.method !== 'GET' && request.method !== 'HEAD';
+  const incomingContentType = request.headers.get('content-type') || '';
+  const isMultipart = incomingContentType.includes('multipart/form-data');
+
+  // Preserve original Content-Type for multipart (includes boundary),
+  // otherwise set JSON for standard API calls
   if (hasBody) {
-    headers['Content-Type'] = 'application/json';
+    if (isMultipart) {
+      headers['Content-Type'] = incomingContentType;
+    } else {
+      headers['Content-Type'] = 'application/json';
+    }
   }
 
   const fetchOptions: RequestInit = {
@@ -46,7 +54,12 @@ async function proxyRequest(request: NextRequest, { params }: { params: Promise<
 
   if (hasBody) {
     try {
-      fetchOptions.body = await request.text();
+      // Forward raw bytes for multipart, text for JSON
+      if (isMultipart) {
+        fetchOptions.body = await request.arrayBuffer();
+      } else {
+        fetchOptions.body = await request.text();
+      }
     } catch {
       // No body
     }

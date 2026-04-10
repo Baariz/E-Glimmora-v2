@@ -331,7 +331,7 @@ export default function JourneyDetailPage() {
             transition={{ duration: 0.8 }}
             className="mb-12"
           >
-            <PostJourneyFeedback journeyTitle={journey.title} />
+            <PostJourneyFeedback journeyId={journey.id} journeyTitle={journey.title} />
           </motion.div>
         )}
 

@@ -26,6 +26,7 @@ export default function VendorGovernancePage() {
   const [alerts, setAlerts] = useState<VendorAlert[]>([]);
 
   const loadData = async () => {
+    if (!currentUser) return;
     setLoading(true);
     try {
       const [vendorData, screeningData, scorecardData, alertData] = await Promise.all([
@@ -46,7 +47,7 @@ export default function VendorGovernancePage() {
   };
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => { loadData(); }, [currentUser]);
 
   const handleAcknowledgeAlert = async (alertId: string) => {
     await services.vendor.acknowledgeVendorAlert(alertId);

@@ -11,8 +11,10 @@ import Image from 'next/image';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils/cn';
 import { Wand2, Send } from 'lucide-react';
+import { useServices } from '@/lib/hooks/useServices';
 
 interface PreDepartureBriefProps {
+  journeyId: string;
   clientName: string;
   journeyTitle: string;
 }
@@ -26,7 +28,8 @@ const AGI_TEMPLATE = {
   specialInstructions: 'No public-facing itinerary exists. All arrangements are known only to your Élan team and those who need to know.',
 };
 
-export function PreDepartureBrief({ clientName, journeyTitle }: PreDepartureBriefProps) {
+export function PreDepartureBrief({ journeyId, clientName, journeyTitle }: PreDepartureBriefProps) {
+  const services = useServices();
   const [arrivalSummary, setArrivalSummary] = useState('');
   const [keyContact, setKeyContact] = useState('');
   const [keyContactRole, setKeyContactRole] = useState('');
@@ -44,9 +47,20 @@ export function PreDepartureBrief({ clientName, journeyTitle }: PreDepartureBrie
     setSpecialInstructions(AGI_TEMPLATE.specialInstructions);
   };
 
-  const handleSend = () => {
-    setSent(true);
-    toast.success('Pre-departure brief sent to client.');
+  const handleSend = async () => {
+    try {
+      const summary = [arrivalSummary, timing ? `Timing: ${timing}` : '', specialInstructions ? `Instructions: ${specialInstructions}` : ''].filter(Boolean).join('\n\n');
+      await services.journey.setPreDepartureBrief(journeyId, {
+        summary,
+        logistics: { keyContact, keyContactRole, discretionLevel },
+        advisorNotes: specialInstructions || undefined,
+      });
+      setSent(true);
+      toast.success('Pre-departure brief sent to client.');
+    } catch (error) {
+      console.error('Failed to send pre-departure brief:', error);
+      toast.error('Failed to send brief.');
+    }
   };
 
   const hasContent = arrivalSummary || keyContact || timing;

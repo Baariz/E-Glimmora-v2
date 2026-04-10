@@ -30,7 +30,7 @@ type MemoryFormData = z.infer<typeof MemoryFormSchema>;
 
 interface MemoryFormProps {
   initialData?: MemoryItem;
-  onSubmit: (data: MemoryFormData & { fileUrl?: string }) => Promise<void>;
+  onSubmit: (data: MemoryFormData & { fileUrl?: string; file?: File }) => Promise<void>;
   onCancel?: () => void;
 }
 
@@ -65,6 +65,7 @@ export function MemoryForm({ initialData, onSubmit, onCancel }: MemoryFormProps)
   const [uploadedFile, setUploadedFile] = useState<string | null>(
     initialData?.fileUrl || null
   );
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const emotionalTags = watch('emotionalTags');
   const isMilestone = watch('isMilestone');
@@ -75,12 +76,16 @@ export function MemoryForm({ initialData, onSubmit, onCancel }: MemoryFormProps)
       'video/*': ['.mp4', '.mov'],
       'audio/*': ['.mp3', '.wav'],
       'application/pdf': ['.pdf'],
+      'text/plain': ['.txt'],
+      'text/csv': ['.csv'],
+      'application/msword': ['.doc'],
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
     },
     maxFiles: 1,
     onDrop: (acceptedFiles) => {
       if (acceptedFiles.length > 0 && acceptedFiles[0]) {
-        const mockUrl = `https://cdn.elan.private/memories/${Date.now()}-${acceptedFiles[0].name}`;
-        setUploadedFile(mockUrl);
+        setSelectedFile(acceptedFiles[0]);
+        setUploadedFile(acceptedFiles[0].name);
       }
     },
   });
@@ -98,6 +103,7 @@ export function MemoryForm({ initialData, onSubmit, onCancel }: MemoryFormProps)
     await onSubmit({
       ...data,
       fileUrl: uploadedFile || undefined,
+      file: selectedFile || undefined,
     });
   };
 
@@ -259,7 +265,7 @@ export function MemoryForm({ initialData, onSubmit, onCancel }: MemoryFormProps)
             <span className="text-sm font-sans text-stone-600 truncate">{uploadedFile}</span>
             <button
               type="button"
-              onClick={() => setUploadedFile(null)}
+              onClick={() => { setUploadedFile(null); setSelectedFile(null); }}
               className="ml-4 w-7 h-7 rounded-full bg-white border border-stone-200/60 flex items-center justify-center text-stone-400 hover:text-stone-600 hover:border-stone-300 transition-all flex-shrink-0"
             >
               <X size={12} />

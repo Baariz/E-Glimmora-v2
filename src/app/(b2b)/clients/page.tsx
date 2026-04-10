@@ -47,11 +47,13 @@ export default function ClientsPage() {
   const [loading, setLoading] = useState(true);
   const [clients, setClients] = useState<ClientRecord[]>([]);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     loadClients();
-  }, []);
+  }, [currentUser]);
 
   async function loadClients() {
+    if (!currentUser) return;
     try {
       setLoading(true);
       const data = await services.client.getClientsByRM((currentUser?.id ?? ''));

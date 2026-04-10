@@ -37,11 +37,13 @@ export default function PortfolioPage() {
   const [riskMetrics, setRiskMetrics] = useState<any>(null);
   const [revenueRecords, setRevenueRecords] = useState<any[]>([]);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     loadDashboardData();
-  }, []);
+  }, [currentUser]);
 
   async function loadDashboardData() {
+    if (!currentUser) return;
     try {
       setLoading(true);
 

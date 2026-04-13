@@ -18,11 +18,8 @@ import { cn } from '@/lib/utils/cn'
 const inviteCodeSchema = z.object({
   inviteCode: z
     .string()
-    .min(1, 'Invite code is required')
-    .regex(
-      /^ELAN-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/,
-      'Invalid invite code format'
-    ),
+    .trim()
+    .min(1, 'Invite code is required'),
 })
 
 type InviteCodeForm = z.infer<typeof inviteCodeSchema>
@@ -45,27 +42,8 @@ export default function InvitePage() {
 
   const inviteCodeValue = watch('inviteCode', '')
 
-  // Auto-format invite code input
   const handleInviteCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '')
-
-    // Insert dashes after every 4 characters
-    if (value.length > 4) {
-      value = value.slice(0, 4) + '-' + value.slice(4)
-    }
-    if (value.length > 9) {
-      value = value.slice(0, 9) + '-' + value.slice(9)
-    }
-    if (value.length > 14) {
-      value = value.slice(0, 14) + '-' + value.slice(14)
-    }
-
-    // Limit to full invite code length
-    if (value.length > 19) {
-      value = value.slice(0, 19)
-    }
-
-    setValue('inviteCode', value, { shouldValidate: false })
+    setValue('inviteCode', e.target.value.toUpperCase(), { shouldValidate: false })
   }
 
   const onSubmit = async (data: InviteCodeForm) => {

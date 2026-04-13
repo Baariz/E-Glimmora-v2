@@ -39,7 +39,7 @@ const NDA_COLOR_MAP: Record<string, string> = {
 export default function ClientsPage() {
   const router = useRouter();
   const services = useServices();
-  const { user: currentUser } = useCurrentUser();
+  const { user: currentUser, isLoading: userLoading } = useCurrentUser();
   const { can } = useCan();
   const canReadClient = can(Permission.READ, 'client');
   const canWriteClient = can(Permission.WRITE, 'client');
@@ -63,6 +63,18 @@ export default function ClientsPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  // Wait for session to hydrate before deciding on permissions
+  if (userLoading || !currentUser) {
+    return (
+      <div className="p-8">
+        <div className="max-w-md mx-auto text-center">
+          <Users className="w-12 h-12 text-slate-300 mx-auto mb-4 animate-pulse" />
+          <p className="font-sans text-slate-500">Loading…</p>
+        </div>
+      </div>
+    );
   }
 
   // Permission gate

@@ -12,4 +12,5 @@ export { ApiMessageService } from './message.api';
 export { ApiPrivacyService } from './privacy.api';
 export { ApiMemoryService } from './memory.api';
 export { ApiInstitutionService } from './institution.api';
+export { ApiClientService } from './client.api';
 export { api, apiRequest, setAuthToken, getAuthToken, clearAuthToken, ApiError } from './client';

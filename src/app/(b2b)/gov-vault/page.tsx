@@ -5,7 +5,7 @@
  * GVLT-01 through GVLT-04: Governed vault view, report export, retention policies
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Card } from '@/components/shared/Card';
 import { Tabs } from '@/components/shared/Tabs';
 import { useCan } from '@/lib/rbac/usePermission';
@@ -14,10 +14,27 @@ import { GovernedVault } from '@/components/b2b/vault/GovernedVault';
 import { VaultReportExport } from '@/components/b2b/vault/VaultReportExport';
 import { RetentionPolicyManager } from '@/components/b2b/vault/RetentionPolicyManager';
 import { Shield, FileText, Settings } from 'lucide-react';
+import { useServices } from '@/lib/hooks/useServices';
+import { useCurrentUser } from '@/lib/hooks/useCurrentUser';
+import type { ClientRecord } from '@/lib/types';
 
 export default function GovernedMemoryVaultPage() {
   const { can } = useCan();
-  const [selectedClient, setSelectedClient] = useState('user-uhni-001');
+  const services = useServices();
+  const { user: currentUser } = useCurrentUser();
+  const [clients, setClients] = useState<ClientRecord[]>([]);
+  const [selectedClient, setSelectedClient] = useState('');
+
+  useEffect(() => {
+    if (!currentUser?.institutionId) return;
+    services.client
+      .getClientsByInstitution(currentUser.institutionId)
+      .then((list) => {
+        setClients(list);
+        if (list[0]?.userId) setSelectedClient(list[0].userId);
+      })
+      .catch((err) => console.error('Failed to load clients:', err));
+  }, [currentUser?.institutionId, services.client]);
 
   // Permission gate: can(Permission.READ, 'vault')
   if (!can(Permission.READ, 'vault')) {
@@ -40,7 +57,7 @@ export default function GovernedMemoryVaultPage() {
     {
       value: 'vault',
       label: 'Vault Entries',
-      content: <GovernedVault clientId={selectedClient} />
+      content: <GovernedVault clientId={selectedClient} clientName={clients.find((c) => c.userId === selectedClient)?.name} />
     },
     {
       value: 'reports',
@@ -76,11 +93,15 @@ export default function GovernedMemoryVaultPage() {
             <select
               value={selectedClient}
               onChange={(e) => setSelectedClient(e.target.value)}
-              className="px-4 py-2 border border-slate-300 rounded-md font-sans text-sm focus:outline-none focus:ring-2 focus:ring-rose-500"
+              disabled={clients.length === 0}
+              className="px-4 py-2 border border-slate-300 rounded-md font-sans text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 disabled:bg-slate-100"
             >
-              <option value="user-uhni-001">Alexandra Bennett (user-uhni-001)</option>
-              <option value="user-uhni-002">Marcus Pemberton-Shaw (user-uhni-002)</option>
-              <option value="user-uhni-003">Isabella von Habsburg (user-uhni-003)</option>
+              {clients.length === 0 && <option>No clients available</option>}
+              {clients.map((c) => (
+                <option key={c.id} value={c.userId}>
+                  {c.name || c.email || c.userId}
+                </option>
+              ))}
             </select>
           </div>
           <div className="text-right">
@@ -92,7 +113,13 @@ export default function GovernedMemoryVaultPage() {
 
       {/* Main Tabs */}
       <Card>
-        <Tabs items={tabs} defaultValue="vault" />
+        {selectedClient ? (
+          <Tabs items={tabs} defaultValue="vault" />
+        ) : (
+          <div className="text-center py-8 text-slate-500 font-sans text-sm">
+            Select a client to view their vault.
+          </div>
+        )}
       </Card>
     </div>
   );

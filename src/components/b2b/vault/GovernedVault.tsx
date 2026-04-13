@@ -10,7 +10,7 @@ import { useServices } from '@/lib/hooks/useServices';
 import { MemoryItem } from '@/lib/types/entities';
 import { Lock, Eye, Calendar } from 'lucide-react';
 
-export function GovernedVault({ clientId }: { clientId: string }) {
+export function GovernedVault({ clientId, clientName }: { clientId: string; clientName?: string }) {
   const { memory } = useServices();
   const [memories, setMemories] = useState<MemoryItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,7 +61,7 @@ export function GovernedVault({ clientId }: { clientId: string }) {
 
       <div>
         <h3 className="font-serif text-xl text-slate-900 mb-1">
-          Memory Vault for {clientId}
+          Memory Vault for {clientName || clientId}
         </h3>
         <p className="font-sans text-sm text-slate-600">
           Read-only timeline view ({memories.length} memories)

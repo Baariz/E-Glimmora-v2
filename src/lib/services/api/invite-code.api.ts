@@ -46,9 +46,8 @@ export class ApiInviteCodeService implements IInviteCodeService {
 
   async getInviteCodeById(id: string): Promise<InviteCode | null> {
     try {
-      // The backend doesn't have a direct get-by-id, so filter from list
-      const all = await this.getInviteCodes();
-      return all.find((c) => c.id === id) || null;
+      const raw = await api.get<ApiInviteCode>(`/api/invites/${id}`);
+      return toInviteCode(raw);
     } catch {
       return null;
     }
@@ -56,9 +55,11 @@ export class ApiInviteCodeService implements IInviteCodeService {
 
   async getInviteCodeByCode(code: string): Promise<InviteCode | null> {
     try {
-      // Use the validate endpoint to check existence, then find in list
-      const all = await this.getInviteCodes();
-      return all.find((c) => c.code === code) || null;
+      const raw = await api.get<ApiInviteCode | ApiInviteCode[]>(
+        `/api/invites?code=${encodeURIComponent(code)}`
+      );
+      const match = Array.isArray(raw) ? raw[0] : raw;
+      return match ? toInviteCode(match) : null;
     } catch {
       return null;
     }
@@ -67,6 +68,7 @@ export class ApiInviteCodeService implements IInviteCodeService {
   async createInviteCode(data: CreateInviteCodeInput): Promise<InviteCode> {
     const raw = await api.post<ApiInviteCode>('/api/invites', {
       type: data.type,
+      created_by: data.createdBy,
       assigned_roles: data.assignedRoles,
       institution_id: data.institutionId || null,
       max_uses: data.maxUses,
@@ -76,14 +78,21 @@ export class ApiInviteCodeService implements IInviteCodeService {
   }
 
   async updateInviteCode(id: string, data: Partial<InviteCode>): Promise<InviteCode> {
-    // Backend doesn't have a direct update endpoint; use the existing data
-    const existing = await this.getInviteCodeById(id);
-    if (!existing) throw new Error(`Invite code ${id} not found`);
-    return { ...existing, ...data };
+    const body: Record<string, unknown> = {};
+    if (data.type !== undefined) body.type = data.type;
+    if (data.assignedRoles !== undefined) body.assigned_roles = data.assignedRoles;
+    if (data.institutionId !== undefined) body.institution_id = data.institutionId || null;
+    if (data.maxUses !== undefined) body.max_uses = data.maxUses;
+    if (data.expiresAt !== undefined) body.expires_at = data.expiresAt || null;
+    if (data.status !== undefined) body.status = data.status;
+    const raw = await api.patch<ApiInviteCode>(`/api/invites/${id}`, body);
+    return toInviteCode(raw);
   }
 
-  async markAsUsed(id: string, _usedByUserId: string): Promise<InviteCode> {
-    const raw = await api.post<ApiInviteCode>(`/api/invites/${id}/use`);
+  async markAsUsed(id: string, usedByUserId: string): Promise<InviteCode> {
+    const raw = await api.post<ApiInviteCode>(`/api/invites/${id}/use`, {
+      used_by: usedByUserId,
+    });
     return toInviteCode(raw);
   }
 

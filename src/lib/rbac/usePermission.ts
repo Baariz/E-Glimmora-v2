@@ -16,11 +16,11 @@ import { Permission, Resource } from '@/lib/types/permissions';
  * @returns true if user has permission, false otherwise
  */
 export function usePermission(action: Permission, resource: Resource): boolean {
-  const { currentRole, context } = useAuth();
+  const { currentRole, context, isLoading } = useAuth();
 
-  if (!currentRole) {
-    return false;
-  }
+  // Avoid a flash of "Access Denied" before the session hydrates
+  if (isLoading) return true;
+  if (!currentRole) return false;
 
   return hasPermission(currentRole, action, resource, context);
 }
@@ -36,15 +36,15 @@ export function usePermission(action: Permission, resource: Resource): boolean {
  * }
  */
 export function useCan() {
-  const { currentRole, context } = useAuth();
+  const { currentRole, context, isLoading } = useAuth();
 
   const can = (action: Permission, resource: Resource): boolean => {
-    if (!currentRole) {
-      return false;
-    }
+    // Avoid a flash of "Access Denied" before the session hydrates
+    if (isLoading) return true;
+    if (!currentRole) return false;
 
     return hasPermission(currentRole, action, resource, context);
   };
 
-  return { can };
+  return { can, isLoading };
 }

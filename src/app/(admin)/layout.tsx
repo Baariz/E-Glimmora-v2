@@ -74,7 +74,7 @@ function AdminNav() {
             <div className="ml-4 pl-4 border-l border-sand-200 flex items-center gap-3">
               <span className="text-sm font-sans text-sand-600">Admin User</span>
               <button
-                onClick={() => signOut()}
+                onClick={() => signOut({ callbackUrl: '/' })}
                 className="text-sm font-sans text-sand-500 hover:text-rose-900 transition-colors"
               >
                 Logout
@@ -113,7 +113,7 @@ function AdminNav() {
             ))}
             <div className="pt-3 border-t border-sand-200">
               <button
-                onClick={() => signOut()}
+                onClick={() => signOut({ callbackUrl: '/' })}
                 className="text-sm font-sans text-sand-500 hover:text-rose-900 touch-target"
               >
                 Logout

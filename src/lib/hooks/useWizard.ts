@@ -22,6 +22,7 @@ interface WizardState<T = Record<string, unknown>> {
   next: (stepData: Partial<T>) => void;
   back: () => void;
   goToStep: (step: number) => void;
+  updateData: (stepData: Partial<T>) => void;
   reset: () => void;
 }
 
@@ -45,7 +46,7 @@ export function useWizard<T = Record<string, unknown>>({
         const stored = localStorage.getItem(storageKey);
         if (stored) {
           const parsed = JSON.parse(stored);
-          setFormData(parsed.formData || initialDataRef.current);
+          setFormData({ ...initialDataRef.current, ...(parsed.formData || {}) });
           setCurrentStep(parsed.currentStep || 1);
         }
       } catch (error) {
@@ -97,6 +98,10 @@ export function useWizard<T = Record<string, unknown>>({
     [totalSteps]
   );
 
+  const updateData = useCallback((stepData: Partial<T>) => {
+    setFormData((prev) => ({ ...prev, ...stepData }));
+  }, []);
+
   const reset = useCallback(() => {
     setFormData(initialDataRef.current);
     setCurrentStep(1);
@@ -114,6 +119,7 @@ export function useWizard<T = Record<string, unknown>>({
     next,
     back,
     goToStep,
+    updateData,
     reset,
   };
 }

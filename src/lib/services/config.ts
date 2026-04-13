@@ -34,7 +34,7 @@ import { ApiMessageService } from './api/message.api';
 import { ApiPrivacyService } from './api/privacy.api';
 import { ApiMemoryService } from './api/memory.api';
 import { ApiInstitutionService } from './api/institution.api';
-import { MockClientService } from './mock/client.mock';
+import { ApiClientService } from './api/client.api';
 import { MockRiskService } from './mock/risk.mock';
 import { MockContractService } from './mock/contract.mock';
 import { MockAuditService } from './mock/audit.mock';
@@ -69,9 +69,9 @@ export const services = {
   privacy: new ApiPrivacyService(),
   memory: new ApiMemoryService(),
   institution: new ApiInstitutionService(),
+  client: new ApiClientService(),
 
   // === Mock-only services (real API not yet implemented) ===
-  client: new MockClientService(),
   risk: new MockRiskService(),
   contract: new MockContractService(),
   audit: new MockAuditService(),

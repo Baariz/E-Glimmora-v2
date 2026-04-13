@@ -35,6 +35,8 @@ interface AuthApiResponse {
       roles: UserRoles;
       mfaEnabled: boolean;
       mfaVerified: boolean;
+      institutionId?: string | null;
+      institution_id?: string | null;
     };
   };
   error?: {
@@ -113,6 +115,22 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
           const { user, access_token } = result.data;
 
+          // Hydrate institution_id from the backend user record (login response omits it)
+          let institutionId: string | null =
+            user.institutionId ?? user.institution_id ?? null;
+          if (!institutionId) {
+            try {
+              const profileRes = await fetch(`${API_BASE_URL}/api/users/${user.id}`, {
+                headers: { Authorization: `Bearer ${access_token}` },
+              });
+              const profileJson = await profileRes.json();
+              const profile = profileJson?.data ?? profileJson;
+              institutionId = profile?.institution_id ?? profile?.institutionId ?? null;
+            } catch {
+              // non-fatal — session just won't have institutionId
+            }
+          }
+
           return {
             id: user.id,
             email: user.email,
@@ -120,6 +138,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             roles: user.roles,
             mfaEnabled: user.mfaEnabled,
             mfaVerified: user.mfaVerified,
+            institutionId,
             // Store the API token so it can be propagated to the session
             apiToken: access_token,
           };
@@ -146,6 +165,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           mfaEnabled?: boolean;
           mfaVerified?: boolean;
           apiToken?: string;
+          institutionId?: string | null;
         };
         if (userWithRoles.roles) {
           token.userId = user.id!;
@@ -153,6 +173,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           token.mfaEnabled = userWithRoles.mfaEnabled;
           token.mfaVerified = userWithRoles.mfaVerified ?? true;
         }
+        token.institutionId = userWithRoles.institutionId ?? null;
         // Store the API JWT in the NextAuth token
         if (userWithRoles.apiToken) {
           token.apiToken = userWithRoles.apiToken;
@@ -173,6 +194,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         (session.user as any).roles = token.roles;
         (session.user as any).mfaEnabled = token.mfaEnabled;
         (session.user as any).mfaVerified = token.mfaVerified;
+        (session.user as any).institutionId = token.institutionId ?? null;
         // Expose API token to client so it can be used for direct API calls
         (session as any).apiToken = token.apiToken;
       }

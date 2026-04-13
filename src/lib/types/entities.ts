@@ -839,6 +839,7 @@ export interface Hotel {
   privacyScore: number;
   description: string;
   clientDescription: string;
+  advisorNotes?: string;
   amenities: HotelAmenity[];
   imageUrl?: string;
   isActive: boolean;
@@ -863,6 +864,9 @@ export interface Package {
   id: string;
   name: string;
   clientTitle: string;
+  description?: string;
+  clientDescription?: string;
+  advisorNotes?: string;
   hotelId: string;
   hotelName: string;
   duration: number;

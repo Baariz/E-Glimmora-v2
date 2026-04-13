@@ -22,7 +22,11 @@ import { IVendorService } from './interfaces/IVendorService';
 import { IConflictService } from './interfaces/IConflictService';
 import { IIntegrationService } from './interfaces/IIntegrationService';
 import { IPrivacyService } from './interfaces/IPrivacyService';
+import { IHotelService } from './interfaces/IHotelService';
+import { IPackageService } from './interfaces/IPackageService';
 import { MockPrivacyService } from './mock/privacy.mock';
+import { ApiHotelService } from './api/hotel.api';
+import { ApiPackageService } from './api/package.api';
 
 import { MockJourneyService } from './mock/journey.mock';
 import { MockMemoryService } from './mock/memory.mock';
@@ -66,6 +70,8 @@ export const services = {
   intent: new ApiIntentService(),
   journey: new ApiJourneyService(),
   message: new ApiMessageService(),
+  hotel: new ApiHotelService(),
+  package: new ApiPackageService(),
 
   // === Mock-only services (real API not yet implemented) ===
   memory: new MockMemoryService(),
@@ -101,6 +107,8 @@ export const services = {
   conflict: IConflictService;
   integration: IIntegrationService;
   privacy: IPrivacyService;
+  hotel: IHotelService;
+  package: IPackageService;
 };
 
 /**

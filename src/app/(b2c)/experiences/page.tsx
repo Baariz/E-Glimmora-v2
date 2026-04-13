@@ -2,11 +2,11 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { useState } from 'react';
-import { MOCK_PACKAGES } from '@/lib/mock/packages.mock';
-import { MOCK_HOTELS } from '@/lib/mock/hotels.mock';
+import { useEffect, useState } from 'react';
+import { useServices } from '@/lib/hooks/useServices';
+import type { Hotel, Package } from '@/lib/types/entities';
 import { cn } from '@/lib/utils/cn';
-import { ArrowRight, MapPin, Moon, Sparkles, Calendar } from 'lucide-react';
+import { ArrowRight, MapPin, Moon, Sparkles, Loader2 } from 'lucide-react';
 import { IMAGES } from '@/lib/constants/imagery';
 import { ParallaxSection } from '@/components/ui/ParallaxSection';
 
@@ -18,7 +18,42 @@ const HOTEL_IMAGES: Record<string, string> = {
 };
 
 export default function ExperiencesPage() {
-  const packages = MOCK_PACKAGES.filter(p => p.isActive);
+  const services = useServices();
+  const [packages, setPackages] = useState<Package[]>([]);
+  const [hotelMap, setHotelMap] = useState<Record<string, Hotel>>({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const pkgs = await services.package.getActivePackages();
+        if (cancelled) return;
+        setPackages(pkgs);
+
+        const uniqueHotelIds = Array.from(new Set(pkgs.map((p) => p.hotelId).filter(Boolean)));
+        const hotels = await Promise.all(
+          uniqueHotelIds.map((id) => services.hotel.getHotelById(id))
+        );
+        if (cancelled) return;
+        const map: Record<string, Hotel> = {};
+        hotels.forEach((h) => {
+          if (h) map[h.id] = h;
+        });
+        setHotelMap(map);
+      } catch {
+        if (!cancelled) setError('Unable to load experiences. Please try again.');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [services]);
 
   return (
     <div
@@ -79,10 +114,30 @@ export default function ExperiencesPage() {
         </div>
       </div>
 
+      {/* ═══════ LOADING / ERROR ═══════ */}
+      {loading && (
+        <div className="max-w-6xl mx-auto px-6 sm:px-12 lg:px-16 py-20 flex items-center justify-center text-stone-500">
+          <Loader2 className="w-5 h-5 animate-spin mr-2" />
+          <span className="font-sans text-sm tracking-wide">Curating your experiences…</span>
+        </div>
+      )}
+
+      {error && !loading && (
+        <div className="max-w-6xl mx-auto px-6 sm:px-12 lg:px-16 py-20 text-center">
+          <p className="font-sans text-sm text-rose-700">{error}</p>
+        </div>
+      )}
+
+      {!loading && !error && packages.length === 0 && (
+        <div className="max-w-6xl mx-auto px-6 sm:px-12 lg:px-16 py-20 text-center">
+          <p className="font-sans text-sm text-stone-500">No experiences available right now.</p>
+        </div>
+      )}
+
       {/* ═══════ EXPERIENCE CARDS ═══════ */}
       <div className="max-w-6xl mx-auto px-6 sm:px-12 lg:px-16 py-10 sm:py-14 space-y-10">
-        {packages.map((pkg, i) => {
-          const hotel = MOCK_HOTELS.find(h => h.id === pkg.hotelId);
+        {!loading && !error && packages.map((pkg, i) => {
+          const hotel = hotelMap[pkg.hotelId];
           const imageUrl = HOTEL_IMAGES[pkg.hotelId] || IMAGES.heroJourney;
           const isReversed = i % 2 !== 0;
 
@@ -142,10 +197,17 @@ export default function ExperiencesPage() {
                     {pkg.clientTitle}
                   </h2>
 
-                  {/* Tagline */}
-                  <p className="text-stone-400 font-sans text-[13px] leading-[1.7] tracking-wide italic mb-7">
+                  {/* Subtitle: tagline */}
+                  <p className="text-stone-400 font-sans text-[13px] leading-[1.7] tracking-wide italic mb-5">
                     &ldquo;{pkg.tagline}&rdquo;
                   </p>
+
+                  {/* Hotel client-facing description */}
+                  {hotel?.clientDescription && (
+                    <p className="text-stone-600 font-sans text-[13px] leading-[1.75] tracking-wide mb-7">
+                      {hotel.clientDescription}
+                    </p>
+                  )}
 
                   {/* Day highlights */}
                   <div className="space-y-4 mb-7">

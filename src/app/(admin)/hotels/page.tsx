@@ -1,65 +1,195 @@
 'use client';
 
-import { useState } from 'react';
-import { Search, Plus, Star, Shield, MapPin, Edit2, Trash2 } from 'lucide-react';
-import { MOCK_HOTELS } from '@/lib/mock/hotels.mock';
-import type { Hotel, HotelRegion, HotelTier } from '@/lib/types/entities';
+import { useEffect, useState, FormEvent } from 'react';
+import { Search, Plus, Shield, MapPin, Edit2, Trash2, Loader2 } from 'lucide-react';
+import { useServices } from '@/lib/hooks/useServices';
+import type { Hotel, HotelAmenity, HotelRegion, HotelTier } from '@/lib/types/entities';
 import { toast } from 'sonner';
 
-/**
- * Admin Hotel & Resort Library
- * Content management for the hotel portfolio.
- * Admin can view, search, filter, add, edit, and remove hotels.
- */
+const REGIONS: HotelRegion[] = ['Europe', 'Asia Pacific', 'Middle East', 'Americas', 'Africa', 'Indian Ocean'];
+const TIERS: HotelTier[] = ['Ultra-Luxury', 'Luxury', 'Boutique'];
+
+interface HotelFormState {
+  name: string;
+  location: string;
+  country: string;
+  region: HotelRegion;
+  tier: HotelTier;
+  privacyScore: number;
+  description: string;
+  clientDescription: string;
+  advisorNotes: string;
+  amenities: string;
+}
+
+const EMPTY_FORM: HotelFormState = {
+  name: '',
+  location: '',
+  country: '',
+  region: 'Europe',
+  tier: 'Luxury',
+  privacyScore: 80,
+  description: '',
+  clientDescription: '',
+  advisorNotes: '',
+  amenities: '',
+};
+
+function toFormState(h: Hotel): HotelFormState {
+  return {
+    name: h.name,
+    location: h.location,
+    country: h.country,
+    region: h.region,
+    tier: h.tier,
+    privacyScore: h.privacyScore,
+    description: h.description,
+    clientDescription: h.clientDescription,
+    advisorNotes: h.advisorNotes || '',
+    amenities: h.amenities.map((a) => a.label).join(', '),
+  };
+}
+
+function parseAmenities(input: string): HotelAmenity[] {
+  return input
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .map((label) => ({ label, icon: '✦' }));
+}
+
 export default function HotelsPage() {
-  const [hotels, setHotels] = useState<Hotel[]>(MOCK_HOTELS);
+  const services = useServices();
+
+  const [hotels, setHotels] = useState<Hotel[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [regionFilter, setRegionFilter] = useState<HotelRegion | 'All'>('All');
   const [tierFilter, setTierFilter] = useState<HotelTier | 'All'>('All');
   const [selectedHotel, setSelectedHotel] = useState<Hotel | null>(null);
-  const [showAddModal, setShowAddModal] = useState(false);
 
-  const regions: HotelRegion[] = ['Europe', 'Asia Pacific', 'Middle East', 'Americas', 'Africa', 'Indian Ocean'];
-  const tiers: HotelTier[] = ['Ultra-Luxury', 'Luxury', 'Boutique'];
+  const [showModal, setShowModal] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState<HotelFormState>(EMPTY_FORM);
+  const [submitting, setSubmitting] = useState(false);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
+
+  const refresh = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await services.hotel.getHotels();
+      setHotels(data);
+    } catch {
+      setError('Failed to load hotels');
+      toast.error('Failed to load hotels');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const filtered = hotels.filter((h) => {
+    const q = search.toLowerCase();
     const matchesSearch =
-      h.name.toLowerCase().includes(search.toLowerCase()) ||
-      h.location.toLowerCase().includes(search.toLowerCase()) ||
-      h.country.toLowerCase().includes(search.toLowerCase());
+      h.name.toLowerCase().includes(q) ||
+      h.location.toLowerCase().includes(q) ||
+      h.country.toLowerCase().includes(q);
     const matchesRegion = regionFilter === 'All' || h.region === regionFilter;
     const matchesTier = tierFilter === 'All' || h.tier === tierFilter;
     return matchesSearch && matchesRegion && matchesTier;
   });
 
-  const handleDelete = (hotelId: string) => {
-    if (!confirm('Remove this hotel from the library?')) return;
-    setHotels((prev) => prev.filter((h) => h.id !== hotelId));
-    if (selectedHotel?.id === hotelId) setSelectedHotel(null);
-    toast.success('Hotel removed');
+  const openAdd = () => {
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+    setShowModal(true);
   };
 
-  const handleToggleActive = (hotelId: string) => {
-    setHotels((prev) =>
-      prev.map((h) => (h.id === hotelId ? { ...h, isActive: !h.isActive } : h))
-    );
-    toast.success('Hotel status updated');
+  const openEdit = (h: Hotel) => {
+    setEditingId(h.id);
+    setForm(toFormState(h));
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    const payload: Partial<Hotel> = {
+      name: form.name,
+      location: form.location,
+      country: form.country,
+      region: form.region,
+      tier: form.tier,
+      privacyScore: Number(form.privacyScore),
+      description: form.description,
+      clientDescription: form.clientDescription,
+      advisorNotes: form.advisorNotes,
+      amenities: parseAmenities(form.amenities),
+      isActive: true,
+    };
+    try {
+      if (editingId) {
+        await services.hotel.updateHotel(editingId, payload);
+        toast.success('Hotel updated');
+      } else {
+        await services.hotel.createHotel(payload);
+        toast.success('Hotel created');
+      }
+      closeModal();
+      await refresh();
+    } catch {
+      toast.error(editingId ? 'Failed to update hotel' : 'Failed to create hotel');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDelete = async (hotelId: string) => {
+    if (!confirm('Remove this hotel from the library?')) return;
+    try {
+      await services.hotel.deleteHotel(hotelId);
+      if (selectedHotel?.id === hotelId) setSelectedHotel(null);
+      toast.success('Hotel removed');
+      await refresh();
+    } catch {
+      toast.error('Failed to remove hotel');
+    }
+  };
+
+  const handleToggleActive = async (hotel: Hotel) => {
+    setTogglingId(hotel.id);
+    try {
+      const updated = await services.hotel.toggleActive(hotel.id);
+      setHotels((prev) => prev.map((h) => (h.id === hotel.id ? updated : h)));
+      toast.success(`Hotel ${updated.isActive ? 'activated' : 'deactivated'}`);
+    } catch {
+      toast.error('Failed to toggle hotel status');
+    } finally {
+      setTogglingId(null);
+    }
   };
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-serif font-medium text-rose-900">
-            Hotel & Resort Library
-          </h1>
-          <p className="text-sm font-sans text-sand-600 mt-1">
-            {hotels.length} properties in portfolio
-          </p>
+          <h1 className="text-2xl font-serif font-medium text-rose-900">Hotel & Resort Library</h1>
+          <p className="text-sm font-sans text-sand-600 mt-1">{hotels.length} properties in portfolio</p>
         </div>
         <button
-          onClick={() => setShowAddModal(true)}
+          onClick={openAdd}
           className="flex items-center gap-2 px-4 py-2 bg-rose-900 text-white text-sm font-sans font-medium rounded-lg hover:bg-rose-800 transition-colors"
         >
           <Plus className="w-4 h-4" />
@@ -67,7 +197,6 @@ export default function HotelsPage() {
         </button>
       </div>
 
-      {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-sand-400" />
@@ -76,7 +205,7 @@ export default function HotelsPage() {
             placeholder="Search by name, location, or country..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-sand-200 rounded-lg text-sm font-sans focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2 border border-sand-200 rounded-lg text-sm font-sans focus:outline-none focus:ring-2 focus:ring-rose-500"
           />
         </div>
         <select
@@ -85,9 +214,7 @@ export default function HotelsPage() {
           className="px-3 py-2 border border-sand-200 rounded-lg text-sm font-sans focus:outline-none focus:ring-2 focus:ring-rose-500"
         >
           <option value="All">All Regions</option>
-          {regions.map((r) => (
-            <option key={r} value={r}>{r}</option>
-          ))}
+          {REGIONS.map((r) => (<option key={r} value={r}>{r}</option>))}
         </select>
         <select
           value={tierFilter}
@@ -95,122 +222,118 @@ export default function HotelsPage() {
           className="px-3 py-2 border border-sand-200 rounded-lg text-sm font-sans focus:outline-none focus:ring-2 focus:ring-rose-500"
         >
           <option value="All">All Tiers</option>
-          {tiers.map((t) => (
-            <option key={t} value={t}>{t}</option>
-          ))}
+          {TIERS.map((t) => (<option key={t} value={t}>{t}</option>))}
         </select>
       </div>
 
-      {/* Hotel Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {filtered.map((hotel) => (
-          <div
-            key={hotel.id}
-            onClick={() => setSelectedHotel(selectedHotel?.id === hotel.id ? null : hotel)}
-            className={`border rounded-xl p-5 cursor-pointer transition-all hover:shadow-md ${
-              selectedHotel?.id === hotel.id
-                ? 'border-rose-300 bg-rose-50/50 shadow-md'
-                : 'border-sand-200 bg-white hover:border-sand-300'
-            } ${!hotel.isActive ? 'opacity-60' : ''}`}
-          >
-            {/* Top row */}
-            <div className="flex items-start justify-between mb-3">
-              <div>
-                <h3 className="font-serif text-lg text-rose-900 font-medium">{hotel.name}</h3>
-                <div className="flex items-center gap-1 text-sand-600 text-sm font-sans mt-0.5">
-                  <MapPin className="w-3.5 h-3.5" />
-                  {hotel.location}, {hotel.country}
+      {loading && (
+        <div className="flex items-center justify-center py-16 text-sand-500">
+          <Loader2 className="w-5 h-5 animate-spin mr-2" />
+          <span className="font-sans text-sm">Loading hotels…</span>
+        </div>
+      )}
+
+      {error && !loading && (
+        <div className="text-center py-16 text-rose-700 font-sans text-sm">{error}</div>
+      )}
+
+      {!loading && !error && (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {filtered.map((hotel) => (
+            <div
+              key={hotel.id}
+              className={`border rounded-xl p-5 transition-all hover:shadow-md ${
+                selectedHotel?.id === hotel.id ? 'border-rose-300 bg-rose-50/50 shadow-md' : 'border-sand-200 bg-white'
+              } ${!hotel.isActive ? 'opacity-60' : ''}`}
+            >
+              <div
+                className="cursor-pointer"
+                onClick={() => setSelectedHotel(selectedHotel?.id === hotel.id ? null : hotel)}
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <h3 className="font-serif text-lg text-rose-900 font-medium">{hotel.name}</h3>
+                    <div className="flex items-center gap-1 text-sand-600 text-sm font-sans mt-0.5">
+                      <MapPin className="w-3.5 h-3.5" />
+                      {hotel.location}, {hotel.country}
+                    </div>
+                  </div>
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-xs font-sans font-medium ${
+                      hotel.tier === 'Ultra-Luxury'
+                        ? 'bg-gold-100 text-gold-800'
+                        : hotel.tier === 'Luxury'
+                          ? 'bg-rose-100 text-rose-800'
+                          : 'bg-sand-100 text-sand-700'
+                    }`}
+                  >
+                    {hotel.tier}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2 mb-3">
+                  <Shield className="w-4 h-4 text-olive-600" />
+                  <div className="flex-1 h-2 bg-sand-100 rounded-full overflow-hidden">
+                    <div className="h-full bg-olive-500 rounded-full" style={{ width: `${hotel.privacyScore}%` }} />
+                  </div>
+                  <span className="text-xs font-sans font-medium text-olive-700">{hotel.privacyScore}</span>
+                </div>
+
+                <p className="text-sm font-sans text-sand-600 line-clamp-2 mb-3">{hotel.clientDescription}</p>
+
+                <div className="flex flex-wrap gap-1.5 mb-3">
+                  {hotel.amenities.slice(0, 4).map((a, i) => (
+                    <span key={i} className="px-2 py-0.5 bg-sand-50 border border-sand-100 rounded text-xs font-sans text-sand-600">
+                      {a.icon} {a.label}
+                    </span>
+                  ))}
+                  {hotel.amenities.length > 4 && (
+                    <span className="px-2 py-0.5 text-xs font-sans text-sand-400">+{hotel.amenities.length - 4} more</span>
+                  )}
                 </div>
               </div>
-              <span
-                className={`px-2 py-0.5 rounded-full text-xs font-sans font-medium ${
-                  hotel.tier === 'Ultra-Luxury'
-                    ? 'bg-gold-100 text-gold-800'
-                    : hotel.tier === 'Luxury'
-                      ? 'bg-rose-100 text-rose-800'
-                      : 'bg-sand-100 text-sand-700'
-                }`}
-              >
-                {hotel.tier}
-              </span>
-            </div>
 
-            {/* Privacy Score */}
-            <div className="flex items-center gap-2 mb-3">
-              <Shield className="w-4 h-4 text-olive-600" />
-              <div className="flex-1 h-2 bg-sand-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-olive-500 rounded-full transition-all"
-                  style={{ width: `${hotel.privacyScore}%` }}
-                />
-              </div>
-              <span className="text-xs font-sans font-medium text-olive-700">
-                {hotel.privacyScore}
-              </span>
-            </div>
-
-            {/* Description */}
-            <p className="text-sm font-sans text-sand-600 line-clamp-2 mb-3">
-              {hotel.clientDescription}
-            </p>
-
-            {/* Amenities */}
-            <div className="flex flex-wrap gap-1.5 mb-3">
-              {hotel.amenities.slice(0, 4).map((a, i) => (
-                <span
-                  key={i}
-                  className="px-2 py-0.5 bg-sand-50 border border-sand-100 rounded text-xs font-sans text-sand-600"
-                >
-                  {a.icon} {a.label}
-                </span>
-              ))}
-              {hotel.amenities.length > 4 && (
-                <span className="px-2 py-0.5 text-xs font-sans text-sand-400">
-                  +{hotel.amenities.length - 4} more
-                </span>
-              )}
-            </div>
-
-            {/* Region + Actions */}
-            <div className="flex items-center justify-between pt-3 border-t border-sand-100">
-              <span className="text-xs font-sans text-sand-500">{hotel.region}</span>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleToggleActive(hotel.id);
-                  }}
-                  className={`text-xs font-sans px-2 py-1 rounded ${
-                    hotel.isActive
-                      ? 'text-olive-700 bg-olive-50 hover:bg-olive-100'
-                      : 'text-sand-600 bg-sand-100 hover:bg-sand-200'
-                  } transition-colors`}
-                >
-                  {hotel.isActive ? 'Active' : 'Inactive'}
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDelete(hotel.id);
-                  }}
-                  className="p-1 text-sand-400 hover:text-rose-600 transition-colors"
-                  aria-label="Delete hotel"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
+              <div className="flex items-center justify-between pt-3 border-t border-sand-100">
+                <span className="text-xs font-sans text-sand-500">{hotel.region}</span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleToggleActive(hotel)}
+                    disabled={togglingId === hotel.id}
+                    className={`text-xs font-sans px-2 py-1 rounded transition-colors disabled:opacity-50 ${
+                      hotel.isActive
+                        ? 'text-olive-700 bg-olive-50 hover:bg-olive-100'
+                        : 'text-sand-600 bg-sand-100 hover:bg-sand-200'
+                    }`}
+                  >
+                    {togglingId === hotel.id ? '…' : hotel.isActive ? 'Active' : 'Inactive'}
+                  </button>
+                  <button
+                    onClick={() => openEdit(hotel)}
+                    className="p-1 text-sand-400 hover:text-rose-600 transition-colors"
+                    aria-label="Edit hotel"
+                  >
+                    <Edit2 className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(hotel.id)}
+                    className="p-1 text-sand-400 hover:text-rose-600 transition-colors"
+                    aria-label="Delete hotel"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
-      {filtered.length === 0 && (
+      {!loading && !error && filtered.length === 0 && (
         <div className="text-center py-16">
           <p className="text-sand-500 font-sans">No hotels match your filters.</p>
         </div>
       )}
 
-      {/* Selected Hotel Detail Panel */}
       {selectedHotel && (
         <div className="border border-rose-200 rounded-xl p-6 bg-rose-50/30">
           <div className="flex items-start justify-between mb-4">
@@ -225,33 +348,20 @@ export default function HotelsPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <h3 className="font-sans text-sm font-semibold text-sand-700 mb-1">
-                Client-Facing Description
-              </h3>
-              <p className="text-sm font-sans text-sand-600 leading-relaxed">
-                {selectedHotel.clientDescription}
-              </p>
+              <h3 className="font-sans text-sm font-semibold text-sand-700 mb-1">Client-Facing Description</h3>
+              <p className="text-sm font-sans text-sand-600 leading-relaxed">{selectedHotel.clientDescription}</p>
             </div>
             <div>
-              <h3 className="font-sans text-sm font-semibold text-sand-700 mb-1">
-                Internal Notes
-              </h3>
-              <p className="text-sm font-sans text-sand-600 leading-relaxed">
-                {selectedHotel.description}
-              </p>
+              <h3 className="font-sans text-sm font-semibold text-sand-700 mb-1">Internal Notes</h3>
+              <p className="text-sm font-sans text-sand-600 leading-relaxed">{selectedHotel.description}</p>
             </div>
           </div>
 
           <div className="mt-4">
-            <h3 className="font-sans text-sm font-semibold text-sand-700 mb-2">
-              All Amenities
-            </h3>
+            <h3 className="font-sans text-sm font-semibold text-sand-700 mb-2">All Amenities</h3>
             <div className="flex flex-wrap gap-2">
               {selectedHotel.amenities.map((a, i) => (
-                <span
-                  key={i}
-                  className="px-3 py-1 bg-white border border-sand-200 rounded-full text-sm font-sans text-sand-700"
-                >
+                <span key={i} className="px-3 py-1 bg-white border border-sand-200 rounded-full text-sm font-sans text-sand-700">
                   {a.icon} {a.label}
                 </span>
               ))}
@@ -260,24 +370,133 @@ export default function HotelsPage() {
         </div>
       )}
 
-      {/* Add Hotel Modal (simplified) */}
-      {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 p-6">
-            <h2 className="font-serif text-xl text-rose-900 mb-4">Add Hotel</h2>
-            <p className="text-sm font-sans text-sand-600 mb-6">
-              In production, this would open a full form with all hotel fields.
-              For the mock, hotels are pre-seeded.
-            </p>
-            <div className="flex justify-end">
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <form
+            onSubmit={handleSubmit}
+            className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+          >
+            <div className="p-6 border-b border-sand-100">
+              <h2 className="font-serif text-xl text-rose-900">{editingId ? 'Edit Hotel' : 'Add Hotel'}</h2>
+            </div>
+
+            <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm font-sans">
+              <label className="space-y-1 sm:col-span-2">
+                <span className="text-sand-700 font-medium">Name</span>
+                <input
+                  required
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  className="w-full px-3 py-2 border border-sand-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                />
+              </label>
+              <label className="space-y-1">
+                <span className="text-sand-700 font-medium">Location</span>
+                <input
+                  required
+                  value={form.location}
+                  onChange={(e) => setForm({ ...form, location: e.target.value })}
+                  className="w-full px-3 py-2 border border-sand-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                />
+              </label>
+              <label className="space-y-1">
+                <span className="text-sand-700 font-medium">Country</span>
+                <input
+                  required
+                  value={form.country}
+                  onChange={(e) => setForm({ ...form, country: e.target.value })}
+                  className="w-full px-3 py-2 border border-sand-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                />
+              </label>
+              <label className="space-y-1">
+                <span className="text-sand-700 font-medium">Region</span>
+                <select
+                  value={form.region}
+                  onChange={(e) => setForm({ ...form, region: e.target.value as HotelRegion })}
+                  className="w-full px-3 py-2 border border-sand-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                >
+                  {REGIONS.map((r) => (<option key={r} value={r}>{r}</option>))}
+                </select>
+              </label>
+              <label className="space-y-1">
+                <span className="text-sand-700 font-medium">Tier</span>
+                <select
+                  value={form.tier}
+                  onChange={(e) => setForm({ ...form, tier: e.target.value as HotelTier })}
+                  className="w-full px-3 py-2 border border-sand-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                >
+                  {TIERS.map((t) => (<option key={t} value={t}>{t}</option>))}
+                </select>
+              </label>
+              <label className="space-y-1 sm:col-span-2">
+                <span className="text-sand-700 font-medium">Privacy Score (0-100)</span>
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  required
+                  value={form.privacyScore}
+                  onChange={(e) => setForm({ ...form, privacyScore: Number(e.target.value) })}
+                  className="w-full px-3 py-2 border border-sand-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                />
+              </label>
+              <label className="space-y-1 sm:col-span-2">
+                <span className="text-sand-700 font-medium">Description (Internal)</span>
+                <textarea
+                  rows={2}
+                  value={form.description}
+                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                  className="w-full px-3 py-2 border border-sand-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                />
+              </label>
+              <label className="space-y-1 sm:col-span-2">
+                <span className="text-sand-700 font-medium">Client Description</span>
+                <textarea
+                  rows={2}
+                  value={form.clientDescription}
+                  onChange={(e) => setForm({ ...form, clientDescription: e.target.value })}
+                  className="w-full px-3 py-2 border border-sand-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                />
+              </label>
+              <label className="space-y-1 sm:col-span-2">
+                <span className="text-sand-700 font-medium">Advisor Notes</span>
+                <textarea
+                  rows={2}
+                  value={form.advisorNotes}
+                  onChange={(e) => setForm({ ...form, advisorNotes: e.target.value })}
+                  className="w-full px-3 py-2 border border-sand-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                />
+              </label>
+              <label className="space-y-1 sm:col-span-2">
+                <span className="text-sand-700 font-medium">Amenities (comma separated)</span>
+                <input
+                  value={form.amenities}
+                  onChange={(e) => setForm({ ...form, amenities: e.target.value })}
+                  placeholder="Spa, Private Beach, Helipad"
+                  className="w-full px-3 py-2 border border-sand-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                />
+              </label>
+            </div>
+
+            <div className="flex justify-end gap-2 p-6 border-t border-sand-100">
               <button
-                onClick={() => setShowAddModal(false)}
-                className="px-4 py-2 text-sm font-sans font-medium text-sand-700 bg-sand-100 rounded-lg hover:bg-sand-200 transition-colors"
+                type="button"
+                onClick={closeModal}
+                disabled={submitting}
+                className="px-4 py-2 text-sm font-sans font-medium text-sand-700 bg-sand-100 rounded-lg hover:bg-sand-200 disabled:opacity-50"
               >
-                Close
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={submitting}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-sans font-medium text-white bg-rose-900 rounded-lg hover:bg-rose-800 disabled:opacity-50"
+              >
+                {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                {editingId ? 'Save Changes' : 'Create Hotel'}
               </button>
             </div>
-          </div>
+          </form>
         </div>
       )}
     </div>

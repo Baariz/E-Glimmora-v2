@@ -43,7 +43,7 @@ import { ApiPackageService } from './api/package.api';
 import { ApiBriefingService } from './api/briefing.api';
 import { ApiIntelligenceService } from './api/intelligence.api';
 import { ApiVendorService } from './api/vendor.api';
-import { MockClientService } from './mock/client.mock';
+import { ApiClientService } from './api/client.api';
 import { MockRiskService } from './mock/risk.mock';
 import { MockContractService } from './mock/contract.mock';
 import { MockAuditService } from './mock/audit.mock';
@@ -82,9 +82,9 @@ export const services = {
   briefing: new ApiBriefingService(),
   intelligence: new ApiIntelligenceService(),
   vendor: new ApiVendorService(),
+  client: new ApiClientService(),
 
   // === Mock-only services (real API not yet implemented) ===
-  client: new MockClientService(),
   risk: new MockRiskService(),
   contract: new MockContractService(),
   audit: new MockAuditService(),

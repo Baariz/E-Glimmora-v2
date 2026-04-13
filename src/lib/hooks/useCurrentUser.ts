@@ -45,6 +45,7 @@ export function useCurrentUser() {
         name: sessionUser.name || '',
         roles: (sessionUser.roles as UserRoles) || { b2c: B2CRole.UHNI },
         avatarUrl: sessionUser.image || undefined,
+        institutionId: sessionUser.institutionId ?? undefined,
         mfaEnabled: sessionUser.mfaEnabled ?? false,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),

@@ -71,7 +71,7 @@ function B2BSidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () => voi
     ['/governance', '/risk', '/access', '/predictive', '/crisis', '/conflicts'].includes(item.path)
   );
   const resourcesItems = navItems.filter(item =>
-    ['/vault', '/revenue', '/vendors', '/integrations'].includes(item.path)
+    ['/gov-vault', '/revenue', '/vendors', '/integrations'].includes(item.path)
   );
 
   const navSections = [

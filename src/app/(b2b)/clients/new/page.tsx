@@ -8,6 +8,7 @@
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useCan } from '@/lib/rbac/usePermission';
+import { useCurrentUser } from '@/lib/hooks/useCurrentUser';
 import { Permission } from '@/lib/types/permissions';
 import { ClientOnboardingWizard } from '@/components/b2b/clients/ClientOnboardingWizard';
 import { ChevronRight, Users } from 'lucide-react';
@@ -15,12 +16,25 @@ import { ChevronRight, Users } from 'lucide-react';
 export default function NewClientPage() {
   const router = useRouter();
   const { can } = useCan();
+  const { user: currentUser, isLoading: userLoading } = useCurrentUser();
   const canWriteClient = can(Permission.WRITE, 'client');
 
   const handleComplete = (clientId: string) => {
     toast.success('Client onboarded successfully');
     router.push(`/clients/${clientId}`);
   };
+
+  // Wait for session to hydrate before deciding on permissions
+  if (userLoading || !currentUser) {
+    return (
+      <div className="p-8">
+        <div className="max-w-md mx-auto text-center">
+          <Users className="w-12 h-12 text-slate-300 mx-auto mb-4 animate-pulse" />
+          <p className="font-sans text-slate-500">Loading…</p>
+        </div>
+      </div>
+    );
+  }
 
   // Permission gate
   if (!canWriteClient) {

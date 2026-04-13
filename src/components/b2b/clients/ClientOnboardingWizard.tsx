@@ -55,7 +55,12 @@ interface WizardData {
   complianceNotes?: string;
 }
 
-const EMPTY_INITIAL_DATA: WizardData = {};
+const EMPTY_INITIAL_DATA: WizardData = {
+  preferredContact: 'email',
+  initialRiskCategory: 'Low',
+  complianceFlags: [],
+  ndaStatus: 'None',
+};
 
 export function ClientOnboardingWizard({ onComplete }: ClientOnboardingWizardProps) {
   const services = useServices();
@@ -127,16 +132,47 @@ export function ClientOnboardingWizard({ onComplete }: ClientOnboardingWizardPro
       return;
     }
 
+    const institutionId = currentUser?.institutionId || '';
+    if (!institutionId) {
+      setStepErrors({
+        submit:
+          'Your account is not linked to an institution. Ask an administrator to assign one before onboarding clients.',
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      // Generate a userId for the new client
-      const userId = `user-uhni-${Date.now()}`;
+      // Reuse an existing user if one already has this email, otherwise create one.
+      const email = wizard.formData.email!;
+      let userId: string;
+      const lookupRes = await fetch(
+        `/api/proxy/users?email=${encodeURIComponent(email)}`
+      ).catch(() => null);
+      const lookup = lookupRes && lookupRes.ok ? await lookupRes.json() : null;
+      const raw = lookup?.data ?? lookup;
+      const candidates = Array.isArray(raw) ? raw : raw ? [raw] : [];
+      const match = candidates.find(
+        (u: any) => typeof u?.email === 'string' && u.email.toLowerCase() === email.toLowerCase()
+      );
+      if (match?.id) {
+        userId = match.id;
+      } else {
+        const tempPassword = `Tmp!${Math.random().toString(36).slice(2, 10)}Aa1`;
+        const newUser = await services.user.createUser({
+          email,
+          name: wizard.formData.name!,
+          roles: { b2c: 'UHNI' },
+          password: tempPassword,
+        } as any);
+        userId = newUser.id;
+      }
 
       // Create client record
       const client = await services.client.createClient({
         userId,
-        institutionId: (currentUser?.institutionId ?? ''),
+        institutionId,
         assignedRM: (currentUser?.id ?? ''),
         name: wizard.formData.name!,
         email: wizard.formData.email!,
@@ -172,15 +208,24 @@ export function ClientOnboardingWizard({ onComplete }: ClientOnboardingWizardPro
       onComplete(client.id);
     } catch (error) {
       console.error('Failed to create client:', error);
-      setStepErrors({ submit: 'Failed to create client. Please try again.' });
+      const raw = error instanceof Error ? error.message : '';
+      let friendly = 'Failed to create client. Please try again.';
+      const lower = raw.toLowerCase();
+      if (lower.includes('duplicate') || lower.includes('already exists') || lower.includes('unique')) {
+        friendly = 'A user with this email already exists. Use a different email.';
+      } else if (lower.includes('cross-institution') || lower.includes('forbidden')) {
+        friendly = 'You do not have permission for this institution.';
+      } else if (lower.includes('uuid') || lower.includes('unprocessable')) {
+        friendly = 'Some required information is missing or invalid. Please review and retry.';
+      }
+      setStepErrors({ submit: friendly });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const updateField = (field: string, value: any) => {
-    wizard.next({ [field]: value } as Partial<WizardData>);
-    wizard.back(); // Stay on current step
+    wizard.updateData({ [field]: value } as Partial<WizardData>);
   };
 
   return (

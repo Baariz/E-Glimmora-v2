@@ -3,17 +3,15 @@
 /**
  * ItineraryViewer — B2C Component
  * Shows the day-by-day itinerary for a confirmed journey.
- * Uses the package data linked to the journey to display a beautiful timeline.
- * Falls back gracefully if no package is attached.
+ * Fetches the real package + linked hotel from the API.
  */
 
-import { useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, MapPin, ChevronDown, ChevronUp, Utensils, Car } from 'lucide-react';
-import { MOCK_PACKAGES } from '@/lib/mock/packages.mock';
-import { MOCK_HOTELS } from '@/lib/mock/hotels.mock';
+import { Calendar, MapPin, ChevronDown, ChevronUp, Utensils, Car, Loader2 } from 'lucide-react';
 import { IMAGES } from '@/lib/constants/imagery';
 import type { Package, Hotel, ItineraryDay } from '@/lib/types/entities';
+import { useServices } from '@/lib/hooks/useServices';
 
 interface ItineraryViewerProps {
   journeyTitle: string;
@@ -21,24 +19,65 @@ interface ItineraryViewerProps {
 }
 
 export function ItineraryViewer({ journeyTitle, packageId }: ItineraryViewerProps) {
+  const services = useServices();
   const [isExpanded, setIsExpanded] = useState(true);
+  const [pkg, setPkg] = useState<Package | null>(null);
+  const [hotel, setHotel] = useState<Hotel | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Find the package — by ID or fall back to the first active one
-  const pkg: Package | undefined = useMemo(() => {
-    if (packageId) return MOCK_PACKAGES.find((p) => p.id === packageId);
-    return MOCK_PACKAGES.find((p) => p.isActive);
-  }, [packageId]);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        if (!packageId) {
+          if (!cancelled) setPkg(null);
+          return;
+        }
+        const resolvedPkg = await services.package.getPackageById(packageId);
+        if (cancelled) return;
+        setPkg(resolvedPkg);
 
-  const hotel: Hotel | undefined = useMemo(() => {
-    if (!pkg) return undefined;
-    return MOCK_HOTELS.find((h) => h.id === pkg.hotelId);
-  }, [pkg]);
+        if (resolvedPkg?.hotelId) {
+          const linkedHotel = await services.hotel.getHotelById(resolvedPkg.hotelId);
+          if (!cancelled) setHotel(linkedHotel);
+        } else if (!cancelled) {
+          setHotel(null);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          console.error('Failed to load itinerary', err);
+          setError('Unable to load your itinerary. Please try again.');
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [services, packageId]);
+
+  if (loading) {
+    return (
+      <div className="border border-sand-200/60 rounded-2xl bg-white shadow-sm px-8 py-10 flex items-center gap-3 text-stone-500 font-sans text-sm">
+        <Loader2 className="w-4 h-4 animate-spin" /> Loading your itinerary…
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="border border-rose-200 rounded-2xl bg-rose-50/40 shadow-sm px-8 py-10 text-rose-700 font-sans text-sm">
+        {error}
+      </div>
+    );
+  }
 
   if (!pkg) return null;
 
   return (
     <div className="border border-sand-200/60 rounded-2xl overflow-hidden bg-white shadow-sm">
-      {/* Cinematic Header */}
       <div
         className="relative min-h-[220px] sm:min-h-[280px] bg-cover bg-center flex items-end cursor-pointer"
         style={{ backgroundImage: `url(${IMAGES.heroVenice})` }}
@@ -84,7 +123,6 @@ export function ItineraryViewer({ journeyTitle, packageId }: ItineraryViewerProp
         </div>
       </div>
 
-      {/* Itinerary timeline — collapsible */}
       {isExpanded && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -92,7 +130,6 @@ export function ItineraryViewer({ journeyTitle, packageId }: ItineraryViewerProp
           transition={{ duration: 0.4 }}
           className="border-t border-sand-200/60"
         >
-          {/* Hotel summary bar */}
           {hotel && (
             <div className="bg-sand-50/80 px-7 sm:px-8 py-4 border-b border-sand-200/60">
               <div className="flex items-center gap-3">
@@ -107,10 +144,8 @@ export function ItineraryViewer({ journeyTitle, packageId }: ItineraryViewerProp
             </div>
           )}
 
-          {/* Day-by-day timeline */}
           <div className="px-7 sm:px-8 py-7 sm:py-8">
             <div className="relative">
-              {/* Vertical timeline line */}
               <div className="absolute left-[15px] top-6 bottom-6 w-px bg-sand-200/80" />
 
               <div className="space-y-7">
@@ -122,12 +157,10 @@ export function ItineraryViewer({ journeyTitle, packageId }: ItineraryViewerProp
                     transition={{ delay: index * 0.06, duration: 0.4 }}
                     className="relative flex gap-5"
                   >
-                    {/* Day circle */}
                     <div className="relative z-10 w-8 h-8 rounded-full bg-rose-50 border border-rose-200/60 flex items-center justify-center flex-shrink-0">
                       <span className="font-serif text-[11px] text-rose-500 font-semibold">{day.day}</span>
                     </div>
 
-                    {/* Day content card */}
                     <div className="flex-1 bg-sand-50/50 border border-sand-200/40 rounded-xl p-5">
                       <h4 className="font-serif text-base text-stone-800 mb-2">
                         {day.title}
@@ -137,7 +170,6 @@ export function ItineraryViewer({ journeyTitle, packageId }: ItineraryViewerProp
                         {day.description}
                       </p>
 
-                      {/* Activities */}
                       <div className="space-y-2 mb-3">
                         {day.activities.map((activity, i) => (
                           <div
@@ -150,7 +182,6 @@ export function ItineraryViewer({ journeyTitle, packageId }: ItineraryViewerProp
                         ))}
                       </div>
 
-                      {/* Meals & Transport */}
                       {(day.meals || day.transport) && (
                         <div className="flex flex-wrap gap-4 pt-3 border-t border-sand-200/40">
                           {day.meals && (

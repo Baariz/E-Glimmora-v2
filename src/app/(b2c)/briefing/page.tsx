@@ -1,17 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { format } from 'date-fns';
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
+import { format } from 'date-fns';
+import { ArrowRight, Shield, Mail, Archive, Sparkles, FileText, Loader2 } from 'lucide-react';
 import { useServices } from '@/lib/hooks/useServices';
-import { useCurrentUser } from '@/lib/hooks/useCurrentUser';
-import { EmotionalPhaseCard } from '@/components/b2c/briefing/EmotionalPhaseCard';
-import { BalanceSummary } from '@/components/b2c/briefing/BalanceSummary';
-import { IMAGES } from '@/lib/constants/imagery';
-import { ParallaxSection } from '@/components/ui/ParallaxSection';
-import type { IntentProfile, Journey } from '@/lib/types/entities';
+import type { UhniBriefing } from '@/lib/types/entities';
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -20,413 +14,243 @@ function getGreeting() {
   return 'Good evening';
 }
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 36 },
-  visible: { opacity: 1, y: 0, transition: { duration: 1, ease: [0.22, 1, 0.36, 1] } },
-};
-const fadeIn = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { duration: 1.2, ease: 'easeOut' } },
-};
-const stagger = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.16 } },
-};
-const lineDraw = {
-  hidden: { scaleX: 0 },
-  visible: { scaleX: 1, transition: { duration: 1.2, ease: [0.22, 1, 0.36, 1] } },
-};
-
 export default function BriefingPage() {
-  const { user } = useCurrentUser();
   const services = useServices();
+  const [data, setData] = useState<UhniBriefing | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const [intentProfile, setIntentProfile] = useState<IntentProfile | null>(null);
-  const [journeys, setJourneys] = useState<Journey[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const load = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await services.briefing.getUhniBriefing();
+      setData(res);
+    } catch (err) {
+      console.error('Failed to load briefing', err);
+      setError(err instanceof Error ? err.message : 'Failed to load your briefing');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        if (!user) return;
-        const [profile, userJourneys] = await Promise.all([
-          services.intent.getIntentProfile(user.id),
-          services.journey.getJourneys(user.id, 'b2c'),
-        ]);
-        if (cancelled) return;
-        setIntentProfile(profile);
-        setJourneys(userJourneys);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
-    }
     load();
-    return () => { cancelled = true; };
-  }, [services, user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const firstName = user?.name?.split(' ')[0] ?? '';
-  const initials = user?.name?.split(' ').map(n => n[0]).join('') ?? '';
-  const today = format(new Date(), 'EEEE, MMMM d, yyyy');
-  const upcomingJourneys = journeys.filter(j => j.status !== 'ARCHIVED').slice(0, 3);
+  if (loading) {
+    return (
+      <div className="max-w-5xl mx-auto p-8 space-y-6">
+        <div className="h-10 w-96 bg-sand-200 rounded animate-pulse" />
+        <div className="h-6 w-64 bg-sand-200 rounded animate-pulse" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+          <div className="h-48 bg-sand-200 rounded-xl animate-pulse" />
+          <div className="h-48 bg-sand-200 rounded-xl animate-pulse" />
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <div className="max-w-2xl mx-auto p-10 text-center space-y-4">
+        <p className="text-rose-700 font-sans text-sm">{error ?? 'Your briefing is unavailable.'}</p>
+        <button
+          onClick={load}
+          className="px-5 py-2.5 bg-rose-900 text-white text-sm font-sans font-medium rounded-full hover:bg-rose-800"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  const { user, emotional_landscape, standing, advisor, journeys, vault, unread_messages, generated_at } = data;
+  const firstName = user.name?.split(' ')[0] ?? '';
+  const scoreBars = emotional_landscape ? [
+    { label: 'Security', value: emotional_landscape.score_security },
+    { label: 'Adventure', value: emotional_landscape.score_adventure },
+    { label: 'Legacy', value: emotional_landscape.score_legacy },
+    { label: 'Recognition', value: emotional_landscape.score_recognition },
+    { label: 'Autonomy', value: emotional_landscape.score_autonomy },
+  ] : [];
 
   return (
-    <div
-      className="min-h-screen bg-sand-50 -mx-4 md:-mx-6 -mt-[5.5rem] md:-mt-24 -mb-6 md:-mb-8"
-      style={{ width: '100vw', marginLeft: 'calc(-50vw + 50%)' }}
-    >
-
-      {/* ═══════════════════════════════ CINEMATIC HERO ═══ */}
-      <ParallaxSection
-        imageUrl={IMAGES.heroRiviera}
-        className="h-screen min-h-[600px]"
-      >
-        {/* Overlays */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/10" />
-
-        {/* Content — vertically centered, left-aligned */}
-        <div
-          className="relative z-10 h-full flex flex-col justify-center px-6 sm:px-12 lg:px-20 max-w-7xl mx-auto"
-        >
-          <motion.div initial="hidden" animate="visible" variants={stagger}>
-            {/* Monogram + date */}
-            <motion.div variants={fadeIn} className="mb-10">
-              <span className="text-white/35 text-[10px] font-sans uppercase tracking-[5px]">
-                {today}
-              </span>
-            </motion.div>
-
-            {/* Decorative line */}
-            <motion.div variants={lineDraw} className="w-16 h-px bg-gradient-to-r from-amber-400 to-amber-600 mb-8 origin-left" />
-
-            {/* Greeting */}
-            <motion.h1
-              variants={fadeUp}
-              className="font-serif text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem] text-white leading-[0.88] tracking-[-0.02em] mb-6 max-w-4xl"
-            >
-              {getGreeting()},
-              <br />
-              <span className="text-amber-200/90">{firstName}</span>.
-            </motion.h1>
-
-            <motion.p
-              variants={fadeUp}
-              className="font-sans text-sm sm:text-base text-white/40 max-w-lg leading-[1.7] mb-10 tracking-wide"
-            >
-              Your sovereign briefing is ready. Every detail curated by your Elan team,
-              presented for your review.
-            </motion.p>
-
-            <motion.div variants={fadeUp} className="flex flex-wrap items-center gap-2 mb-10">
-              <div className="flex items-center gap-2 bg-white/8 backdrop-blur-md border border-white/15 text-white/60 text-[11px] font-sans px-4 py-2 rounded-full">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                {journeys.filter(j => j.status === 'EXECUTED').length > 0 ? 'Journey Active' : 'All Clear'}
-              </div>
-              <div className="flex items-center gap-2 bg-white/8 backdrop-blur-md border border-white/15 text-white/60 text-[11px] font-sans px-4 py-2 rounded-full">
-                <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                {journeys.filter(j => !['ARCHIVED', 'EXECUTED'].includes(j.status)).length} in progress
-              </div>
-              <div className="flex items-center gap-2 bg-white/8 backdrop-blur-md border border-white/15 text-white/60 text-[11px] font-sans px-4 py-2 rounded-full">
-                <div className="w-1.5 h-1.5 rounded-full bg-rose-300" />
-                Discretion · High
-              </div>
-            </motion.div>
-
-            <motion.div variants={fadeUp} className="flex flex-wrap items-center gap-5">
-              <Link
-                href="/journeys"
-                className="group inline-flex items-center gap-3 bg-white text-rose-900 font-sans text-[13px] font-semibold tracking-wide px-8 py-3.5 rounded-full hover:bg-amber-50 transition-all shadow-2xl"
-              >
-                Explore Journeys
-                <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-              </Link>
-              <Link
-                href="/messages"
-                className="group inline-flex items-center gap-2 text-white/50 font-sans text-[13px] tracking-wide hover:text-white transition-colors"
-              >
-                Contact Advisor
-                <span className="w-4 h-px bg-white/30 group-hover:w-6 group-hover:bg-white transition-all" />
-              </Link>
-            </motion.div>
-          </motion.div>
-        </div>
-      </ParallaxSection>
-
-      {/* ═══════════════════════ EMOTIONAL LANDSCAPE ═══ */}
-      <div className="bg-sand-50">
-        <div className="max-w-7xl mx-auto px-6 sm:px-12 lg:px-20 py-28 sm:py-36">
-          {/* Section header */}
-          <motion.div
-            initial={{ opacity: 0, y: 36 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
-            className="mb-16 sm:mb-20"
-          >
-            <div className="w-10 h-px bg-rose-300 mb-6" />
-            <p className="text-rose-400 text-[10px] font-sans uppercase tracking-[5px] mb-3">
-              Your State
-            </p>
-            <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl text-stone-900 leading-[0.95]">
-              Emotional landscape.
-            </h2>
-          </motion.div>
-
-          {/* Asymmetric grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-10">
-            <motion.div
-              initial={{ opacity: 0, y: 36 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 1, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
-              className="lg:col-span-3"
-            >
-              <EmotionalPhaseCard intentProfile={intentProfile} isLoading={isLoading} />
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: 36 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 1, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
-              className="lg:col-span-2"
-            >
-              <BalanceSummary intentProfile={intentProfile} isLoading={isLoading} />
-            </motion.div>
-          </div>
-        </div>
+    <div className="max-w-5xl mx-auto px-6 sm:px-10 py-12 space-y-10">
+      {/* Welcome */}
+      <div className="space-y-2">
+        <p className="text-[10px] font-sans uppercase tracking-[4px] text-sand-500">
+          {format(new Date(generated_at), 'EEEE, MMMM d, yyyy')}
+        </p>
+        <h1 className="font-serif text-4xl sm:text-5xl text-rose-900">
+          {getGreeting()}, <span className="text-amber-700">{firstName}</span>.
+        </h1>
+        {advisor && (
+          <p className="font-sans text-sand-600 text-sm">
+            Your advisor <b className="text-sand-800">{advisor.name}</b> is watching over your portfolio.
+          </p>
+        )}
       </div>
 
-      {/* ═══════════════════════════ SOVEREIGN STATUS ═══ */}
-      <div className="bg-stone-900">
-        <div className="max-w-7xl mx-auto px-6 sm:px-12 lg:px-20 py-16 sm:py-20">
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-            className="mb-12"
-          >
-            <div className="w-8 h-px bg-amber-400/40 mb-5" />
-            <p className="text-white/30 text-[10px] font-sans uppercase tracking-[5px]">
-              Your Standing
+      {/* Emotional landscape */}
+      <section className="bg-white border border-sand-200 rounded-xl p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-serif text-xl text-rose-900">Emotional Landscape</h2>
+          {emotional_landscape && (
+            <span className="text-xs font-sans text-sand-500">Alignment: {emotional_landscape.alignment_score}/100</span>
+          )}
+        </div>
+        {!emotional_landscape ? (
+          <div className="text-center py-10 space-y-4">
+            <p className="font-sans text-sand-600 text-sm">
+              We don&rsquo;t have your intent profile yet — a few minutes will help us tailor every experience to you.
             </p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-white/[0.08]">
-            {/* Risk */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.7, delay: 0, ease: [0.22, 1, 0.36, 1] }}
-              className="px-0 sm:pr-10 pb-10 sm:pb-0"
+            <Link
+              href="/intent"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-rose-900 text-white text-sm font-sans font-medium rounded-full hover:bg-rose-800"
             >
-              <div className="flex items-center gap-3 mb-4">
-                <div className="relative">
-                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
-                  <motion.div
-                    className="absolute inset-0 rounded-full bg-emerald-400"
-                    animate={{ scale: [1, 2.5, 1], opacity: [0.6, 0, 0.6] }}
-                    transition={{ duration: 2.5, repeat: Infinity }}
-                  />
+              Complete your profile <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {scoreBars.map(({ label, value }) => (
+              <div key={label}>
+                <div className="flex justify-between text-xs font-sans text-sand-600 mb-1">
+                  <span>{label}</span><span>{value}</span>
                 </div>
-                <p className="text-white/30 text-[10px] font-sans uppercase tracking-[4px]">Risk Status</p>
+                <div className="h-2 bg-sand-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-amber-400 to-rose-500 rounded-full" style={{ width: `${Math.min(100, Math.max(0, value))}%` }} />
+                </div>
               </div>
-              <h3 className="font-serif text-3xl text-white mb-3">All Clear.</h3>
-              <p className="text-white/30 text-[12px] font-sans leading-[1.8] tracking-wide">
-                All privacy protocols are active. Your discretion shield is fully engaged.
-              </p>
-            </motion.div>
-
-            {/* Discretion */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.7, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
-              className="px-0 sm:px-10 py-10 sm:py-0"
-            >
-              <div className="flex items-center gap-3 mb-4">
-                <span className="text-amber-400/60 text-sm">{'\u25C8'}</span>
-                <p className="text-white/30 text-[10px] font-sans uppercase tracking-[4px]">Discretion</p>
-              </div>
-              <h3 className="font-serif text-3xl text-white mb-3">Maximum.</h3>
-              <p className="text-white/30 text-[12px] font-sans leading-[1.8] tracking-wide">
-                Invisible itineraries active. Maximum privacy protection engaged across all touchpoints.
-              </p>
-            </motion.div>
-
-            {/* Advisor */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.7, delay: 0.24, ease: [0.22, 1, 0.36, 1] }}
-              className="px-0 sm:pl-10 pt-10 sm:pt-0"
-            >
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-2.5 h-2.5 rounded-full bg-rose-400/60" />
-                <p className="text-white/30 text-[10px] font-sans uppercase tracking-[4px]">Your Advisor</p>
-              </div>
-              <h3 className="font-serif text-3xl text-white mb-3">Available.</h3>
-              <p className="text-white/30 text-[12px] font-sans leading-[1.8] tracking-wide mb-5">
-                Your personal advisor is ready. One message is all it takes.
-              </p>
-              <Link
-                href="/messages"
-                className="group inline-flex items-center gap-2 text-white/40 text-[11px] font-sans tracking-wide hover:text-white transition-colors"
-              >
-                Send a message
-                <span className="w-4 h-px bg-white/20 group-hover:w-6 group-hover:bg-white/60 transition-all" />
-              </Link>
-            </motion.div>
-          </div>
-        </div>
-      </div>
-
-      {/* ═══════════════════════════ PHOTOGRAPHY DIVIDER ═══ */}
-      <ParallaxSection
-        imageUrl={IMAGES.heroMaldives}
-        className="h-[50vh] min-h-[400px]"
-      >
-        <div className="absolute inset-0 bg-black/40" />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent" />
-
-        <div className="relative z-10 h-full flex items-end px-6 sm:px-12 lg:px-20 pb-16 sm:pb-20 max-w-7xl mx-auto">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={stagger}
-          >
-            <motion.div variants={lineDraw} className="w-10 h-px bg-amber-400/60 mb-6 origin-left" />
-            <motion.p variants={fadeUp} className="text-white/40 text-[10px] font-sans uppercase tracking-[5px] mb-3">
-              Your Collection
-            </motion.p>
-            <motion.h3 variants={fadeUp} className="font-serif text-3xl sm:text-4xl lg:text-5xl text-white leading-[0.95] mb-5 max-w-lg">
-              {upcomingJourneys.length > 0
-                ? `${upcomingJourneys.length} journeys in motion.`
-                : 'Your journeys await.'}
-            </motion.h3>
-            <motion.div variants={fadeUp}>
-              <Link
-                href="/journeys"
-                className="group inline-flex items-center gap-2 text-white/50 text-[13px] font-sans tracking-wide hover:text-white transition-colors"
-              >
-                View all journeys
-                <span className="w-4 h-px bg-white/30 group-hover:w-6 group-hover:bg-white transition-all" />
-              </Link>
-            </motion.div>
-          </motion.div>
-        </div>
-      </ParallaxSection>
-
-      {/* ═══════════════════════ UPCOMING JOURNEYS ═══ */}
-      {upcomingJourneys.length > 0 && (
-        <div className="bg-sand-50">
-          <div className="max-w-7xl mx-auto px-6 sm:px-12 lg:px-20 py-28 sm:py-36">
-            <motion.div
-              initial={{ opacity: 0, y: 36 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
-              className="mb-16"
-            >
-              <div className="w-10 h-px bg-rose-300 mb-6" />
-              <p className="text-rose-400 text-[10px] font-sans uppercase tracking-[5px] mb-3">
-                In Motion
-              </p>
-              <h2 className="font-serif text-4xl sm:text-5xl text-stone-900 leading-[0.95]">
-                Upcoming journeys.
-              </h2>
-            </motion.div>
-
-            <div className="divide-y divide-stone-200/60">
-              {upcomingJourneys.map((journey, i) => (
-                <motion.div
-                  key={journey.id}
-                  initial={{ opacity: 0, y: 24 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.8, delay: i * 0.1, ease: [0.22, 1, 0.36, 1] }}
-                >
-                  <Link href={`/journeys/${journey.id}`} className="group block py-8 sm:py-10">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-10">
-                      {/* Number */}
-                      <span className="font-serif text-5xl sm:text-6xl text-stone-200 group-hover:text-rose-200 transition-colors duration-500 flex-shrink-0 w-20">
-                        {String(i + 1).padStart(2, '0')}
-                      </span>
-
-                      {/* Content */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex flex-wrap items-center gap-3 mb-2">
-                          <span className="text-[10px] font-sans uppercase tracking-[3px] text-stone-400">
-                            {journey.category}
-                          </span>
-                          <span className="text-[10px] text-rose-500 font-sans font-medium tracking-wide uppercase">
-                            {journey.status.replace('_', ' ')}
-                          </span>
-                        </div>
-                        <h4 className="font-serif text-2xl sm:text-3xl text-stone-800 group-hover:text-rose-800 transition-colors duration-300 truncate">
-                          {journey.title}
-                        </h4>
-                        <p className="text-stone-400 text-sm mt-2 line-clamp-1 font-sans tracking-wide">
-                          {journey.narrative}
-                        </p>
-                      </div>
-
-                      {/* Arrow */}
-                      <div className="flex-shrink-0 w-10 h-10 rounded-full border border-stone-200 group-hover:border-rose-300 flex items-center justify-center transition-all duration-500 group-hover:bg-rose-50">
-                        <ArrowRight size={16} className="text-stone-300 group-hover:text-rose-500 group-hover:translate-x-0.5 transition-all duration-300" />
-                      </div>
-                    </div>
-                  </Link>
-                </motion.div>
+            ))}
+            <div className="pt-3 flex flex-wrap gap-2 text-xs font-sans">
+              {emotional_landscape.values.map((v) => (
+                <span key={v} className="px-2 py-0.5 bg-sand-100 text-sand-700 rounded-full">{v}</span>
               ))}
             </div>
           </div>
+        )}
+      </section>
+
+      {/* Standing */}
+      <section className="flex flex-wrap gap-3">
+        <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-stone-900 text-white text-xs font-sans rounded-full">
+          <Shield className="w-3.5 h-3.5 text-amber-300" /> Discretion · {standing.discretion_tier}
+        </span>
+        {standing.risk_tier && (
+          <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-900 text-white text-xs font-sans rounded-full">
+            Risk · {standing.risk_tier}{standing.risk_score != null ? ` (${standing.risk_score})` : ''}
+          </span>
+        )}
+        {standing.invisible_itinerary_default && (
+          <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-100 text-amber-900 text-xs font-sans rounded-full">
+            Invisible itinerary · Default on
+          </span>
+        )}
+      </section>
+
+      {/* Journeys */}
+      <section className="bg-white border border-sand-200 rounded-xl p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-serif text-xl text-rose-900">Your Journeys</h2>
+          <span className="text-xs font-sans text-sand-500">{journeys.total} total</span>
         </div>
-      )}
-
-      {/* ═══════════════════════════ FOOTER CTA ═══ */}
-      <ParallaxSection
-        imageUrl={IMAGES.heroSuite}
-        className="py-36 sm:py-44"
-      >
-        <div className="absolute inset-0 bg-black/55" />
-
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          variants={stagger}
-          className="relative z-10 text-center px-6 max-w-2xl mx-auto"
-        >
-          <motion.div variants={lineDraw} className="w-12 h-px bg-amber-400/50 mx-auto mb-8 origin-center" />
-          <motion.p variants={fadeUp} className="text-amber-300/50 text-[10px] font-sans uppercase tracking-[6px] mb-6">
-            Begin
-          </motion.p>
-          <motion.h3 variants={fadeUp} className="font-serif text-4xl sm:text-5xl text-white leading-[0.95] mb-6">
-            Ready for your next<br />experience?
-          </motion.h3>
-          <motion.p variants={fadeUp} className="text-white/40 font-sans text-sm mb-12 leading-[1.8] tracking-wide max-w-sm mx-auto">
-            Tell us what you seek. Our intelligence will craft something extraordinary.
-          </motion.p>
-          <motion.div variants={fadeUp}>
+        {journeys.total === 0 ? (
+          <div className="text-center py-10 space-y-4">
+            <Sparkles className="w-8 h-8 text-rose-400 mx-auto" />
+            <p className="font-sans text-sand-600 text-sm">Begin your first journey — tell us what you seek.</p>
             <Link
               href="/intent"
-              className="group inline-flex items-center gap-3 bg-white text-rose-900 font-sans text-[13px] font-semibold tracking-wide px-10 py-4 rounded-full hover:bg-rose-50 transition-all shadow-2xl"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-rose-900 text-white text-sm font-sans font-medium rounded-full hover:bg-rose-800"
             >
-              Begin Your Intent
-              <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+              Start your first journey <ArrowRight className="w-4 h-4" />
             </Link>
-          </motion.div>
-        </motion.div>
-      </ParallaxSection>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {journeys.active && (
+              <Link
+                href={`/journeys/${journeys.active.id}`}
+                className="block p-4 rounded-lg bg-gradient-to-r from-rose-50 to-amber-50 border border-rose-200 hover:shadow-md transition-shadow"
+              >
+                <p className="text-[10px] font-sans uppercase tracking-[3px] text-rose-600 mb-1">Active now</p>
+                <p className="font-serif text-lg text-rose-900">{journeys.active.title}</p>
+                <p className="text-xs font-sans text-sand-600 mt-1">{journeys.active.category} · {journeys.active.status.replace('_', ' ')}</p>
+              </Link>
+            )}
+            {journeys.upcoming.length > 0 && (
+              <div>
+                <p className="text-xs font-sans uppercase tracking-wider text-sand-500 mb-2">Upcoming</p>
+                <ul className="divide-y divide-sand-100">
+                  {journeys.upcoming.slice(0, 3).map((j) => (
+                    <li key={j.id}>
+                      <Link href={`/journeys/${j.id}`} className="py-3 flex items-center justify-between hover:text-rose-700 transition-colors">
+                        <div>
+                          <p className="font-sans text-sm font-medium text-sand-800">{j.title}</p>
+                          <p className="text-xs font-sans text-sand-500">{j.category} · {j.status.replace('_', ' ')}</p>
+                        </div>
+                        <ArrowRight className="w-4 h-4 text-sand-400" />
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {journeys.last_archived && (
+              <div className="flex items-center gap-2 text-xs font-sans text-sand-500 pt-2">
+                <Archive className="w-3.5 h-3.5" /> Last archived: {journeys.last_archived.title}
+              </div>
+            )}
+          </div>
+        )}
+      </section>
 
+      {/* Vault + Messages */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <section className="bg-white border border-sand-200 rounded-xl p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-serif text-xl text-rose-900">Your Vault</h2>
+            <span className="text-xs font-sans text-sand-500">{vault.total_items} items · {vault.milestone_count} milestones</span>
+          </div>
+          {vault.total_items === 0 ? (
+            <div className="text-center py-8">
+              <FileText className="w-8 h-8 text-sand-400 mx-auto mb-3" />
+              <p className="text-sm font-sans text-sand-500">Your vault is empty.</p>
+            </div>
+          ) : (
+            <ul className="space-y-2">
+              {vault.recent.slice(0, 3).map((v) => (
+                <li key={v.id}>
+                  <Link href={`/vault/${v.id}`} className="flex items-center justify-between py-2 hover:text-rose-700">
+                    <div>
+                      <p className="font-sans text-sm text-sand-800">{v.title}</p>
+                      <p className="text-xs font-sans text-sand-500">{v.type}{v.is_milestone ? ' · Milestone' : ''}</p>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-sand-400" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        <section className="bg-white border border-sand-200 rounded-xl p-6 flex flex-col">
+          <h2 className="font-serif text-xl text-rose-900 mb-4">Messages</h2>
+          <div className="flex-1 flex flex-col items-center justify-center text-center">
+            <Mail className="w-10 h-10 text-rose-400 mb-3" />
+            <p className="font-serif text-3xl text-rose-900">{unread_messages}</p>
+            <p className="text-xs font-sans text-sand-500 mt-1">unread</p>
+          </div>
+          <Link
+            href="/messages"
+            className="mt-4 inline-flex items-center justify-center gap-2 px-4 py-2 bg-rose-50 text-rose-900 text-sm font-sans font-medium rounded-full hover:bg-rose-100"
+          >
+            Open inbox <ArrowRight className="w-4 h-4" />
+          </Link>
+        </section>
+      </div>
     </div>
   );
 }

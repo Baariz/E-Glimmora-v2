@@ -12,6 +12,9 @@ import {
   Trash2,
   Loader2,
   X,
+  Edit2,
+  ArrowUp,
+  ArrowDown,
 } from 'lucide-react';
 import { useServices } from '@/lib/hooks/useServices';
 import type { Hotel, Package, ItineraryDay, HotelRegion } from '@/lib/types/entities';
@@ -60,24 +63,29 @@ export default function PackagesPage() {
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('All');
+  const [regionFilter, setRegionFilter] = useState<HotelRegion | 'All'>('All');
+  const [hotelFilter, setHotelFilter] = useState<string>('All');
   const [expandedPackage, setExpandedPackage] = useState<string | null>(null);
   const [previewItinerary, setPreviewItinerary] = useState<string | null>(null);
 
   const [showModal, setShowModal] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<PackageFormState>(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
   const refresh = async () => {
     setLoading(true);
     setError(null);
     try {
-      const [pkgs, hts] = await Promise.all([
+      const [pkgs, hts, activeHts] = await Promise.all([
         services.package.getPackages(),
         services.hotel.getHotels(),
+        services.hotel.getHotels({ active: true }),
       ]);
       setPackages(pkgs);
       setHotels(hts);
-      setActiveHotels(hts.filter((h) => h.isActive));
+      setActiveHotels(activeHts);
     } catch {
       setError('Failed to load packages');
       toast.error('Failed to load packages');
@@ -100,7 +108,9 @@ export default function PackagesPage() {
       p.clientTitle.toLowerCase().includes(q) ||
       p.hotelName.toLowerCase().includes(q);
     const matchesCategory = categoryFilter === 'All' || p.category === categoryFilter;
-    return matchesSearch && matchesCategory;
+    const matchesRegion = regionFilter === 'All' || p.region === regionFilter;
+    const matchesHotel = hotelFilter === 'All' || p.hotelId === hotelFilter;
+    return matchesSearch && matchesCategory && matchesRegion && matchesHotel;
   });
 
   const handleDelete = async (pkgId: string) => {
@@ -115,12 +125,15 @@ export default function PackagesPage() {
   };
 
   const handleToggleActive = async (pkg: Package) => {
+    setTogglingId(pkg.id);
     try {
-      await services.package.updatePackage(pkg.id, { isActive: !pkg.isActive });
-      toast.success('Package status updated');
-      await refresh();
+      const updated = await services.package.toggleActive(pkg.id);
+      setPackages((prev) => prev.map((p) => (p.id === pkg.id ? updated : p)));
+      toast.success(`Package ${updated.isActive ? 'activated' : 'deactivated'}`);
     } catch {
       toast.error('Failed to update package');
+    } finally {
+      setTogglingId(null);
     }
   };
 
@@ -130,13 +143,51 @@ export default function PackagesPage() {
   };
 
   const openAdd = () => {
+    setEditingId(null);
     setForm({ ...EMPTY_FORM, hotelId: activeHotels[0]?.id || '' });
+    setShowModal(true);
+  };
+
+  const openEdit = (pkg: Package) => {
+    setEditingId(pkg.id);
+    setForm({
+      name: pkg.name,
+      clientTitle: pkg.clientTitle,
+      hotelId: pkg.hotelId,
+      duration: pkg.duration,
+      region: pkg.region,
+      category: pkg.category,
+      tagline: pkg.tagline,
+      itinerary: pkg.itinerary.map((d) => ({
+        day: d.day,
+        title: d.title,
+        description: d.description,
+        activities: d.activities.join(', '),
+        meals: d.meals || '',
+        transport: d.transport || '',
+      })),
+    });
     setShowModal(true);
   };
 
   const closeModal = () => {
     setShowModal(false);
+    setEditingId(null);
     setForm(EMPTY_FORM);
+  };
+
+  const moveDay = (idx: number, dir: -1 | 1) => {
+    setForm((prev) => {
+      const next = [...prev.itinerary];
+      const target = idx + dir;
+      if (target < 0 || target >= next.length) return prev;
+      const a = next[idx];
+      const b = next[target];
+      if (!a || !b) return prev;
+      next[idx] = b;
+      next[target] = a;
+      return { ...prev, itinerary: next.map((d, i) => ({ ...d, day: i + 1 })) };
+    });
   };
 
   const addDay = () => {
@@ -181,24 +232,29 @@ export default function PackagesPage() {
       meals: d.meals || undefined,
       transport: d.transport || undefined,
     }));
+    const payload: Partial<Package> = {
+      name: form.name,
+      clientTitle: form.clientTitle,
+      hotelId: hotel.id,
+      hotelName: hotel.name,
+      duration: Number(form.duration),
+      region: form.region,
+      category: form.category,
+      tagline: form.tagline,
+      itinerary,
+    };
     try {
-      await services.package.createPackage({
-        name: form.name,
-        clientTitle: form.clientTitle,
-        hotelId: hotel.id,
-        hotelName: hotel.name,
-        duration: Number(form.duration),
-        region: form.region,
-        category: form.category,
-        tagline: form.tagline,
-        itinerary,
-        isActive: true,
-      });
-      toast.success('Package created');
+      if (editingId) {
+        await services.package.updatePackage(editingId, payload);
+        toast.success('Package updated');
+      } else {
+        await services.package.createPackage({ ...payload, isActive: true });
+        toast.success('Package created');
+      }
       closeModal();
       await refresh();
     } catch {
-      toast.error('Failed to create package');
+      toast.error(editingId ? 'Failed to update package' : 'Failed to create package');
     } finally {
       setSubmitting(false);
     }
@@ -240,6 +296,22 @@ export default function PackagesPage() {
         >
           <option value="All">All Categories</option>
           {categories.map((c) => (<option key={c} value={c}>{c}</option>))}
+        </select>
+        <select
+          value={regionFilter}
+          onChange={(e) => setRegionFilter(e.target.value as HotelRegion | 'All')}
+          className="px-3 py-2 border border-sand-200 rounded-lg text-sm font-sans focus:outline-none focus:ring-2 focus:ring-rose-500"
+        >
+          <option value="All">All Regions</option>
+          {REGIONS.map((r) => (<option key={r} value={r}>{r}</option>))}
+        </select>
+        <select
+          value={hotelFilter}
+          onChange={(e) => setHotelFilter(e.target.value)}
+          className="px-3 py-2 border border-sand-200 rounded-lg text-sm font-sans focus:outline-none focus:ring-2 focus:ring-rose-500"
+        >
+          <option value="All">All Hotels</option>
+          {hotels.map((h) => (<option key={h.id} value={h.id}>{h.name}</option>))}
         </select>
       </div>
 
@@ -309,12 +381,20 @@ export default function PackagesPage() {
                         {isPreview ? 'Hide Itinerary' : 'Preview Itinerary'}
                       </button>
                       <button
+                        onClick={() => openEdit(pkg)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-sans text-rose-900 bg-rose-50 rounded-lg hover:bg-rose-100"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                        Edit
+                      </button>
+                      <button
                         onClick={() => handleToggleActive(pkg)}
-                        className={`px-3 py-1.5 text-sm font-sans rounded-lg ${
+                        disabled={togglingId === pkg.id}
+                        className={`px-3 py-1.5 text-sm font-sans rounded-lg disabled:opacity-50 ${
                           pkg.isActive ? 'text-olive-700 bg-olive-50 hover:bg-olive-100' : 'text-sand-600 bg-sand-100 hover:bg-sand-200'
                         }`}
                       >
-                        {pkg.isActive ? 'Active' : 'Inactive'}
+                        {togglingId === pkg.id ? '…' : pkg.isActive ? 'Active' : 'Inactive'}
                       </button>
                       <button
                         onClick={() => handleDelete(pkg.id)}
@@ -377,7 +457,7 @@ export default function PackagesPage() {
             className="bg-white rounded-xl shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"
           >
             <div className="p-6 border-b border-sand-100 flex items-center justify-between">
-              <h2 className="font-serif text-xl text-rose-900">New Package</h2>
+              <h2 className="font-serif text-xl text-rose-900">{editingId ? 'Edit Package' : 'New Package'}</h2>
               <button type="button" onClick={closeModal} className="text-sand-400 hover:text-sand-700">
                 <X className="w-5 h-5" />
               </button>
@@ -479,14 +559,34 @@ export default function PackagesPage() {
                   <div key={idx} className="border border-sand-200 rounded-lg p-4 space-y-2 text-sm font-sans">
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-rose-900">Day {d.day}</span>
-                      <button
-                        type="button"
-                        onClick={() => removeDay(idx)}
-                        className="text-sand-400 hover:text-rose-600"
-                        aria-label="Remove day"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => moveDay(idx, -1)}
+                          disabled={idx === 0}
+                          className="text-sand-400 hover:text-rose-600 disabled:opacity-30 disabled:hover:text-sand-400"
+                          aria-label="Move day up"
+                        >
+                          <ArrowUp className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => moveDay(idx, 1)}
+                          disabled={idx === form.itinerary.length - 1}
+                          className="text-sand-400 hover:text-rose-600 disabled:opacity-30 disabled:hover:text-sand-400"
+                          aria-label="Move day down"
+                        >
+                          <ArrowDown className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => removeDay(idx)}
+                          className="text-sand-400 hover:text-rose-600"
+                          aria-label="Remove day"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
                     <input
                       placeholder="Title"
@@ -541,7 +641,7 @@ export default function PackagesPage() {
                 className="flex items-center gap-2 px-4 py-2 text-sm font-sans font-medium text-white bg-rose-900 rounded-lg hover:bg-rose-800 disabled:opacity-50"
               >
                 {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
-                Create Package
+                {editingId ? 'Save Changes' : 'Create Package'}
               </button>
             </div>
           </form>

@@ -24,9 +24,11 @@ import { IIntegrationService } from './interfaces/IIntegrationService';
 import { IPrivacyService } from './interfaces/IPrivacyService';
 import { IHotelService } from './interfaces/IHotelService';
 import { IPackageService } from './interfaces/IPackageService';
+import { IBriefingService } from './interfaces/IBriefingService';
 import { MockPrivacyService } from './mock/privacy.mock';
 import { ApiHotelService } from './api/hotel.api';
 import { ApiPackageService } from './api/package.api';
+import { ApiBriefingService } from './api/briefing.api';
 
 import { MockJourneyService } from './mock/journey.mock';
 import { MockMemoryService } from './mock/memory.mock';
@@ -72,6 +74,7 @@ export const services = {
   message: new ApiMessageService(),
   hotel: new ApiHotelService(),
   package: new ApiPackageService(),
+  briefing: new ApiBriefingService(),
 
   // === Mock-only services (real API not yet implemented) ===
   memory: new MockMemoryService(),
@@ -109,6 +112,7 @@ export const services = {
   privacy: IPrivacyService;
   hotel: IHotelService;
   package: IPackageService;
+  briefing: IBriefingService;
 };
 
 /**

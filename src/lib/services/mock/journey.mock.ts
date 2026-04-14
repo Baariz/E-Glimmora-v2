@@ -390,4 +390,20 @@ export class MockJourneyService extends BaseMockService implements IJourneyServi
     // Mock: no-op — local narrative generator handles this in mock mode
     return [];
   }
+
+  async setPreDepartureBrief(): Promise<Journey> {
+    throw new Error('setPreDepartureBrief is not available in mock mode');
+  }
+
+  async getMonitor(): Promise<never> {
+    throw new Error('getMonitor is not available in mock mode');
+  }
+
+  async submitFeedback(): Promise<never> {
+    throw new Error('submitFeedback is not available in mock mode');
+  }
+
+  async getFeedback(): Promise<null> {
+    return null;
+  }
 }

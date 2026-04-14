@@ -6,10 +6,12 @@
  * Simple, calm, unhurried — like a private journal entry
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils/cn';
+import { useServices } from '@/lib/hooks/useServices';
 
 const MOODS = [
   { emoji: '\uD83D\uDE14', label: 'Disappointing', value: 1 },
@@ -20,20 +22,71 @@ const MOODS = [
 ];
 
 interface PostJourneyFeedbackProps {
+  journeyId: string;
   journeyTitle: string;
+  canSubmit?: boolean;
   onSubmitted?: () => void;
 }
 
-export function PostJourneyFeedback({ journeyTitle, onSubmitted }: PostJourneyFeedbackProps) {
+export function PostJourneyFeedback({ journeyId, canSubmit = true, onSubmitted }: PostJourneyFeedbackProps) {
+  const services = useServices();
   const [selectedMood, setSelectedMood] = useState<number | null>(null);
   const [reflection, setReflection] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
 
-  const handleSubmit = () => {
-    if (!selectedMood) return;
-    setSubmitted(true);
-    onSubmitted?.();
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const existing = await services.journey.getFeedback(journeyId);
+        if (!cancelled && existing) {
+          setSelectedMood(existing.mood);
+          setReflection(existing.reflection ?? '');
+          setSubmitted(true);
+        }
+      } catch (err) {
+        console.error('Failed to load existing feedback', err);
+      } finally {
+        if (!cancelled) setInitialLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [services, journeyId]);
+
+  const handleSubmit = async () => {
+    if (!selectedMood || !canSubmit) return;
+    setSubmitting(true);
+    try {
+      await services.journey.submitFeedback(journeyId, {
+        mood: selectedMood,
+        reflection: reflection || undefined,
+      });
+      // State-machine transition: EXECUTED → ARCHIVED via SUBMIT_FEEDBACK
+      try {
+        await services.journey.transitionJourney(journeyId, 'SUBMIT_FEEDBACK');
+      } catch (transitionErr) {
+        // If already archived, ignore
+        console.warn('SUBMIT_FEEDBACK transition skipped', transitionErr);
+      }
+      setSubmitted(true);
+      onSubmitted?.();
+    } catch (err) {
+      console.error('Failed to submit feedback', err);
+      toast.error('Unable to submit your reflection. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
+
+  if (initialLoading) {
+    return (
+      <div className="bg-white border border-sand-200/60 rounded-2xl p-8 sm:p-10 flex items-center justify-center gap-2 text-stone-400 text-sm font-sans shadow-sm">
+        <Loader2 className="w-4 h-4 animate-spin" /> Loading…
+      </div>
+    );
+  }
 
   if (submitted) {
     return (
@@ -113,15 +166,16 @@ export function PostJourneyFeedback({ journeyTitle, onSubmitted }: PostJourneyFe
 
       <button
         onClick={handleSubmit}
-        disabled={!selectedMood}
+        disabled={!selectedMood || submitting || !canSubmit}
         className={cn(
           'w-full py-3.5 rounded-full font-sans text-[13px] font-semibold tracking-wide transition-all flex items-center justify-center gap-2.5',
-          selectedMood
+          selectedMood && canSubmit && !submitting
             ? 'bg-rose-600 text-white hover:bg-rose-700 shadow-lg'
             : 'bg-sand-100 text-stone-300 cursor-not-allowed'
         )}
       >
-        Share My Reflection
+        {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+        {submitting ? 'Submitting…' : 'Share My Reflection'}
       </button>
     </div>
   );

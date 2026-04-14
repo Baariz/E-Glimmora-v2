@@ -5,8 +5,12 @@
 
 import { Hotel } from '@/lib/types/entities';
 
+export interface HotelQuery {
+  active?: boolean;
+}
+
 export interface IHotelService {
-  getHotels(): Promise<Hotel[]>;
+  getHotels(query?: HotelQuery): Promise<Hotel[]>;
   getHotelById(id: string): Promise<Hotel | null>;
   createHotel(data: Partial<Hotel>): Promise<Hotel>;
   updateHotel(id: string, data: Partial<Hotel>): Promise<Hotel>;

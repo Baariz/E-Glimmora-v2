@@ -254,15 +254,23 @@ export default function GovernanceDetailPage() {
             <PackageSelector
               journeyId={journey.id}
               journeyCategory={journey.category}
+              currentPackageId={journey.packageId ?? null}
+              onPackageSelected={() => loadJourney()}
             />
           )}
 
           {/* Travel Monitor — only when EXECUTED */}
-          {journey.status === JourneyStatus.EXECUTED && <TravelMonitorPanel />}
+          {journey.status === JourneyStatus.EXECUTED && <TravelMonitorPanel journeyId={journey.id} />}
 
           {/* Pre-Departure Brief — only when APPROVED or PRESENTED */}
           {(journey.status === JourneyStatus.APPROVED || journey.status === JourneyStatus.PRESENTED) && (
-            <PreDepartureBrief clientName={client?.name || 'Client'} journeyTitle={journey.title} />
+            <PreDepartureBrief
+              journeyId={journey.id}
+              clientName={client?.name || 'Client'}
+              journeyTitle={journey.title}
+              initialBrief={journey.preDepartureBrief ?? null}
+              onSaved={loadJourney}
+            />
           )}
         </div>
 

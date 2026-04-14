@@ -11,6 +11,9 @@ import type {
   DiscretionLevel,
   CreateJourneyInput,
   DomainContext,
+  PreDepartureBrief,
+  JourneyFeedback,
+  TravelMonitor,
 } from '@/lib/types';
 import type { IJourneyService } from '../interfaces/IJourneyService';
 import { api } from './client';
@@ -33,8 +36,35 @@ interface ApiJourney {
   is_invisible: boolean;
   emotional_objective?: string | null;
   strategic_reasoning?: string | null;
+  package_id?: string | null;
+  pre_departure_brief?: ApiPreDepartureBrief | null;
   created_at: string;
   updated_at: string;
+}
+
+interface ApiPreDepartureBrief {
+  arrival_summary?: string | null;
+  key_contact?: string | null;
+  key_contact_role?: string | null;
+  timing?: string | null;
+  discretion_level?: 'High' | 'Standard' | 'Custom' | null;
+  special_instructions?: string | null;
+  sent_at?: string | null;
+}
+
+interface ApiJourneyFeedback {
+  journey_id: string;
+  mood: number;
+  reflection?: string | null;
+  submitted_at?: string | null;
+}
+
+interface ApiTravelMonitor {
+  journey_id: string;
+  flight?: Record<string, string | null> | null;
+  transfer?: Record<string, string | null> | null;
+  accommodation?: Record<string, string | null> | null;
+  alerts?: string[] | null;
 }
 
 interface ApiJourneyVersion {
@@ -86,8 +116,61 @@ function toJourney(raw: ApiJourney): Journey {
     isInvisible: raw.is_invisible,
     emotionalObjective: raw.emotional_objective || undefined,
     strategicReasoning: raw.strategic_reasoning || undefined,
+    packageId: raw.package_id ?? null,
+    preDepartureBrief: raw.pre_departure_brief ? toPreDepartureBrief(raw.pre_departure_brief) : null,
     createdAt: raw.created_at,
     updatedAt: raw.updated_at,
+  };
+}
+
+function toPreDepartureBrief(raw: ApiPreDepartureBrief): PreDepartureBrief {
+  return {
+    arrivalSummary: raw.arrival_summary || undefined,
+    keyContact: raw.key_contact || undefined,
+    keyContactRole: raw.key_contact_role || undefined,
+    timing: raw.timing || undefined,
+    discretionLevel: raw.discretion_level || undefined,
+    specialInstructions: raw.special_instructions || undefined,
+    sentAt: raw.sent_at || undefined,
+  };
+}
+
+function toApiPreDepartureBody(brief: PreDepartureBrief): Record<string, unknown> {
+  return {
+    arrival_summary: brief.arrivalSummary ?? null,
+    key_contact: brief.keyContact ?? null,
+    key_contact_role: brief.keyContactRole ?? null,
+    timing: brief.timing ?? null,
+    discretion_level: brief.discretionLevel ?? null,
+    special_instructions: brief.specialInstructions ?? null,
+  };
+}
+
+function toFeedback(raw: ApiJourneyFeedback): JourneyFeedback {
+  return {
+    journeyId: raw.journey_id,
+    mood: raw.mood,
+    reflection: raw.reflection || undefined,
+    submittedAt: raw.submitted_at || undefined,
+  };
+}
+
+function toMonitor(raw: ApiTravelMonitor): TravelMonitor {
+  const mapBlock = (b: Record<string, string | null> | null | undefined) => {
+    if (!b) return null;
+    const out: Record<string, string | undefined> = {};
+    for (const [k, v] of Object.entries(b)) {
+      const camel = k.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+      out[camel] = v ?? undefined;
+    }
+    return out;
+  };
+  return {
+    journeyId: raw.journey_id,
+    flight: mapBlock(raw.flight) as TravelMonitor['flight'],
+    transfer: mapBlock(raw.transfer) as TravelMonitor['transfer'],
+    accommodation: mapBlock(raw.accommodation) as TravelMonitor['accommodation'],
+    alerts: raw.alerts || [],
   };
 }
 
@@ -112,6 +195,7 @@ function toApiUpdateBody(data: Partial<Journey>) {
   if (data.isInvisible !== undefined) body.is_invisible = data.isInvisible;
   if (data.emotionalObjective !== undefined) body.emotional_objective = data.emotionalObjective;
   if (data.strategicReasoning !== undefined) body.strategic_reasoning = data.strategicReasoning;
+  if (data.packageId !== undefined) body.package_id = data.packageId;
   return body;
 }
 
@@ -182,6 +266,39 @@ export class ApiJourneyService implements IJourneyService {
       body
     );
     return toJourney(raw);
+  }
+
+  async setPreDepartureBrief(journeyId: string, brief: PreDepartureBrief): Promise<Journey> {
+    const raw = await api.post<ApiJourney>(
+      `/api/journeys/${journeyId}/pre-departure`,
+      toApiPreDepartureBody(brief)
+    );
+    return toJourney(raw);
+  }
+
+  async getMonitor(journeyId: string): Promise<TravelMonitor> {
+    const raw = await api.get<ApiTravelMonitor>(`/api/journeys/${journeyId}/monitor`);
+    return toMonitor(raw);
+  }
+
+  async submitFeedback(
+    journeyId: string,
+    feedback: { mood: number; reflection?: string }
+  ): Promise<JourneyFeedback> {
+    const raw = await api.post<ApiJourneyFeedback>(
+      `/api/journeys/${journeyId}/feedback`,
+      { mood: feedback.mood, reflection: feedback.reflection ?? null }
+    );
+    return toFeedback(raw);
+  }
+
+  async getFeedback(journeyId: string): Promise<JourneyFeedback | null> {
+    try {
+      const raw = await api.get<ApiJourneyFeedback>(`/api/journeys/${journeyId}/feedback`);
+      return toFeedback(raw);
+    } catch {
+      return null;
+    }
   }
 
   async generateJourneys(userId: string, count?: number): Promise<Journey[]> {

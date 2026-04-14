@@ -4,7 +4,7 @@
  */
 
 import type { Package, ItineraryDay, HotelRegion } from '@/lib/types/entities';
-import type { IPackageService } from '../interfaces/IPackageService';
+import type { IPackageService, PackageQuery } from '../interfaces/IPackageService';
 import { apiRequest } from './client';
 
 // ── Backend shape (snake_case) ───────────────────────────────────────────────
@@ -68,8 +68,12 @@ function toApiBody(data: Partial<Package>): Record<string, unknown> {
 // ── Service ──────────────────────────────────────────────────────────────────
 
 export class ApiPackageService implements IPackageService {
-  async getPackages(): Promise<Package[]> {
-    const raw = await apiRequest<ApiPackage[]>('/api/packages', { method: 'GET' });
+  async getPackages(query?: PackageQuery): Promise<Package[]> {
+    const qs = new URLSearchParams();
+    if (query?.hotel_id) qs.set('hotel_id', query.hotel_id);
+    if (query?.active !== undefined) qs.set('active', String(query.active));
+    const suffix = qs.toString() ? `?${qs.toString()}` : '';
+    const raw = await apiRequest<ApiPackage[]>(`/api/packages${suffix}`, { method: 'GET' });
     return raw.map(toPackage);
   }
 
@@ -106,5 +110,10 @@ export class ApiPackageService implements IPackageService {
   async deletePackage(id: string): Promise<boolean> {
     await apiRequest(`/api/packages/${id}`, { method: 'DELETE' });
     return true;
+  }
+
+  async toggleActive(id: string): Promise<Package> {
+    const raw = await apiRequest<ApiPackage>(`/api/packages/${id}/toggle-active`, { method: 'POST' });
+    return toPackage(raw);
   }
 }

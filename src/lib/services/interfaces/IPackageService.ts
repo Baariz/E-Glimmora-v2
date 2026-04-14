@@ -5,11 +5,17 @@
 
 import { Package } from '@/lib/types/entities';
 
+export interface PackageQuery {
+  hotel_id?: string;
+  active?: boolean;
+}
+
 export interface IPackageService {
-  getPackages(): Promise<Package[]>;
+  getPackages(query?: PackageQuery): Promise<Package[]>;
   getActivePackages(): Promise<Package[]>;
   getPackageById(id: string): Promise<Package | null>;
   createPackage(data: Partial<Package>): Promise<Package>;
   updatePackage(id: string, data: Partial<Package>): Promise<Package>;
   deletePackage(id: string): Promise<boolean>;
+  toggleActive(id: string): Promise<Package>;
 }

@@ -4,7 +4,7 @@
  */
 
 import type { Hotel, HotelAmenity, HotelRegion, HotelTier } from '@/lib/types/entities';
-import type { IHotelService } from '../interfaces/IHotelService';
+import type { IHotelService, HotelQuery } from '../interfaces/IHotelService';
 import { apiRequest } from './client';
 
 // ── Backend shape (snake_case) ───────────────────────────────────────────────
@@ -46,6 +46,7 @@ function toHotel(raw: ApiHotel): Hotel {
     advisorNotes: raw.advisor_notes || undefined,
     amenities,
     imageUrl: raw.image_urls?.[0] || undefined,
+    imageUrls: raw.image_urls || [],
     isActive: raw.is_active,
     createdAt: raw.created_at,
     updatedAt: raw.updated_at,
@@ -64,7 +65,8 @@ function toApiBody(data: Partial<Hotel>): Record<string, unknown> {
   if (data.clientDescription !== undefined) body.client_description = data.clientDescription;
   if (data.advisorNotes !== undefined) body.advisor_notes = data.advisorNotes;
   if (data.amenities !== undefined) body.amenities = data.amenities.map((a) => a.label);
-  if (data.imageUrl !== undefined) body.image_urls = data.imageUrl ? [data.imageUrl] : [];
+  if (data.imageUrls !== undefined) body.image_urls = data.imageUrls;
+  else if (data.imageUrl !== undefined) body.image_urls = data.imageUrl ? [data.imageUrl] : [];
   if (data.isActive !== undefined) body.is_active = data.isActive;
   return body;
 }
@@ -72,8 +74,11 @@ function toApiBody(data: Partial<Hotel>): Record<string, unknown> {
 // ── Service ──────────────────────────────────────────────────────────────────
 
 export class ApiHotelService implements IHotelService {
-  async getHotels(): Promise<Hotel[]> {
-    const raw = await apiRequest<ApiHotel[]>('/api/hotels', { method: 'GET' });
+  async getHotels(query?: HotelQuery): Promise<Hotel[]> {
+    const qs = new URLSearchParams();
+    if (query?.active !== undefined) qs.set('active', String(query.active));
+    const suffix = qs.toString() ? `?${qs.toString()}` : '';
+    const raw = await apiRequest<ApiHotel[]>(`/api/hotels${suffix}`, { method: 'GET' });
     return raw.map(toHotel);
   }
 

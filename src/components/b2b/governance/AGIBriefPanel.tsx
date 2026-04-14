@@ -3,24 +3,20 @@
 /**
  * AGI Intelligence Brief Panel — Advisor View
  * Dark card — signals intelligence, internal-only
- * Shows ranked hotel options, aviation shortlist, risk summary
+ * Shows active hotel library, aviation shortlist, risk summary
  * NEVER shown to UHNI client
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils/cn';
-import { ChevronDown, ChevronUp, Shield, Plane, Building2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, Shield, Plane, Building2, Loader2 } from 'lucide-react';
+import { useServices } from '@/lib/hooks/useServices';
+import type { Hotel } from '@/lib/types/entities';
 
 interface AGIBriefPanelProps {
   journeyId: string;
   clientName: string;
 }
-
-const MOCK_HOTELS = [
-  { name: 'Aman Venice', location: 'Venice, Italy', privacyScore: 96, emotionalMatch: 94, riskLevel: 'Low' as const, note: 'Private canal entrance. Zero press exposure. Aligned with client discretion tier: High.', recommended: true },
-  { name: 'Hotel de Crillon', location: 'Paris, France', privacyScore: 88, emotionalMatch: 91, riskLevel: 'Low' as const, note: 'Presidential suite with private access. Minor exposure risk during fashion week.', recommended: false },
-  { name: 'Four Seasons George V', location: 'Paris, France', privacyScore: 82, emotionalMatch: 87, riskLevel: 'Medium' as const, note: 'High-visibility address. Recommend only if prestige outweighs privacy for this client.', recommended: false },
-];
 
 const MOCK_JETS = [
   { operator: 'VistaJet', aircraft: 'Global 7500', availability: 'Confirmed' as const, note: 'Client-preferred operator. NDA: verified.' },
@@ -30,18 +26,36 @@ const MOCK_JETS = [
 type SectionKey = 'hotels' | 'aviation' | 'risk';
 
 export function AGIBriefPanel({ journeyId, clientName }: AGIBriefPanelProps) {
+  const services = useServices();
   const [openSection, setOpenSection] = useState<SectionKey | null>(null);
   const [advisorNote, setAdvisorNote] = useState('');
+  const [hotels, setHotels] = useState<Hotel[]>([]);
+  const [hotelsLoading, setHotelsLoading] = useState(true);
+  const [hotelsError, setHotelsError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setHotelsLoading(true);
+      setHotelsError(null);
+      try {
+        const data = await services.hotel.getHotels({ active: true });
+        if (!cancelled) setHotels(data);
+      } catch (err) {
+        if (!cancelled) {
+          console.error('Failed to load hotels for AGI brief', err);
+          setHotelsError('Unable to load hotel recommendations. Please try again.');
+        }
+      } finally {
+        if (!cancelled) setHotelsLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [services, journeyId]);
 
   const toggle = (section: SectionKey) => {
     setOpenSection(prev => prev === section ? null : section);
   };
-
-  const riskColor = (level: 'Low' | 'Medium' | 'High') => ({
-    Low: 'text-emerald-400 bg-emerald-900/40',
-    Medium: 'text-amber-400 bg-amber-900/40',
-    High: 'text-red-400 bg-red-900/40',
-  }[level]);
 
   return (
     <div className="bg-slate-800 rounded-xl overflow-hidden border border-slate-700">
@@ -63,45 +77,57 @@ export function AGIBriefPanel({ journeyId, clientName }: AGIBriefPanelProps) {
             <div className="flex items-center gap-2 text-white">
               <Building2 size={16} className="text-slate-400" />
               <span className="font-sans text-sm font-medium">Hotel Recommendations</span>
-              <span className="text-xs bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full">3 options</span>
+              {!hotelsLoading && !hotelsError && (
+                <span className="text-xs bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full">{hotels.length} options</span>
+              )}
             </div>
             {openSection === 'hotels' ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
           </button>
           {openSection === 'hotels' && (
             <div className="p-4 space-y-3">
-              {MOCK_HOTELS.map((hotel, i) => (
-                <div key={i} className={cn('p-4 rounded-lg border', hotel.recommended ? 'border-amber-500/40 bg-amber-900/20' : 'border-slate-600 bg-slate-700/30')}>
+              {hotelsLoading && (
+                <div className="flex items-center gap-2 text-slate-400 text-xs font-sans py-4">
+                  <Loader2 size={14} className="animate-spin" /> Loading hotel library…
+                </div>
+              )}
+              {hotelsError && !hotelsLoading && (
+                <p className="text-red-400 text-xs font-sans py-2">{hotelsError}</p>
+              )}
+              {!hotelsLoading && !hotelsError && hotels.length === 0 && (
+                <p className="text-slate-400 text-xs font-sans py-2">No active hotels in the library.</p>
+              )}
+              {!hotelsLoading && !hotelsError && hotels.map((hotel) => (
+                <div key={hotel.id} className="p-4 rounded-lg border border-slate-600 bg-slate-700/30">
                   <div className="flex items-start justify-between mb-2">
                     <div>
                       <div className="flex items-center gap-2 mb-0.5">
                         <span className="text-white font-sans text-sm font-medium">{hotel.name}</span>
-                        {hotel.recommended && <span className="text-xs bg-amber-500 text-white px-2 py-0.5 rounded-full">AGI Recommended</span>}
+                        <span className="text-[10px] uppercase tracking-wider text-slate-400 bg-slate-700 px-1.5 py-0.5 rounded">{hotel.tier}</span>
                       </div>
-                      <span className="text-slate-400 text-xs">{hotel.location}</span>
-                    </div>
-                    <span className={cn('text-xs px-2 py-0.5 rounded-full', riskColor(hotel.riskLevel))}>{hotel.riskLevel} Risk</span>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-2">
-                    <div>
-                      <p className="text-slate-500 text-xs mb-1">Privacy Score</p>
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 h-1.5 bg-slate-600 rounded-full overflow-hidden">
-                          <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${hotel.privacyScore}%` }} />
-                        </div>
-                        <span className="text-emerald-400 text-xs font-medium">{hotel.privacyScore}</span>
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-slate-500 text-xs mb-1">Emotional Match</p>
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 h-1.5 bg-slate-600 rounded-full overflow-hidden">
-                          <div className="h-full bg-amber-400 rounded-full" style={{ width: `${hotel.emotionalMatch}%` }} />
-                        </div>
-                        <span className="text-amber-400 text-xs font-medium">{hotel.emotionalMatch}</span>
-                      </div>
+                      <span className="text-slate-400 text-xs">{hotel.location}, {hotel.country}</span>
                     </div>
                   </div>
-                  <p className="text-slate-400 text-xs leading-relaxed">{hotel.note}</p>
+                  <div className="mb-2">
+                    <p className="text-slate-500 text-xs mb-1">Privacy Score</p>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-1.5 bg-slate-600 rounded-full overflow-hidden">
+                        <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${hotel.privacyScore}%` }} />
+                      </div>
+                      <span className="text-emerald-400 text-xs font-medium">{hotel.privacyScore}</span>
+                    </div>
+                  </div>
+                  {hotel.description && (
+                    <div className="mb-2">
+                      <p className="text-slate-500 text-[10px] uppercase tracking-wider mb-0.5">Description (Internal)</p>
+                      <p className="text-slate-300 text-xs leading-relaxed">{hotel.description}</p>
+                    </div>
+                  )}
+                  {hotel.advisorNotes && (
+                    <div>
+                      <p className="text-amber-400/70 text-[10px] uppercase tracking-wider mb-0.5">Advisor Notes</p>
+                      <p className="text-slate-300 text-xs leading-relaxed">{hotel.advisorNotes}</p>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

@@ -117,8 +117,57 @@ export interface Journey {
   isInvisible: boolean;
   emotionalObjective?: string;
   strategicReasoning?: string;
+  packageId?: string | null;
+  preDepartureBrief?: PreDepartureBrief | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface PreDepartureBrief {
+  arrivalSummary?: string;
+  keyContact?: string;
+  keyContactRole?: string;
+  timing?: string;
+  discretionLevel?: 'High' | 'Standard' | 'Custom';
+  specialInstructions?: string;
+  sentAt?: string;
+}
+
+export interface JourneyFeedback {
+  journeyId: string;
+  mood: number;
+  reflection?: string;
+  submittedAt?: string;
+}
+
+export interface TravelMonitor {
+  journeyId: string;
+  flight?: {
+    number?: string;
+    route?: string;
+    status?: string;
+    departure?: string;
+    arrival?: string;
+    aircraft?: string;
+    terminal?: string;
+  } | null;
+  transfer?: {
+    type?: string;
+    route?: string;
+    status?: string;
+    driver?: string;
+    vehicle?: string;
+    contact?: string;
+    eta?: string;
+  } | null;
+  accommodation?: {
+    property?: string;
+    room?: string;
+    status?: string;
+    checkIn?: string;
+    note?: string;
+  } | null;
+  alerts?: string[];
 }
 
 export interface JourneyVersion {
@@ -842,6 +891,7 @@ export interface Hotel {
   advisorNotes?: string;
   amenities: HotelAmenity[];
   imageUrl?: string;
+  imageUrls?: string[];
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -877,4 +927,206 @@ export interface Package {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+// ============================================================================
+// Phase 5 — Dashboard / Briefing aggregates
+// ============================================================================
+
+export interface UserSummary {
+  id: string;
+  name: string;
+  email: string;
+  role: string | null;
+}
+
+export interface JourneySummary {
+  id: string;
+  title: string;
+  status: string;
+  category: string;
+  discretion_level: string | null;
+  is_invisible: boolean;
+  updated_at: string;
+}
+
+export interface VaultItemSummary {
+  id: string;
+  title: string;
+  type: string;
+  is_milestone: boolean;
+  created_at: string;
+}
+
+// /api/briefing
+
+export interface EmotionalLandscape {
+  score_security: number;
+  score_adventure: number;
+  score_legacy: number;
+  score_recognition: number;
+  score_autonomy: number;
+  values: string[];
+  priorities: string[] | null;
+  risk_tolerance: string;
+  life_stage: string;
+  travel_mode: string | null;
+  preferred_season: string | null;
+  alignment_score: number;
+}
+
+export interface Standing {
+  discretion_tier: string;
+  invisible_itinerary_default: boolean;
+  risk_tier: string | null;
+  risk_score: number | null;
+}
+
+export interface JourneysBlock {
+  total: number;
+  by_status: Record<string, number>;
+  upcoming: JourneySummary[];
+  active: JourneySummary | null;
+  last_archived: JourneySummary | null;
+}
+
+export interface VaultBlock {
+  total_items: number;
+  milestone_count: number;
+  recent: VaultItemSummary[];
+}
+
+export interface UhniBriefing {
+  user: UserSummary;
+  emotional_landscape: EmotionalLandscape | null;
+  standing: Standing;
+  advisor: UserSummary | null;
+  journeys: JourneysBlock;
+  vault: VaultBlock;
+  unread_messages: number;
+  generated_at: string;
+}
+
+// /api/portfolio
+
+export interface ClientSummary {
+  id: string;
+  user_id: string;
+  name: string | null;
+  status: string;
+  risk_category: number | null;
+  active_journey_count: number;
+  updated_at: string;
+}
+
+export interface PortfolioClientsBlock {
+  total: number;
+  active: number;
+  by_status: Record<string, number>;
+  recent: ClientSummary[];
+}
+
+export interface JourneyPipelineBlock {
+  total: number;
+  by_status: Record<string, number>;
+  needs_attention: JourneySummary[];
+}
+
+export interface RevenueBlock {
+  ytd_total: number;
+  currency: string;
+  active_contracts: number;
+  by_period: Record<string, number>;
+}
+
+export interface AlertsBlock {
+  predictive_open: number;
+  conflicts_open: number;
+  crisis_active: number;
+  vendor_alerts_open: number;
+}
+
+export interface AdvisorPortfolio {
+  advisor: UserSummary;
+  institution_id: string | null;
+  clients: PortfolioClientsBlock;
+  journey_pipeline: JourneyPipelineBlock;
+  revenue: RevenueBlock;
+  alerts: AlertsBlock;
+  generated_at: string;
+}
+
+// /api/dashboard
+
+export interface UsersBlock {
+  total: number;
+  active: number;
+  by_role: Record<string, number>;
+  new_this_week: number;
+}
+
+export interface InstitutionsBlock {
+  total: number;
+  by_tier: Record<string, number>;
+}
+
+export interface InvitesBlock {
+  total: number;
+  active: number;
+  used: number;
+  expiring_soon: number;
+}
+
+export interface SystemHealthBlock {
+  db: string;
+  llm_configured: boolean;
+  router_count: number;
+  endpoint_count: number;
+}
+
+export interface AuditEventSummary {
+  id: string;
+  event: string;
+  action: string;
+  resource_type: string;
+  user_id: string;
+  timestamp: string;
+}
+
+export interface AdminDashboard {
+  users: UsersBlock;
+  institutions: InstitutionsBlock;
+  journey_pipeline: JourneyPipelineBlock;
+  invites: InvitesBlock;
+  system_health: SystemHealthBlock;
+  recent_audit: AuditEventSummary[];
+  revenue_summary: RevenueBlock;
+  generated_at: string;
+}
+
+// /api/intelligence/feed
+
+export type FeedItemType =
+  | 'GEOPOLITICAL_RISK'
+  | 'TRAVEL_ADVISORY'
+  | 'PREDICTIVE_ALERT'
+  | 'AVIATION_DISRUPTION';
+
+export interface IntelligenceFeedItem {
+  type: FeedItemType;
+  id: string;
+  title: string;
+  summary: string;
+  severity: string;
+  relevance_score: number;
+  country_or_region: string | null;
+  related_journey_id: string | null;
+  created_at: string;
+}
+
+export interface IntelligenceFeed {
+  user_id: string;
+  items: IntelligenceFeedItem[];
+  total: number;
+  generated_at: string;
 }

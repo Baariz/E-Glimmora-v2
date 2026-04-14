@@ -20,6 +20,7 @@ interface HotelFormState {
   clientDescription: string;
   advisorNotes: string;
   amenities: string;
+  imageUrls: string;
 }
 
 const EMPTY_FORM: HotelFormState = {
@@ -33,6 +34,7 @@ const EMPTY_FORM: HotelFormState = {
   clientDescription: '',
   advisorNotes: '',
   amenities: '',
+  imageUrls: '',
 };
 
 function toFormState(h: Hotel): HotelFormState {
@@ -47,7 +49,15 @@ function toFormState(h: Hotel): HotelFormState {
     clientDescription: h.clientDescription,
     advisorNotes: h.advisorNotes || '',
     amenities: h.amenities.map((a) => a.label).join(', '),
+    imageUrls: (h.imageUrls && h.imageUrls.length ? h.imageUrls : h.imageUrl ? [h.imageUrl] : []).join(', '),
   };
+}
+
+function parseImageUrls(input: string): string[] {
+  return input
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
 }
 
 function parseAmenities(input: string): HotelAmenity[] {
@@ -67,6 +77,7 @@ export default function HotelsPage() {
   const [search, setSearch] = useState('');
   const [regionFilter, setRegionFilter] = useState<HotelRegion | 'All'>('All');
   const [tierFilter, setTierFilter] = useState<HotelTier | 'All'>('All');
+  const [activeFilter, setActiveFilter] = useState<'All' | 'Active' | 'Inactive'>('All');
   const [selectedHotel, setSelectedHotel] = useState<Hotel | null>(null);
 
   const [showModal, setShowModal] = useState(false);
@@ -102,7 +113,10 @@ export default function HotelsPage() {
       h.country.toLowerCase().includes(q);
     const matchesRegion = regionFilter === 'All' || h.region === regionFilter;
     const matchesTier = tierFilter === 'All' || h.tier === tierFilter;
-    return matchesSearch && matchesRegion && matchesTier;
+    const matchesActive =
+      activeFilter === 'All' ||
+      (activeFilter === 'Active' ? h.isActive : !h.isActive);
+    return matchesSearch && matchesRegion && matchesTier && matchesActive;
   });
 
   const openAdd = () => {
@@ -137,6 +151,7 @@ export default function HotelsPage() {
       clientDescription: form.clientDescription,
       advisorNotes: form.advisorNotes,
       amenities: parseAmenities(form.amenities),
+      imageUrls: parseImageUrls(form.imageUrls),
       isActive: true,
     };
     try {
@@ -223,6 +238,15 @@ export default function HotelsPage() {
         >
           <option value="All">All Tiers</option>
           {TIERS.map((t) => (<option key={t} value={t}>{t}</option>))}
+        </select>
+        <select
+          value={activeFilter}
+          onChange={(e) => setActiveFilter(e.target.value as 'All' | 'Active' | 'Inactive')}
+          className="px-3 py-2 border border-sand-200 rounded-lg text-sm font-sans focus:outline-none focus:ring-2 focus:ring-rose-500"
+        >
+          <option value="All">All Statuses</option>
+          <option value="Active">Active</option>
+          <option value="Inactive">Inactive</option>
         </select>
       </div>
 
@@ -355,6 +379,12 @@ export default function HotelsPage() {
               <h3 className="font-sans text-sm font-semibold text-sand-700 mb-1">Internal Notes</h3>
               <p className="text-sm font-sans text-sand-600 leading-relaxed">{selectedHotel.description}</p>
             </div>
+            {selectedHotel.advisorNotes && (
+              <div className="md:col-span-2">
+                <h3 className="font-sans text-sm font-semibold text-sand-700 mb-1">Advisor Notes</h3>
+                <p className="text-sm font-sans text-sand-600 leading-relaxed">{selectedHotel.advisorNotes}</p>
+              </div>
+            )}
           </div>
 
           <div className="mt-4">
@@ -464,6 +494,16 @@ export default function HotelsPage() {
                   rows={2}
                   value={form.advisorNotes}
                   onChange={(e) => setForm({ ...form, advisorNotes: e.target.value })}
+                  className="w-full px-3 py-2 border border-sand-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                />
+              </label>
+              <label className="space-y-1 sm:col-span-2">
+                <span className="text-sand-700 font-medium">Image URLs (comma separated)</span>
+                <textarea
+                  rows={2}
+                  value={form.imageUrls}
+                  onChange={(e) => setForm({ ...form, imageUrls: e.target.value })}
+                  placeholder="https://cdn.example.com/hero.jpg, https://cdn.example.com/suite.jpg"
                   className="w-full px-3 py-2 border border-sand-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
                 />
               </label>

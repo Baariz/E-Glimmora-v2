@@ -1,421 +1,226 @@
 'use client';
 
 /**
- * B2B Portfolio Dashboard
- * Complete dashboard with all 7 DASH requirements
+ * B2B Advisor Portfolio Dashboard
+ * Phase 5 — single aggregated endpoint: GET /api/portfolio
  */
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ColumnDef } from '@tanstack/react-table';
+import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
-import { toast } from 'sonner';
-import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, BarChart, Bar } from 'recharts';
-
-import { useServices } from '@/lib/hooks/useServices';
-import { useCurrentUser } from '@/lib/hooks/useCurrentUser';
-import { useCan } from '@/lib/rbac/usePermission';
-import { Permission } from '@/lib/types/permissions';
-import { ClientRecord, Journey, JourneyStatus, RiskCategory } from '@/lib/types';
+import { Users, AlertTriangle, DollarSign, ArrowRight, Shield, Zap, Store, Activity } from 'lucide-react';
 import { Card } from '@/components/shared/Card';
-import { DataTable } from '@/components/b2b/tables/DataTable';
-import { StatsRow } from '@/components/b2b/layouts/StatsRow';
-import { StatusBadge } from '@/components/b2b/layouts/StatusBadge';
+import { useServices } from '@/lib/hooks/useServices';
+import { ApiError } from '@/lib/services/api/client';
+import type { AdvisorPortfolio } from '@/lib/types/entities';
 
 export default function PortfolioPage() {
-  const router = useRouter();
   const services = useServices();
-  const { user: currentUser } = useCurrentUser();
-  const { can } = useCan();
-  const canReadRisk = can(Permission.READ, 'risk');
-  const canReadRevenue = can(Permission.READ, 'revenue');
-  const canReadJourney = can(Permission.READ, 'journey');
-
+  const router = useRouter();
+  const [data, setData] = useState<AdvisorPortfolio | null>(null);
   const [loading, setLoading] = useState(true);
-  const [clients, setClients] = useState<ClientRecord[]>([]);
-  const [journeys, setJourneys] = useState<Journey[]>([]);
-  const [riskMetrics, setRiskMetrics] = useState<any>(null);
-  const [revenueRecords, setRevenueRecords] = useState<any[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadDashboardData();
-  }, []);
-
-  async function loadDashboardData() {
-    try {
+    let cancelled = false;
+    (async () => {
       setLoading(true);
-
-      // Load clients
-      const clientData = await services.client.getClientsByRM((currentUser?.id ?? ''));
-      setClients(clientData);
-
-      // Load journeys for all clients
-      if (canReadJourney) {
-        const allJourneys: Journey[] = [];
-        for (const client of clientData) {
-          const clientJourneys = await services.journey.getJourneys(client.userId, 'b2b');
-          allJourneys.push(...clientJourneys);
+      setError(null);
+      try {
+        const res = await services.briefing.getAdvisorPortfolio();
+        if (!cancelled) setData(res);
+      } catch (err) {
+        if (cancelled) return;
+        if (err instanceof ApiError && err.status === 403) {
+          router.push('/');
+          return;
         }
-        setJourneys(allJourneys);
+        console.error('Failed to load portfolio', err);
+        setError(err instanceof Error ? err.message : 'Failed to load portfolio');
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-
-      // Load risk metrics
-      if (canReadRisk) {
-        const risk = await services.risk.getPortfolioRisk((currentUser?.institutionId ?? ''));
-        setRiskMetrics(risk);
-      }
-
-      // Load revenue records
-      if (canReadRevenue) {
-        const revenue = await services.contract.getRevenueRecords((currentUser?.institutionId ?? ''));
-        setRevenueRecords(revenue);
-      }
-    } catch (error) {
-      toast.error('Failed to load portfolio data');
-      console.error('Dashboard load error:', error);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  // DASH-01: Client table columns
-  const clientColumns: ColumnDef<ClientRecord>[] = [
-    {
-      accessorKey: 'name',
-      header: 'Client Name',
-      enableSorting: true,
-    },
-    {
-      accessorKey: 'status',
-      header: 'Status',
-      cell: ({ row }) => <StatusBadge status={row.original.status} />,
-      enableSorting: true,
-    },
-    {
-      accessorKey: 'riskCategory',
-      header: 'Risk',
-      cell: ({ row }) => <StatusBadge status={row.original.riskCategory} />,
-      enableSorting: true,
-    },
-    {
-      accessorKey: 'activeJourneyCount',
-      header: 'Active Journeys',
-      enableSorting: true,
-    },
-    {
-      accessorKey: 'ndaStatus',
-      header: 'NDA Status',
-      cell: ({ row }) => <StatusBadge status={row.original.ndaStatus} size="sm" />,
-      enableSorting: true,
-    },
-    {
-      accessorKey: 'lastActivity',
-      header: 'Last Activity',
-      cell: ({ row }) => (
-        <span className="text-sm text-slate-600">
-          {formatDistanceToNow(new Date(row.original.lastActivity), { addSuffix: true })}
-        </span>
-      ),
-      enableSorting: true,
-    },
-  ];
-
-  // Calculate stats
-  const totalClients = clients.length;
-  const activeJourneys = journeys.filter(j =>
-    j.status !== JourneyStatus.ARCHIVED && j.status !== JourneyStatus.EXECUTED
-  ).length;
-  const riskAlerts = clients.filter(c =>
-    c.riskCategory === 'High' || c.riskCategory === 'Critical'
-  ).length;
-  const quarterlyRevenue = revenueRecords
-    .filter(r => r.period.includes('2026-Q1'))
-    .reduce((sum, r) => sum + r.amount, 0);
-
-  // DASH-03: Journey pipeline data
-  const journeyPipeline = Object.values(JourneyStatus).map(status => ({
-    status: status.replace('_', ' '),
-    count: journeys.filter(j => j.status === status).length,
-    color: getStatusColor(status),
-  }));
-
-  // DASH-02: Risk heat map data
-  const riskHeatMapData = clients.map((client, index) => ({
-    x: index,
-    y: client.riskScore,
-    name: client.name,
-    category: client.riskCategory,
-    fill: getRiskColor(client.riskCategory),
-  }));
-
-  // DASH-04: Emotional insights data
-  const clientsWithEmotionalProfile = clients.filter(c => c.emotionalProfile);
-
-  // DASH-05: NDA tracker data
-  const ndaClients = clients.filter(c => c.ndaStatus !== 'None');
-
-  // DASH-06: Compliance alerts
-  const complianceAlerts = [
-    ...clients.filter(c => c.riskCategory === 'High' || c.riskCategory === 'Critical')
-      .map(c => ({ type: 'Risk', message: `${c.name} has ${c.riskCategory} risk rating` })),
-    ...clients.filter(c => c.ndaStatus === 'Expired')
-      .map(c => ({ type: 'NDA', message: `${c.name} NDA expired` })),
-    ...journeys.filter(j => {
-      if (j.status !== JourneyStatus.COMPLIANCE_REVIEW) return false;
-      const created = new Date(j.createdAt);
-      const daysSince = (Date.now() - created.getTime()) / (1000 * 60 * 60 * 24);
-      return daysSince > 7;
-    }).map(j => ({ type: 'Journey', message: `Journey "${j.title}" stuck in compliance review for >7 days` })),
-  ];
-
-  // DASH-07: Revenue by month (last 6 months)
-  const revenueByMonth = revenueRecords
-    .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
-    .slice(-6)
-    .map(r => ({
-      period: r.period,
-      amount: r.amount,
-    }));
+    })();
+    return () => { cancelled = true; };
+  }, [services, router]);
 
   if (loading) {
     return (
-      <div className="space-y-8">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-serif font-light text-slate-900">Portfolio Dashboard</h1>
-          <p className="text-base font-sans text-slate-600">Loading portfolio data...</p>
+      <div className="p-8 space-y-6">
+        <div className="h-8 w-72 bg-sand-200 rounded animate-pulse" />
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {[1, 2, 3, 4].map((i) => (<div key={i} className="h-28 bg-sand-200 rounded-lg animate-pulse" />))}
         </div>
+        <div className="h-64 bg-sand-200 rounded-lg animate-pulse" />
       </div>
     );
   }
 
+  if (error || !data) {
+    return (
+      <div className="p-10 text-center space-y-4">
+        <p className="text-rose-700 font-sans text-sm">{error ?? 'Portfolio unavailable.'}</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-4 py-2 bg-rose-900 text-white text-sm font-sans font-medium rounded-lg hover:bg-rose-800"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  const { advisor, institution_id, clients, journey_pipeline, revenue, alerts } = data;
+
+  const alertChips: Array<{ label: string; count: number; href: string; icon: React.ElementType; color: string }> = [
+    { label: 'Predictive Alerts', count: alerts.predictive_open, href: '/predictive', icon: Zap, color: 'bg-amber-50 text-amber-800 border-amber-200' },
+    { label: 'Conflicts', count: alerts.conflicts_open, href: '/conflicts', icon: AlertTriangle, color: 'bg-rose-50 text-rose-800 border-rose-200' },
+    { label: 'Crisis', count: alerts.crisis_active, href: '/crisis', icon: Shield, color: 'bg-red-50 text-red-800 border-red-200' },
+    { label: 'Vendor Alerts', count: alerts.vendor_alerts_open, href: '/vendors', icon: Store, color: 'bg-slate-50 text-slate-800 border-slate-200' },
+  ];
+
   return (
-    <div className="space-y-8">
-      {/* Page header */}
-      <div className="space-y-2">
-        <h1 className="text-3xl font-serif font-light text-slate-900">Portfolio Dashboard</h1>
-        <p className="text-base font-sans text-slate-600">
-          Overview of client portfolio, active journeys, and risk metrics
+    <div className="p-8 max-w-7xl mx-auto space-y-8">
+      {/* Advisor header */}
+      <div className="space-y-1">
+        <h1 className="text-3xl font-serif font-light text-rose-900">{advisor.name}</h1>
+        <p className="text-sm font-sans text-sand-600">
+          {advisor.email}{institution_id ? ` · Institution ${institution_id.slice(0, 8)}` : ''}
         </p>
       </div>
 
-      {/* DASH-01 & DASH-07: Stats Row */}
-      <StatsRow
-        stats={[
-          {
-            label: 'Total Clients',
-            value: totalClients,
-            subtitle: `${clients.filter(c => c.status === 'Active').length} active`,
-            colorClass: 'from-white to-rose-50',
-          },
-          {
-            label: 'Active Journeys',
-            value: activeJourneys,
-            subtitle: `Across ${new Set(journeys.map(j => j.userId)).size} clients`,
-            colorClass: 'from-white to-teal-50',
-          },
-          {
-            label: 'Risk Alerts',
-            value: riskAlerts,
-            subtitle: 'Requires attention',
-            colorClass: 'from-white to-gold-50',
-          },
-          {
-            label: 'Quarterly Revenue',
-            value: canReadRevenue ? `$${(quarterlyRevenue / 1000).toFixed(0)}K` : 'N/A',
-            subtitle: canReadRevenue ? 'Q1 2026' : 'No access',
-            colorClass: 'from-white to-olive-50',
-          },
-        ]}
-      />
-
-      {/* DASH-01: Portfolio Client Table */}
-      <Card header="Client Portfolio">
-        <DataTable
-          columns={clientColumns}
-          data={clients}
-          searchPlaceholder="Search clients..."
-          searchColumn="name"
-          onRowClick={(client) => router.push(`/clients/${client.id}`)}
-          emptyMessage="No clients found"
-        />
-      </Card>
-
-      {/* DASH-02: Risk Heat Map */}
-      {canReadRisk && (
-        <Card header="Portfolio Risk Heat Map">
-          <ResponsiveContainer width="100%" height={300}>
-            <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis type="number" dataKey="x" name="Client" hide />
-              <YAxis type="number" dataKey="y" name="Risk Score" domain={[0, 100]} />
-              <Tooltip
-                cursor={{ strokeDasharray: '3 3' }}
-                content={({ payload }) => {
-                  if (!payload || payload.length === 0) return null;
-                  const data = payload[0].payload;
-                  return (
-                    <div className="bg-white p-3 border border-slate-200 rounded shadow-lg">
-                      <p className="font-sans text-sm font-semibold">{data.name}</p>
-                      <p className="font-sans text-xs text-slate-600">
-                        Risk Score: {data.y} ({data.category})
-                      </p>
-                    </div>
-                  );
-                }}
-              />
-              <Scatter data={riskHeatMapData} />
-            </ScatterChart>
-          </ResponsiveContainer>
-        </Card>
-      )}
-
-      {/* DASH-03: Journey Pipeline Tracker */}
-      {canReadJourney && (
-        <Card header="Journey Pipeline">
-          <div className="space-y-4">
-            {journeyPipeline.map((stage) => (
-              <div key={stage.status}>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-sans text-slate-700">{stage.status}</span>
-                  <span className="text-sm font-sans font-semibold text-slate-900">{stage.count}</span>
-                </div>
-                <div className="w-full bg-slate-200 rounded-full h-2">
-                  <div
-                    className={`h-2 rounded-full ${stage.color}`}
-                    style={{ width: `${(stage.count / Math.max(...journeyPipeline.map(s => s.count), 1)) * 100}%` }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
-
-      {/* DASH-04: Emotional Insight Comparison */}
-      {clientsWithEmotionalProfile.length > 0 && (
-        <Card header="Client Emotional Profiles">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {clientsWithEmotionalProfile.slice(0, 6).map((client) => (
-              <div key={client.id} className="border border-slate-200 rounded-lg p-4">
-                <p className="font-sans text-sm font-semibold text-slate-900 mb-3">{client.name}</p>
-                <ResponsiveContainer width="100%" height={150}>
-                  <RadarChart data={Object.entries(client.emotionalProfile!).map(([key, value]) => ({
-                    subject: key.charAt(0).toUpperCase() + key.slice(1),
-                    value,
-                  }))}>
-                    <PolarGrid />
-                    <PolarAngleAxis dataKey="subject" tick={{ fontSize: 10 }} />
-                    <PolarRadiusAxis domain={[0, 100]} tick={false} />
-                    <Radar dataKey="value" stroke="#be185d" fill="#be185d" fillOpacity={0.3} />
-                  </RadarChart>
-                </ResponsiveContainer>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
-
-      {/* DASH-05 & DASH-06: NDA Tracker + Compliance Alerts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card header="NDA Tracker">
-          <div className="space-y-3">
-            {ndaClients.length === 0 ? (
-              <p className="text-sm font-sans text-slate-500">No active NDAs</p>
-            ) : (
-              ndaClients.map((client) => (
-                <div key={client.id} className="flex items-center justify-between py-2 border-b border-slate-100 last:border-0">
-                  <div>
-                    <p className="text-sm font-sans font-medium text-slate-900">{client.name}</p>
-                    {client.ndaExpiresAt && (
-                      <p className="text-xs font-sans text-slate-500">
-                        Expires {formatDistanceToNow(new Date(client.ndaExpiresAt), { addSuffix: true })}
-                      </p>
-                    )}
-                  </div>
-                  <StatusBadge status={client.ndaStatus} size="sm" />
-                </div>
-              ))
-            )}
-          </div>
-        </Card>
-
-        <Card header={`Compliance Alerts (${complianceAlerts.length})`}>
-          <div className="space-y-3">
-            {complianceAlerts.length === 0 ? (
-              <p className="text-sm font-sans text-slate-500">No alerts</p>
-            ) : (
-              complianceAlerts.slice(0, 5).map((alert, index) => (
-                <div key={index} className="flex items-start gap-3 py-2 border-b border-slate-100 last:border-0">
-                  <div className="flex-shrink-0 mt-0.5">
-                    <StatusBadge status={alert.type} size="sm" />
-                  </div>
-                  <p className="text-sm font-sans text-slate-700">{alert.message}</p>
-                </div>
-              ))
-            )}
-          </div>
-        </Card>
+      {/* Alert chips */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {alertChips.map(({ label, count, href, icon: Icon, color }) => (
+          <Link
+            key={label}
+            href={href}
+            className={`flex items-center justify-between px-4 py-3 rounded-lg border font-sans text-sm transition-all hover:shadow-sm ${color}`}
+          >
+            <div className="flex items-center gap-2">
+              <Icon className="w-4 h-4" />
+              <span>{label}</span>
+            </div>
+            <span className="font-serif text-lg">{count}</span>
+          </Link>
+        ))}
       </div>
 
-      {/* DASH-07: Revenue Metrics */}
-      {canReadRevenue && revenueRecords.length > 0 && (
-        <Card header="Revenue Metrics">
-          <div className="space-y-6">
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={revenueByMonth}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="period" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip />
-                <Bar dataKey="amount" fill="#0d9488" />
-              </BarChart>
-            </ResponsiveContainer>
-
-            <div className="grid grid-cols-3 gap-4 pt-4 border-t border-slate-200">
-              <div>
-                <p className="text-xs font-sans text-slate-500">Total Revenue</p>
-                <p className="text-2xl font-serif text-slate-900">
-                  ${(revenueRecords.reduce((sum, r) => sum + r.amount, 0) / 1000).toFixed(0)}K
-                </p>
-              </div>
-              <div>
-                <p className="text-xs font-sans text-slate-500">Avg per Client</p>
-                <p className="text-2xl font-serif text-slate-900">
-                  ${totalClients > 0 ? (revenueRecords.reduce((sum, r) => sum + r.amount, 0) / totalClients / 1000).toFixed(0) : 0}K
-                </p>
-              </div>
-              <div>
-                <p className="text-xs font-sans text-slate-500">This Quarter</p>
-                <p className="text-2xl font-serif text-slate-900">${(quarterlyRevenue / 1000).toFixed(0)}K</p>
-              </div>
+      {/* Clients block */}
+      <Card header="Clients">
+        {clients.total === 0 ? (
+          <div className="py-8 text-center text-sand-500 text-sm font-sans">No clients assigned yet.</div>
+        ) : (
+          <>
+            <div className="flex flex-wrap items-center gap-3 mb-4 text-sm font-sans">
+              <span className="flex items-center gap-1.5 text-sand-700"><Users className="w-4 h-4" /> {clients.total} total</span>
+              <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-full text-xs">{clients.active} active</span>
+              {Object.entries(clients.by_status).map(([s, n]) => (
+                <span key={s} className="px-2 py-0.5 bg-sand-100 text-sand-700 rounded-full text-xs">{s}: {n}</span>
+              ))}
             </div>
+            <ul className="divide-y divide-sand-100">
+              {clients.recent.slice(0, 5).map((c) => (
+                <li key={c.id}>
+                  <Link href={`/clients/${c.id}`} className="flex items-center justify-between py-3 hover:text-rose-700">
+                    <div>
+                      <p className="font-sans text-sm font-medium text-sand-800">{c.name ?? 'Unnamed client'}</p>
+                      <p className="text-xs font-sans text-sand-500">
+                        {c.status} · {c.active_journey_count} active journey{c.active_journey_count === 1 ? '' : 's'}
+                        {c.risk_category != null ? ` · Risk ${c.risk_category}` : ''}
+                      </p>
+                    </div>
+                    <span className="text-xs font-sans text-sand-400">{formatDistanceToNow(new Date(c.updated_at), { addSuffix: true })}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </Card>
+
+      {/* Journey pipeline — hide entirely if zero */}
+      {journey_pipeline.total > 0 && (
+        <Card header={
+          <div className="flex items-center justify-between w-full">
+            <span>Journey Pipeline</span>
+            {journey_pipeline.needs_attention.length > 0 && (
+              <span className="px-2 py-0.5 bg-red-600 text-white text-xs font-sans rounded-full">
+                {journey_pipeline.needs_attention.length} need attention
+              </span>
+            )}
+          </div>
+        }>
+          <div className="space-y-4">
+            <div className="flex flex-wrap gap-2 text-xs font-sans">
+              <span className="px-2 py-1 bg-rose-50 text-rose-900 rounded-full">Total: {journey_pipeline.total}</span>
+              {Object.entries(journey_pipeline.by_status).map(([s, n]) => (
+                <span key={s} className="px-2 py-1 bg-sand-100 text-sand-700 rounded-full">{s.replace('_', ' ')}: {n}</span>
+              ))}
+            </div>
+            {journey_pipeline.needs_attention.length > 0 && (
+              <ul className="space-y-2">
+                {journey_pipeline.needs_attention.map((j) => (
+                  <li key={j.id}>
+                    <Link href={`/governance/${j.id}`} className="flex items-start gap-2 py-2 text-sm font-sans hover:text-rose-700">
+                      <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <span className="text-rose-900 font-medium">{j.title}</span>{' '}
+                        <span className="text-sand-500 text-xs">· {j.category} · {j.status.replace('_', ' ')}</span>
+                      </div>
+                      <ArrowRight className="w-4 h-4 text-sand-400 ml-auto" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </Card>
       )}
+
+      {/* Revenue block */}
+      <Card header="Revenue">
+        <div className="flex flex-wrap items-center gap-6 mb-6">
+          <div className="flex items-start gap-3">
+            <DollarSign className="w-6 h-6 text-teal-700 mt-1" />
+            <div>
+              <p className="text-xs font-sans uppercase tracking-wider text-sand-500">YTD Total</p>
+              <p className="font-serif text-2xl text-rose-900">
+                {revenue.currency} {revenue.ytd_total.toLocaleString()}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <Activity className="w-6 h-6 text-rose-700 mt-1" />
+            <div>
+              <p className="text-xs font-sans uppercase tracking-wider text-sand-500">Active Contracts</p>
+              <p className="font-serif text-2xl text-rose-900">{revenue.active_contracts}</p>
+            </div>
+          </div>
+        </div>
+        {Object.keys(revenue.by_period).length > 0 && (
+          <div>
+            <p className="text-xs font-sans uppercase tracking-wider text-sand-500 mb-3">By Period</p>
+            <div className="flex items-end gap-2 h-32">
+              {(() => {
+                const entries = Object.entries(revenue.by_period);
+                const max = Math.max(...entries.map(([, v]) => v), 1);
+                return entries.map(([period, v]) => (
+                  <div key={period} className="flex-1 flex flex-col items-center gap-1">
+                    <div
+                      className="w-full bg-gradient-to-t from-rose-400 to-amber-400 rounded-t"
+                      style={{ height: `${(v / max) * 100}%`, minHeight: '2px' }}
+                      title={`${period}: ${revenue.currency} ${v.toLocaleString()}`}
+                    />
+                    <span className="text-[10px] font-sans text-sand-500 whitespace-nowrap">{period}</span>
+                  </div>
+                ));
+              })()}
+            </div>
+          </div>
+        )}
+      </Card>
     </div>
   );
-}
-
-// Helper functions
-function getStatusColor(status: JourneyStatus): string {
-  const colors: Record<JourneyStatus, string> = {
-    [JourneyStatus.DRAFT]: 'bg-slate-300',
-    [JourneyStatus.RM_REVIEW]: 'bg-gold-400',
-    [JourneyStatus.COMPLIANCE_REVIEW]: 'bg-amber-400',
-    [JourneyStatus.APPROVED]: 'bg-teal-400',
-    [JourneyStatus.PRESENTED]: 'bg-olive-400',
-    [JourneyStatus.EXECUTED]: 'bg-emerald-400',
-    [JourneyStatus.ARCHIVED]: 'bg-gray-300',
-  };
-  return colors[status] || 'bg-slate-300';
-}
-
-function getRiskColor(category: RiskCategory): string {
-  const colors: Record<RiskCategory, string> = {
-    Low: '#84cc16',
-    Medium: '#eab308',
-    High: '#f43f5e',
-    Critical: '#dc2626',
-  };
-  return colors[category] || '#94a3b8';
 }

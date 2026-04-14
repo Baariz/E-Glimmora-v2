@@ -3,50 +3,86 @@
 /**
  * Pre-Departure Brief Composer
  * Advisor writes a calm, minimal departure summary for the UHNI
- * Split view: editor left, live preview right
+ * Persists to POST /api/journeys/{id}/pre-departure
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils/cn';
-import { Wand2, Send } from 'lucide-react';
+import { Wand2, Send, Loader2 } from 'lucide-react';
+import { useServices } from '@/lib/hooks/useServices';
+import type { PreDepartureBrief as Brief } from '@/lib/types/entities';
 
 interface PreDepartureBriefProps {
+  journeyId: string;
   clientName: string;
   journeyTitle: string;
+  initialBrief?: Brief | null;
+  onSaved?: () => void;
 }
 
-const AGI_TEMPLATE = {
+const AGI_TEMPLATE: Brief = {
   arrivalSummary: 'Your arrival has been arranged with complete discretion. A dedicated host will greet you privately upon arrival.',
   keyContact: 'Your Élan Experience Host',
   keyContactRole: 'On-Ground Liaison',
   timing: 'All timing has been pre-coordinated. Simply arrive as planned — everything else is handled.',
-  discretionLevel: 'High' as const,
+  discretionLevel: 'High',
   specialInstructions: 'No public-facing itinerary exists. All arrangements are known only to your Élan team and those who need to know.',
 };
 
-export function PreDepartureBrief({ clientName, journeyTitle }: PreDepartureBriefProps) {
-  const [arrivalSummary, setArrivalSummary] = useState('');
-  const [keyContact, setKeyContact] = useState('');
-  const [keyContactRole, setKeyContactRole] = useState('');
-  const [timing, setTiming] = useState('');
-  const [discretionLevel, setDiscretionLevel] = useState<'High' | 'Standard' | 'Custom'>('High');
-  const [specialInstructions, setSpecialInstructions] = useState('');
-  const [sent, setSent] = useState(false);
+export function PreDepartureBrief({ journeyId, clientName, journeyTitle, initialBrief, onSaved }: PreDepartureBriefProps) {
+  const services = useServices();
+  const [arrivalSummary, setArrivalSummary] = useState(initialBrief?.arrivalSummary ?? '');
+  const [keyContact, setKeyContact] = useState(initialBrief?.keyContact ?? '');
+  const [keyContactRole, setKeyContactRole] = useState(initialBrief?.keyContactRole ?? '');
+  const [timing, setTiming] = useState(initialBrief?.timing ?? '');
+  const [discretionLevel, setDiscretionLevel] = useState<'High' | 'Standard' | 'Custom'>(initialBrief?.discretionLevel ?? 'High');
+  const [specialInstructions, setSpecialInstructions] = useState(initialBrief?.specialInstructions ?? '');
+  const [sent, setSent] = useState(Boolean(initialBrief?.sentAt));
+  const [sending, setSending] = useState(false);
+
+  useEffect(() => {
+    if (initialBrief) {
+      setArrivalSummary(initialBrief.arrivalSummary ?? '');
+      setKeyContact(initialBrief.keyContact ?? '');
+      setKeyContactRole(initialBrief.keyContactRole ?? '');
+      setTiming(initialBrief.timing ?? '');
+      setDiscretionLevel(initialBrief.discretionLevel ?? 'High');
+      setSpecialInstructions(initialBrief.specialInstructions ?? '');
+      setSent(Boolean(initialBrief.sentAt));
+    }
+  }, [initialBrief]);
 
   const applyTemplate = () => {
-    setArrivalSummary(AGI_TEMPLATE.arrivalSummary);
-    setKeyContact(AGI_TEMPLATE.keyContact);
-    setKeyContactRole(AGI_TEMPLATE.keyContactRole);
-    setTiming(AGI_TEMPLATE.timing);
-    setDiscretionLevel(AGI_TEMPLATE.discretionLevel);
-    setSpecialInstructions(AGI_TEMPLATE.specialInstructions);
+    setArrivalSummary(AGI_TEMPLATE.arrivalSummary!);
+    setKeyContact(AGI_TEMPLATE.keyContact!);
+    setKeyContactRole(AGI_TEMPLATE.keyContactRole!);
+    setTiming(AGI_TEMPLATE.timing!);
+    setDiscretionLevel(AGI_TEMPLATE.discretionLevel!);
+    setSpecialInstructions(AGI_TEMPLATE.specialInstructions!);
   };
 
-  const handleSend = () => {
-    setSent(true);
-    toast.success('Pre-departure brief sent to client.');
+  const handleSend = async () => {
+    setSending(true);
+    try {
+      await services.journey.setPreDepartureBrief(journeyId, {
+        arrivalSummary,
+        keyContact,
+        keyContactRole,
+        timing,
+        discretionLevel,
+        specialInstructions,
+      });
+      setSent(true);
+      toast.success('Pre-departure brief sent to client.');
+      onSaved?.();
+    } catch (err) {
+      console.error('Failed to save pre-departure brief', err);
+      toast.error('Unable to send brief. Please try again.');
+    } finally {
+      setSending(false);
+    }
   };
 
   const hasContent = arrivalSummary || keyContact || timing;
@@ -67,11 +103,16 @@ export function PreDepartureBrief({ clientName, journeyTitle }: PreDepartureBrie
       {sent ? (
         <div className="px-6 py-10 text-center">
           <p className="text-emerald-600 font-sans font-medium mb-1">Brief sent successfully.</p>
-          <p className="text-slate-400 text-sm font-sans">Client has been notified through their secure channel.</p>
+          <p className="text-slate-400 text-sm font-sans mb-4">Client has been notified through their secure channel.</p>
+          <button
+            onClick={() => setSent(false)}
+            className="text-blue-600 text-xs font-sans hover:underline"
+          >
+            Edit &amp; resend
+          </button>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-slate-200">
-          {/* Editor */}
           <div className="p-6 space-y-4">
             <div>
               <label className="block text-xs font-sans font-medium text-slate-500 uppercase tracking-wider mb-1.5">Arrival Summary</label>
@@ -103,13 +144,12 @@ export function PreDepartureBrief({ clientName, journeyTitle }: PreDepartureBrie
               <label className="block text-xs font-sans font-medium text-slate-500 uppercase tracking-wider mb-1.5">Special Instructions</label>
               <textarea value={specialInstructions} onChange={(e) => setSpecialInstructions(e.target.value)} rows={2} placeholder="Any final notes..." className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 text-sm font-sans placeholder-slate-400 resize-none focus:outline-none focus:border-blue-300" />
             </div>
-            <button onClick={handleSend} disabled={!hasContent} className={cn('w-full flex items-center justify-center gap-2 py-2.5 rounded-lg font-sans text-sm font-medium transition-all', hasContent ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-slate-100 text-slate-400 cursor-not-allowed')}>
-              <Send size={14} />
-              Send to Client
+            <button onClick={handleSend} disabled={!hasContent || sending} className={cn('w-full flex items-center justify-center gap-2 py-2.5 rounded-lg font-sans text-sm font-medium transition-all', hasContent && !sending ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-slate-100 text-slate-400 cursor-not-allowed')}>
+              {sending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+              {sending ? 'Sending…' : 'Send to Client'}
             </button>
           </div>
 
-          {/* Live Preview */}
           <div className="p-6 bg-sand-50">
             <p className="text-xs font-sans font-medium text-slate-400 uppercase tracking-wider mb-4">Client Preview</p>
             {hasContent ? (

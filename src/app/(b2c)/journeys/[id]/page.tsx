@@ -265,7 +265,7 @@ export default function JourneyDetailPage() {
             transition={{ duration: 0.8 }}
             className="mb-12"
           >
-            <ItineraryViewer journeyTitle={journey.title} />
+            <ItineraryViewer journeyTitle={journey.title} packageId={journey.packageId ?? undefined} />
           </motion.div>
         )}
 
@@ -331,7 +331,12 @@ export default function JourneyDetailPage() {
             transition={{ duration: 0.8 }}
             className="mb-12"
           >
-            <PostJourneyFeedback journeyTitle={journey.title} />
+            <PostJourneyFeedback
+              journeyId={journey.id}
+              journeyTitle={journey.title}
+              canSubmit={journey.status === JourneyStatus.EXECUTED}
+              onSubmitted={handleRefreshJourney}
+            />
           </motion.div>
         )}
 

@@ -10,6 +10,7 @@ import { useEffect, useState } from 'react';
 import { ChevronDown, ChevronUp, Sparkles, Cpu, Loader2 } from 'lucide-react';
 import { useServices } from '@/lib/hooks/useServices';
 import type { HotelScore, IntelligenceSource } from '@/lib/types/entities';
+import { TrustChrome } from '@/components/shared/TrustChrome';
 
 interface AGIBriefPanelProps {
   /** UHNI client's user id — forwarded as `user_id` in POST body */
@@ -92,10 +93,19 @@ function HotelCard({ score }: { score: HotelScore }) {
           </div>
         </div>
       </div>
-      <div className="mt-3 border-t border-slate-700 pt-2">
+      <div className="mt-3 border-t border-slate-700 pt-3">
+        <TrustChrome
+          variant="dark"
+          sources={score.sources}
+          rating={score.rating}
+          review_count={score.review_count}
+          distance_km={score.distance_km}
+          advisor_approved={score.advisor_approved}
+          confidence={score.confidence}
+        />
         <button
           onClick={() => setOpenReason((v) => !v)}
-          className="w-full flex items-center justify-between text-[11px] font-sans uppercase tracking-wider text-slate-400 hover:text-slate-200 transition-colors"
+          className="w-full flex items-center justify-between text-[11px] font-sans uppercase tracking-wider text-slate-400 hover:text-slate-200 transition-colors mt-3"
         >
           <span>AI Reasoning</span>
           {openReason ? <ChevronUp size={14} /> : <ChevronDown size={14} />}

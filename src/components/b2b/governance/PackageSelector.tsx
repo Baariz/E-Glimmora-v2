@@ -25,6 +25,7 @@ import type {
   ItineraryDay,
 } from '@/lib/types/entities';
 import { Card, CardHeader, CardContent } from '@/components/shared/Card';
+import { TrustChrome } from '@/components/shared/TrustChrome';
 import { useServices } from '@/lib/hooks/useServices';
 import { toast } from 'sonner';
 
@@ -274,6 +275,18 @@ export function PackageSelector({
                       <div className="space-y-2">
                         <ScoreBar label="Match score" value={m.match_score} accent="rose" />
                         <ScoreBar label="Season fit" value={m.season_fit} accent="olive" />
+                      </div>
+                      <div className="mt-3">
+                        <TrustChrome
+                          variant="light"
+                          compact
+                          sources={m.sources}
+                          rating={m.rating}
+                          review_count={m.review_count}
+                          distance_km={m.distance_km}
+                          advisor_approved={m.advisor_approved}
+                          confidence={m.confidence}
+                        />
                       </div>
                     </div>
 

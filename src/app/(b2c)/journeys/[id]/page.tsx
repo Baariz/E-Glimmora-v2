@@ -21,6 +21,7 @@ import { LiveJourneyCard } from '@/components/b2c/journeys/LiveJourneyCard';
 import { PrivateConfirmation } from '@/components/b2c/journeys/PrivateConfirmation';
 import { PostJourneyFeedback } from '@/components/b2c/journeys/PostJourneyFeedback';
 import { NextJourneyPanel } from '@/components/b2c/journeys/NextJourneyPanel';
+import { DynamicItineraryBanner } from '@/components/b2c/journeys/DynamicItineraryBanner';
 import { ItineraryViewer } from '@/components/b2c/journeys/ItineraryViewer';
 import { IMAGES } from '@/lib/constants/imagery';
 import { ParallaxSection } from '@/components/ui/ParallaxSection';
@@ -253,6 +254,7 @@ export default function JourneyDetailPage() {
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
         >
+          <DynamicItineraryBanner journeyId={journey.id} userId={journey.userId} />
           <JourneyDetail journey={journey} className="mb-12" />
         </motion.div>
 

@@ -10,6 +10,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Sparkles, ArrowUpRight } from 'lucide-react';
 import { useServices } from '@/lib/hooks/useServices';
+import { TrustChrome } from '@/components/shared/TrustChrome';
 import {
   type Journey,
   JourneyStatus,
@@ -61,6 +62,18 @@ function SuggestionCard({ s }: { s: JourneySuggestion }) {
         <p className="font-sans text-sm text-stone-500 leading-relaxed line-clamp-4">
           {s.emotional_resonance}
         </p>
+        <div className="mt-3">
+          <TrustChrome
+            variant="light"
+            compact
+            sources={s.sources}
+            rating={s.rating}
+            review_count={s.review_count}
+            distance_km={s.distance_km}
+            advisor_approved={s.advisor_approved}
+            confidence={s.confidence}
+          />
+        </div>
       </div>
       <Link
         href="/intent"

@@ -9,6 +9,7 @@
 import { Target, Lightbulb, AlertTriangle, Sparkles } from 'lucide-react';
 import type { Journey } from '@/lib/types/entities';
 import { cn } from '@/lib/utils/cn';
+import { BudgetBreakdown } from '@/components/shared/BudgetBreakdown';
 
 interface JourneyDetailProps {
   journey: Journey;
@@ -52,6 +53,13 @@ export function JourneyDetail({ journey, className }: JourneyDetailProps) {
           {journey.narrative}
         </div>
       </div>
+
+      {/* Budget Breakdown */}
+      {journey.budget && (
+        <div className="mb-10">
+          <BudgetBreakdown budget={journey.budget} />
+        </div>
+      )}
 
       {/* Strategic Reasoning */}
       {journey.strategicReasoning && (

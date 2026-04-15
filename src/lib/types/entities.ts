@@ -121,6 +121,8 @@ export interface Journey {
   preDepartureBrief?: PreDepartureBrief | null;
   /** Narrative generation source — 'ai' when POST /api/journeys/generate used an LLM, 'template' for fallback */
   source?: 'ai' | 'template';
+  /** Optional cost split (Feature #2 budget breakdown). */
+  budget?: BudgetBreakdown;
   createdAt: string;
   updatedAt: string;
 }
@@ -1136,7 +1138,21 @@ export interface IntelligenceFeed {
 // === Phase 6 — AGI Intelligence (hotel scoring, package matching, suggestions) ===
 export type IntelligenceSource = 'ai' | 'fallback' | 'template';
 
-export interface HotelScore {
+/** Shared transparency chrome surfaced on recommendation cards. All optional — backend fills in progressively. */
+export interface RecommendationTrust {
+  /** Data sources (official site, Google reviews, TripAdvisor, tourism board, etc.) */
+  sources?: Array<{ label: string; url?: string; kind?: 'official' | 'review' | 'tourism' | 'partner' }>;
+  /** Aggregate rating 0–5 */
+  rating?: number;
+  review_count?: number;
+  /** Distance to client's anchor point (hotel, airport, etc.) in km */
+  distance_km?: number;
+  advisor_approved?: boolean;
+  /** Confidence in the recommendation 0-100 */
+  confidence?: number;
+}
+
+export interface HotelScore extends RecommendationTrust {
   hotel_id: string;
   hotel_name: string;
   privacy_match: number;      // 0-100
@@ -1151,7 +1167,7 @@ export interface HotelScoringResponse {
   source: IntelligenceSource;
 }
 
-export interface PackageMatch {
+export interface PackageMatch extends RecommendationTrust {
   package_id: string;
   package_name: string;
   match_score: number;        // 0-100
@@ -1165,12 +1181,58 @@ export interface PackageMatchingResponse {
   source: IntelligenceSource;
 }
 
-export interface JourneySuggestion {
+export interface JourneySuggestion extends RecommendationTrust {
   package_id: string;
   package_name: string;
   match_score: number;        // 0-100
   emotional_resonance: string;
   recommended: boolean;
+}
+
+// === Budget breakdown (Feature #2) ===
+export interface BudgetLine {
+  label: string;
+  amount: number;
+  note?: string;
+}
+export interface BudgetBreakdown {
+  currency: string;          // ISO 4217
+  flights?: BudgetLine[];
+  accommodation?: BudgetLine[];
+  activities?: BudgetLine[];
+  local_transport?: BudgetLine[];
+  other?: BudgetLine[];
+  total?: number;            // computed if absent
+}
+
+// === Bookings (Feature #3 + #4) ===
+export type BookingKind = 'flight' | 'stay' | 'activity' | 'transport';
+export type BookingStatus = 'Confirmed' | 'Pending' | 'Cancelled' | 'OnHold';
+export interface Booking {
+  id: string;
+  kind: BookingKind;
+  title: string;
+  provider?: string;
+  reference?: string;
+  start_at?: string;         // ISO
+  end_at?: string;           // ISO
+  amount?: number;
+  currency?: string;
+  status: BookingStatus;
+  journey_id?: string;
+}
+
+// === Notifications / real-time assistance (Feature #5) ===
+export type NotificationKind = 'flight_delay' | 'hotel_change' | 'activity_availability' | 'itinerary_adjust' | 'info';
+export interface TravelNotification {
+  id: string;
+  kind: NotificationKind;
+  title: string;
+  body: string;
+  severity: 'info' | 'warning' | 'critical';
+  created_at: string;
+  related_journey_id?: string | null;
+  read?: boolean;
 }
 
 export interface JourneySuggestionsResponse {

@@ -10,6 +10,7 @@ import { PageTransition } from '@/components/providers/PageTransition'
 import { SmoothScroll } from '@/components/providers/SmoothScroll'
 import { ContextSwitcher } from '@/components/auth/ContextSwitcher'
 import { AIChatWidget } from '@/components/b2c/chat/AIChatWidget'
+import { NotificationBell } from '@/components/shared/NotificationBell'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { getNavLinksForRole, getRoleBadge } from '@/lib/rbac/b2c-role-filters'
 import { B2CRole } from '@/lib/types/roles'
@@ -101,6 +102,8 @@ function B2CNav() {
             )}
 
             {role === B2CRole.UHNI && <ContextSwitcher />}
+
+            <NotificationBell invert={!scrolled} />
 
             {/* User menu */}
             <div className={cn(

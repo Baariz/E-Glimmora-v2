@@ -6,7 +6,7 @@
  * Displays emotional objective, full narrative, reasoning, and risk summary.
  */
 
-import { Target, Lightbulb, AlertTriangle } from 'lucide-react';
+import { Target, Lightbulb, AlertTriangle, Sparkles } from 'lucide-react';
 import type { Journey } from '@/lib/types/entities';
 import { cn } from '@/lib/utils/cn';
 
@@ -40,7 +40,14 @@ export function JourneyDetail({ journey, className }: JourneyDetailProps) {
       {/* Full Narrative */}
       <div className="mb-10">
         <div className="w-10 h-px bg-rose-300 mb-5" />
-        <p className="text-rose-400 text-[10px] font-sans uppercase tracking-[5px] mb-4">The Narrative</p>
+        <div className="flex items-center gap-3 mb-4">
+          <p className="text-rose-400 text-[10px] font-sans uppercase tracking-[5px]">The Narrative</p>
+          {journey.source === 'ai' && (
+            <span className="inline-flex items-center gap-1 text-[9px] font-sans uppercase tracking-[3px] text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">
+              <Sparkles size={9} /> AI Curated
+            </span>
+          )}
+        </div>
         <div className="text-stone-600 text-base sm:text-lg font-sans leading-[1.9] tracking-wide whitespace-pre-line">
           {journey.narrative}
         </div>

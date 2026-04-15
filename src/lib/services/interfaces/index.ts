@@ -21,3 +21,4 @@ export * from './ICrisisService';
 export * from './IVendorService';
 export * from './IConflictService';
 export * from './IIntegrationService';
+export * from './IIntelligenceService';

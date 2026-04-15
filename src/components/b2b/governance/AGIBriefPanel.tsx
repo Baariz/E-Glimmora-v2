@@ -2,201 +2,218 @@
 
 /**
  * AGI Intelligence Brief Panel — Advisor View
- * Dark card — signals intelligence, internal-only
- * Shows active hotel library, aviation shortlist, risk summary
- * NEVER shown to UHNI client
+ * Phase 6: POST /api/intelligence/hotel-scoring
+ * Dark-themed, collapsible. Internal-only. NEVER shown to UHNI client.
  */
 
 import { useEffect, useState } from 'react';
-import { cn } from '@/lib/utils/cn';
-import { ChevronDown, ChevronUp, Shield, Plane, Building2, Loader2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, Sparkles, Cpu, Loader2 } from 'lucide-react';
 import { useServices } from '@/lib/hooks/useServices';
-import type { Hotel } from '@/lib/types/entities';
+import type { HotelScore, IntelligenceSource } from '@/lib/types/entities';
 
 interface AGIBriefPanelProps {
-  journeyId: string;
+  /** UHNI client's user id — forwarded as `user_id` in POST body */
+  clientUserId: string;
   clientName: string;
 }
 
-const MOCK_JETS = [
-  { operator: 'VistaJet', aircraft: 'Global 7500', availability: 'Confirmed' as const, note: 'Client-preferred operator. NDA: verified.' },
-  { operator: 'NetJets Europe', aircraft: 'Bombardier Challenger 350', availability: 'Pending' as const, note: 'Backup option. Same privacy and security standards.' },
-];
+function riskBadge(risk: string) {
+  const r = risk.toLowerCase();
+  if (r === 'low') return 'bg-emerald-900/40 text-emerald-300 border-emerald-700/40';
+  if (r === 'medium') return 'bg-amber-900/40 text-amber-300 border-amber-700/40';
+  if (r === 'high') return 'bg-rose-900/40 text-rose-300 border-rose-700/40';
+  return 'bg-slate-700/40 text-slate-300 border-slate-600';
+}
 
-type SectionKey = 'hotels' | 'aviation' | 'risk';
+function Bar({ label, value }: { label: string; value: number }) {
+  const pct = Math.max(0, Math.min(100, value));
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-[11px] font-sans uppercase tracking-wider text-slate-400">{label}</span>
+        <span className="text-xs font-sans text-slate-200 font-medium">{pct}</span>
+      </div>
+      <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
+        <div
+          className="h-full bg-gradient-to-r from-amber-400 to-emerald-400 rounded-full transition-all duration-700 ease-out"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
+  );
+}
 
-export function AGIBriefPanel({ journeyId, clientName }: AGIBriefPanelProps) {
+function Gauge({ value }: { value: number }) {
+  const pct = Math.max(0, Math.min(100, value));
+  const r = 28;
+  const c = 2 * Math.PI * r;
+  const offset = c - (pct / 100) * c;
+  return (
+    <div className="relative w-20 h-20 flex items-center justify-center flex-shrink-0">
+      <svg className="absolute inset-0 -rotate-90" viewBox="0 0 64 64">
+        <circle cx="32" cy="32" r={r} stroke="currentColor" strokeWidth="5" fill="none" className="text-slate-700" />
+        <circle
+          cx="32"
+          cy="32"
+          r={r}
+          stroke="currentColor"
+          strokeWidth="5"
+          fill="none"
+          strokeDasharray={c}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+          className="text-amber-400 transition-all duration-700 ease-out"
+        />
+      </svg>
+      <div className="text-center">
+        <div className="font-serif text-xl text-white leading-none">{pct}</div>
+        <div className="text-[9px] font-sans text-slate-400 uppercase tracking-wider">score</div>
+      </div>
+    </div>
+  );
+}
+
+function HotelCard({ score }: { score: HotelScore }) {
+  const [openReason, setOpenReason] = useState(false);
+  return (
+    <div className="p-4 rounded-lg border border-slate-700 bg-slate-900/50">
+      <div className="flex items-start gap-4">
+        <Gauge value={score.overall_score} />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2 mb-2">
+            <h3 className="font-serif text-base text-white truncate">{score.hotel_name}</h3>
+            <span className={`text-[10px] font-sans px-2 py-0.5 rounded-full border ${riskBadge(score.risk_level)} flex-shrink-0`}>
+              {score.risk_level}
+            </span>
+          </div>
+          <div className="space-y-2">
+            <Bar label="Privacy match" value={score.privacy_match} />
+            <Bar label="Emotional match" value={score.emotional_match} />
+          </div>
+        </div>
+      </div>
+      <div className="mt-3 border-t border-slate-700 pt-2">
+        <button
+          onClick={() => setOpenReason((v) => !v)}
+          className="w-full flex items-center justify-between text-[11px] font-sans uppercase tracking-wider text-slate-400 hover:text-slate-200 transition-colors"
+        >
+          <span>AI Reasoning</span>
+          {openReason ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+        </button>
+        {openReason && (
+          <p className="text-xs font-sans text-slate-300 leading-relaxed mt-2 whitespace-pre-wrap">
+            {score.reasoning || 'No reasoning provided.'}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function SourcePill({ source }: { source: IntelligenceSource }) {
+  const isAi = source === 'ai';
+  return (
+    <span className={`text-[10px] font-sans px-2 py-1 rounded-full border inline-flex items-center gap-1 ${
+      isAi
+        ? 'bg-amber-500/10 text-amber-300 border-amber-500/30'
+        : 'bg-slate-700/50 text-slate-300 border-slate-600'
+    }`}>
+      {isAi ? <Sparkles size={11} /> : <Cpu size={11} />}
+      {isAi ? 'AI Scored' : 'Algorithmic'}
+    </span>
+  );
+}
+
+function Skeleton() {
+  return (
+    <div className="space-y-3">
+      {[0, 1, 2].map((i) => (
+        <div key={i} className="p-4 rounded-lg border border-slate-700 bg-slate-900/50 animate-pulse">
+          <div className="flex items-start gap-4">
+            <div className="w-20 h-20 rounded-full bg-slate-700" />
+            <div className="flex-1 space-y-3">
+              <div className="h-4 w-2/3 bg-slate-700 rounded" />
+              <div className="h-2 w-full bg-slate-700 rounded" />
+              <div className="h-2 w-5/6 bg-slate-700 rounded" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function AGIBriefPanel({ clientUserId, clientName }: AGIBriefPanelProps) {
   const services = useServices();
-  const [openSection, setOpenSection] = useState<SectionKey | null>(null);
-  const [advisorNote, setAdvisorNote] = useState('');
-  const [hotels, setHotels] = useState<Hotel[]>([]);
-  const [hotelsLoading, setHotelsLoading] = useState(true);
-  const [hotelsError, setHotelsError] = useState<string | null>(null);
+  const [collapsed, setCollapsed] = useState(false);
+  const [scores, setScores] = useState<HotelScore[]>([]);
+  const [source, setSource] = useState<IntelligenceSource>('fallback');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!clientUserId) return;
     let cancelled = false;
     (async () => {
-      setHotelsLoading(true);
-      setHotelsError(null);
+      setLoading(true);
+      setError(null);
       try {
-        const data = await services.hotel.getHotels({ active: true });
-        if (!cancelled) setHotels(data);
+        const res = await services.intelligence.scoreHotels(clientUserId);
+        if (cancelled) return;
+        setScores((res.scores ?? []).slice(0, 3));
+        setSource(res.source ?? 'fallback');
       } catch (err) {
         if (!cancelled) {
-          console.error('Failed to load hotels for AGI brief', err);
-          setHotelsError('Unable to load hotel recommendations. Please try again.');
+          console.error('Failed to score hotels', err);
+          setError(err instanceof Error ? err.message : 'Unable to load hotel scoring.');
         }
       } finally {
-        if (!cancelled) setHotelsLoading(false);
+        if (!cancelled) setLoading(false);
       }
     })();
     return () => { cancelled = true; };
-  }, [services, journeyId]);
-
-  const toggle = (section: SectionKey) => {
-    setOpenSection(prev => prev === section ? null : section);
-  };
+  }, [services, clientUserId]);
 
   return (
     <div className="bg-slate-800 rounded-xl overflow-hidden border border-slate-700">
-      <div className="px-6 py-4 flex items-center justify-between border-b border-slate-700">
+      <button
+        type="button"
+        onClick={() => setCollapsed((v) => !v)}
+        className="w-full px-6 py-4 flex items-center justify-between border-b border-slate-700 hover:bg-slate-700/40 transition-colors"
+      >
         <div className="flex items-center gap-3">
           <span className="text-amber-400 text-lg">{'\u25C8'}</span>
-          <div>
-            <p className="text-white font-sans font-medium text-sm">AGI Intelligence Brief</p>
+          <div className="text-left">
+            <p className="text-white font-sans font-medium text-sm">AGI Intelligence Brief — Hotel Scoring</p>
             <p className="text-slate-400 text-xs font-sans">For {clientName} — Internal Only</p>
           </div>
         </div>
-        <span className="text-xs font-sans px-2 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">Confidential</span>
-      </div>
+        <div className="flex items-center gap-2">
+          {!loading && !error && <SourcePill source={source} />}
+          {collapsed ? <ChevronDown size={16} className="text-slate-400" /> : <ChevronUp size={16} className="text-slate-400" />}
+        </div>
+      </button>
 
-      <div className="p-6 space-y-4">
-        {/* Hotel Recommendations */}
-        <div className="border border-slate-700 rounded-lg overflow-hidden">
-          <button onClick={() => toggle('hotels')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-700/50 hover:bg-slate-700 transition-colors">
-            <div className="flex items-center gap-2 text-white">
-              <Building2 size={16} className="text-slate-400" />
-              <span className="font-sans text-sm font-medium">Hotel Recommendations</span>
-              {!hotelsLoading && !hotelsError && (
-                <span className="text-xs bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full">{hotels.length} options</span>
-              )}
+      {!collapsed && (
+        <div className="p-6">
+          {loading && <Skeleton />}
+          {error && !loading && (
+            <div className="flex items-center gap-2 text-rose-300 text-sm font-sans py-4">
+              <Loader2 size={14} /> {error}
             </div>
-            {openSection === 'hotels' ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
-          </button>
-          {openSection === 'hotels' && (
-            <div className="p-4 space-y-3">
-              {hotelsLoading && (
-                <div className="flex items-center gap-2 text-slate-400 text-xs font-sans py-4">
-                  <Loader2 size={14} className="animate-spin" /> Loading hotel library…
-                </div>
-              )}
-              {hotelsError && !hotelsLoading && (
-                <p className="text-red-400 text-xs font-sans py-2">{hotelsError}</p>
-              )}
-              {!hotelsLoading && !hotelsError && hotels.length === 0 && (
-                <p className="text-slate-400 text-xs font-sans py-2">No active hotels in the library.</p>
-              )}
-              {!hotelsLoading && !hotelsError && hotels.map((hotel) => (
-                <div key={hotel.id} className="p-4 rounded-lg border border-slate-600 bg-slate-700/30">
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <span className="text-white font-sans text-sm font-medium">{hotel.name}</span>
-                        <span className="text-[10px] uppercase tracking-wider text-slate-400 bg-slate-700 px-1.5 py-0.5 rounded">{hotel.tier}</span>
-                      </div>
-                      <span className="text-slate-400 text-xs">{hotel.location}, {hotel.country}</span>
-                    </div>
-                  </div>
-                  <div className="mb-2">
-                    <p className="text-slate-500 text-xs mb-1">Privacy Score</p>
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 h-1.5 bg-slate-600 rounded-full overflow-hidden">
-                        <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${hotel.privacyScore}%` }} />
-                      </div>
-                      <span className="text-emerald-400 text-xs font-medium">{hotel.privacyScore}</span>
-                    </div>
-                  </div>
-                  {hotel.description && (
-                    <div className="mb-2">
-                      <p className="text-slate-500 text-[10px] uppercase tracking-wider mb-0.5">Description (Internal)</p>
-                      <p className="text-slate-300 text-xs leading-relaxed">{hotel.description}</p>
-                    </div>
-                  )}
-                  {hotel.advisorNotes && (
-                    <div>
-                      <p className="text-amber-400/70 text-[10px] uppercase tracking-wider mb-0.5">Advisor Notes</p>
-                      <p className="text-slate-300 text-xs leading-relaxed">{hotel.advisorNotes}</p>
-                    </div>
-                  )}
-                </div>
-              ))}
+          )}
+          {!loading && !error && scores.length === 0 && (
+            <p className="text-slate-400 text-sm font-sans py-6 text-center">
+              No hotel scores available for this client yet.
+            </p>
+          )}
+          {!loading && !error && scores.length > 0 && (
+            <div className="space-y-3">
+              {scores.map((s) => <HotelCard key={s.hotel_id} score={s} />)}
             </div>
           )}
         </div>
-
-        {/* Aviation */}
-        <div className="border border-slate-700 rounded-lg overflow-hidden">
-          <button onClick={() => toggle('aviation')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-700/50 hover:bg-slate-700 transition-colors">
-            <div className="flex items-center gap-2 text-white">
-              <Plane size={16} className="text-slate-400" />
-              <span className="font-sans text-sm font-medium">Private Aviation Shortlist</span>
-            </div>
-            {openSection === 'aviation' ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
-          </button>
-          {openSection === 'aviation' && (
-            <div className="p-4 space-y-2">
-              {MOCK_JETS.map((jet, i) => (
-                <div key={i} className="p-3 rounded-lg bg-slate-700/30 border border-slate-600">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-white font-sans text-sm font-medium">{jet.operator}</span>
-                    <span className={cn('text-xs px-2 py-0.5 rounded-full', jet.availability === 'Confirmed' ? 'bg-emerald-900/40 text-emerald-400' : 'bg-amber-900/40 text-amber-400')}>{jet.availability}</span>
-                  </div>
-                  <p className="text-slate-400 text-xs">{jet.aircraft} — {jet.note}</p>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Risk Summary */}
-        <div className="border border-slate-700 rounded-lg overflow-hidden">
-          <button onClick={() => toggle('risk')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-700/50 hover:bg-slate-700 transition-colors">
-            <div className="flex items-center gap-2 text-white">
-              <Shield size={16} className="text-slate-400" />
-              <span className="font-sans text-sm font-medium">Risk & Exposure Summary</span>
-            </div>
-            {openSection === 'risk' ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
-          </button>
-          {openSection === 'risk' && (
-            <div className="p-4 space-y-3">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="p-3 rounded-lg bg-emerald-900/30 border border-emerald-700/40">
-                  <p className="text-emerald-400 text-xs font-sans uppercase tracking-wider mb-1">Overall Risk</p>
-                  <p className="text-emerald-300 font-sans font-medium">Low</p>
-                </div>
-                <div className="p-3 rounded-lg bg-slate-700/30 border border-slate-600">
-                  <p className="text-slate-400 text-xs font-sans uppercase tracking-wider mb-1">Privacy Alignment</p>
-                  <p className="text-white font-sans font-medium">93 / 100</p>
-                </div>
-              </div>
-              <div className="p-3 rounded-lg bg-slate-700/30 border border-slate-600">
-                <p className="text-slate-400 text-xs mb-1">Exposure Assessment</p>
-                <p className="text-slate-300 text-sm">No known public events during travel window. Political stability: Stable. Media risk: Minimal.</p>
-              </div>
-              <div>
-                <p className="text-slate-400 text-xs mb-2">Your Notes (Internal)</p>
-                <textarea
-                  value={advisorNote}
-                  onChange={(e) => setAdvisorNote(e.target.value)}
-                  placeholder="Add any advisor notes for this brief..."
-                  rows={2}
-                  className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-300 text-xs font-sans placeholder-slate-500 resize-none focus:outline-none focus:border-slate-500"
-                />
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+      )}
     </div>
   );
 }

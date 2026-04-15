@@ -119,6 +119,8 @@ export interface Journey {
   strategicReasoning?: string;
   packageId?: string | null;
   preDepartureBrief?: PreDepartureBrief | null;
+  /** Narrative generation source — 'ai' when POST /api/journeys/generate used an LLM, 'template' for fallback */
+  source?: 'ai' | 'template';
   createdAt: string;
   updatedAt: string;
 }
@@ -1129,4 +1131,49 @@ export interface IntelligenceFeed {
   items: IntelligenceFeedItem[];
   total: number;
   generated_at: string;
+}
+
+// === Phase 6 — AGI Intelligence (hotel scoring, package matching, suggestions) ===
+export type IntelligenceSource = 'ai' | 'fallback' | 'template';
+
+export interface HotelScore {
+  hotel_id: string;
+  hotel_name: string;
+  privacy_match: number;      // 0-100
+  emotional_match: number;    // 0-100
+  risk_level: 'Low' | 'Medium' | 'High' | string;
+  overall_score: number;      // 0-100
+  reasoning: string;
+}
+
+export interface HotelScoringResponse {
+  scores: HotelScore[];
+  source: IntelligenceSource;
+}
+
+export interface PackageMatch {
+  package_id: string;
+  package_name: string;
+  match_score: number;        // 0-100
+  season_fit: number;         // 0-100
+  emotional_resonance: string;
+  recommended: boolean;
+}
+
+export interface PackageMatchingResponse {
+  matches: PackageMatch[];
+  source: IntelligenceSource;
+}
+
+export interface JourneySuggestion {
+  package_id: string;
+  package_name: string;
+  match_score: number;        // 0-100
+  emotional_resonance: string;
+  recommended: boolean;
+}
+
+export interface JourneySuggestionsResponse {
+  suggestions: JourneySuggestion[];
+  source: IntelligenceSource;
 }

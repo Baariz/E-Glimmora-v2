@@ -8,7 +8,8 @@
 
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Lock, EyeOff, ArrowRight } from 'lucide-react';
+import { useState } from 'react';
+import { Lock, EyeOff, ArrowRight, Sparkles } from 'lucide-react';
 import type { Journey } from '@/lib/types/entities';
 import { cn } from '@/lib/utils/cn';
 import { IMAGES } from '@/lib/constants/imagery';
@@ -40,8 +41,10 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
 
 export function JourneyCard({ journey, className }: JourneyCardProps) {
   const router = useRouter();
+  const [expanded, setExpanded] = useState(false);
   const img = CATEGORY_IMAGES[journey.category] || IMAGES.heroJourney;
   const status = STATUS_LABELS[journey.status] || { label: 'Draft', color: 'bg-white/20 text-white/70' };
+  const isLong = journey.narrative.length > 240;
 
   return (
     <article
@@ -109,12 +112,30 @@ export function JourneyCard({ journey, className }: JourneyCardProps) {
           {journey.title}
         </h3>
 
-        {/* Narrative excerpt */}
-        <p className="text-white/35 text-[13px] font-sans leading-[1.7] tracking-wide mb-5 line-clamp-2">
-          {journey.narrative.length > 110
-            ? journey.narrative.substring(0, 110) + '\u2026'
-            : journey.narrative}
+        {/* AI Curated ghost pill */}
+        {journey.source === 'ai' && (
+          <span className="inline-flex items-center gap-1 mb-2 text-[9px] font-sans uppercase tracking-[3px] text-amber-200/80 bg-white/5 border border-white/10 rounded-full px-2 py-0.5 backdrop-blur-sm">
+            <Sparkles size={9} /> AI Curated
+          </span>
+        )}
+
+        {/* Narrative excerpt — line-clamped with Read more toggle */}
+        <p className={cn(
+          'text-white/45 text-[13px] font-sans leading-[1.7] tracking-wide mb-2 whitespace-pre-wrap',
+          !expanded && 'line-clamp-4'
+        )}>
+          {journey.narrative}
         </p>
+        {isLong && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setExpanded((v) => !v); }}
+            className="mb-5 text-[10px] font-sans uppercase tracking-[3px] text-white/60 hover:text-white transition-colors"
+          >
+            {expanded ? 'Show less' : 'Read more'}
+          </button>
+        )}
+        {!isLong && <div className="mb-5" />}
 
         {/* Footer: status + explore link */}
         <div className="flex items-center justify-between">

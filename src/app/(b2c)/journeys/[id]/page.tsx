@@ -349,7 +349,7 @@ export default function JourneyDetailPage() {
             transition={{ duration: 0.8 }}
             className="mb-16"
           >
-            <NextJourneyPanel />
+            <NextJourneyPanel userId={journey.userId} journeys={[journey]} />
           </motion.div>
         )}
       </div>

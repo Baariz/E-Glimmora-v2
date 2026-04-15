@@ -244,16 +244,16 @@ export default function GovernanceDetailPage() {
             JourneyStatus.ARCHIVED,
           ].includes(journey.status) && <ExecutionTracker journey={journey} />}
 
-          {/* AGI Brief Panel — gated on READ journey permission */}
-          {can(Permission.READ, 'journey') && (
-            <AGIBriefPanel journeyId={journey.id} clientName={client?.name || 'Client'} />
+          {/* AGI Brief Panel — hotel scoring against client's emotional profile */}
+          {can(Permission.READ, 'journey') && journey.userId && (
+            <AGIBriefPanel clientUserId={journey.userId} clientName={client?.name || 'Client'} />
           )}
 
-          {/* Package Selector — recommend packages for this journey */}
-          {can(Permission.READ, 'journey') && (
+          {/* Package Selector — AI-matched packages for this client/journey */}
+          {can(Permission.READ, 'journey') && journey.userId && (
             <PackageSelector
+              clientUserId={journey.userId}
               journeyId={journey.id}
-              journeyCategory={journey.category}
               currentPackageId={journey.packageId ?? null}
               onPackageSelected={() => loadJourney()}
             />

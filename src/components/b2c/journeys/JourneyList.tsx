@@ -12,6 +12,7 @@ import { Compass } from 'lucide-react';
 import { useServices } from '@/lib/hooks/useServices';
 import { useCurrentUser } from '@/lib/hooks/useCurrentUser';
 import { JourneyCard } from './JourneyCard';
+import { NextJourneyPanel } from './NextJourneyPanel';
 
 import type { Journey } from '@/lib/types/entities';
 import { JourneyStatus } from '@/lib/types/entities';
@@ -118,19 +119,22 @@ export function JourneyList({ filter = 'all', onGenerateClick }: JourneyListProp
     );
   }
 
-  // Journey grid — two columns
+  // Journey grid — two columns, with AI suggestions above
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
-      {journeys.map((journey, i) => (
-        <motion.div
-          key={journey.id}
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] }}
-        >
-          <JourneyCard journey={journey} />
-        </motion.div>
-      ))}
+    <div className="space-y-10">
+      {currentUser && <NextJourneyPanel userId={currentUser.id} journeys={journeys} />}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+        {journeys.map((journey, i) => (
+          <motion.div
+            key={journey.id}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <JourneyCard journey={journey} />
+          </motion.div>
+        ))}
+      </div>
     </div>
   );
 }

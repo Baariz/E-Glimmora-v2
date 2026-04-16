@@ -126,7 +126,7 @@ const ADMIN_PERMISSIONS: Partial<Record<AdminRole, Partial<Record<Resource, Perm
     revenue: [Permission.READ],
     contract: [Permission.READ],
     integration: [Permission.READ, Permission.CONFIGURE],
-    vendor: [Permission.READ, Permission.EXPORT],
+    vendor: [Permission.READ, Permission.WRITE, Permission.DELETE, Permission.EXPORT, Permission.CONFIGURE],
   },
 };
 

@@ -3,7 +3,7 @@
 import { useEffect, useState, FormEvent } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Check, ArrowLeft, ArrowRight, Loader2, Plus } from 'lucide-react';
-import type { Vendor, VendorCategory } from '@/lib/types';
+import type { Vendor, VendorCategory, Institution } from '@/lib/types';
 import type { CreateVendorInput } from '@/lib/services/interfaces/IVendorService';
 
 const CATEGORIES: VendorCategory[] = [
@@ -15,12 +15,16 @@ interface VendorFormDialogProps {
   open: boolean;
   mode: 'create' | 'edit';
   initial?: Vendor | null;
-  institutionId: string;
+  /** When provided, locks the vendor to this institution (InstAdmin flow). Omit to let the user pick (SuperAdmin flow). */
+  institutionId?: string;
+  /** Optional list of institutions to choose from when institutionId is not fixed. */
+  institutions?: Institution[];
   onClose: () => void;
   onSubmit: (input: CreateVendorInput) => Promise<void>;
 }
 
 interface FormState {
+  institutionId: string;
   name: string;
   category: VendorCategory;
   contactName: string;
@@ -38,6 +42,7 @@ interface FormState {
 }
 
 const EMPTY: FormState = {
+  institutionId: '',
   name: '', category: 'Concierge',
   contactName: '', contactEmail: '', contactPhone: '', website: '',
   headquartersCountry: '', operatingRegions: [], regionInput: '',
@@ -47,6 +52,7 @@ const EMPTY: FormState = {
 
 function fromVendor(v: Vendor): FormState {
   return {
+    institutionId: v.institutionId,
     name: v.name,
     category: v.category,
     contactName: v.contactName,
@@ -64,7 +70,8 @@ function fromVendor(v: Vendor): FormState {
   };
 }
 
-export function VendorFormDialog({ open, mode, initial, institutionId, onClose, onSubmit }: VendorFormDialogProps) {
+export function VendorFormDialog({ open, mode, initial, institutionId, institutions, onClose, onSubmit }: VendorFormDialogProps) {
+  const showInstitutionPicker = !institutionId && (institutions?.length ?? 0) > 0;
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [form, setForm] = useState<FormState>(EMPTY);
   const [submitting, setSubmitting] = useState(false);
@@ -73,12 +80,15 @@ export function VendorFormDialog({ open, mode, initial, institutionId, onClose, 
   useEffect(() => {
     if (open) {
       setStep(1);
-      setForm(initial ? fromVendor(initial) : EMPTY);
+      const base = initial ? fromVendor(initial) : { ...EMPTY };
+      // If a fixed institutionId is passed (InstAdmin flow), prefill it.
+      if (institutionId) base.institutionId = institutionId;
+      setForm(base);
       setErr(null);
       document.body.style.overflow = 'hidden';
     }
     return () => { document.body.style.overflow = ''; };
-  }, [open, initial]);
+  }, [open, initial, institutionId]);
 
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) => setForm(s => ({ ...s, [k]: v }));
 
@@ -92,16 +102,22 @@ export function VendorFormDialog({ open, mode, initial, institutionId, onClose, 
     setForm(s => ({ ...s, operatingRegions: s.operatingRegions.filter(x => x !== r) }));
 
   const canNext1 =
-    form.name.trim() && form.contactName.trim() && form.contactEmail.trim() && form.category;
+    form.name.trim() && form.contactName.trim() && form.contactEmail.trim() && form.category
+    && (!showInstitutionPicker || !!form.institutionId);
   const canNext2 = !!form.contractStart;
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setErr(null);
+    const resolvedInstitutionId = institutionId || form.institutionId;
+    if (!resolvedInstitutionId) {
+      setErr('An institution must be selected.');
+      return;
+    }
     setSubmitting(true);
     try {
       const input: CreateVendorInput = {
-        institutionId,
+        institutionId: resolvedInstitutionId,
         name: form.name.trim(),
         category: form.category,
         contactName: form.contactName.trim(),
@@ -169,6 +185,26 @@ export function VendorFormDialog({ open, mode, initial, institutionId, onClose, 
           <div className="flex-1 overflow-y-auto p-6 text-sm font-sans">
             {step === 1 && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {showInstitutionPicker && (
+                  <label className="space-y-1 sm:col-span-2">
+                    <span className="text-sand-700 font-medium">Institution <span className="text-rose-600">*</span></span>
+                    <select
+                      required
+                      value={form.institutionId}
+                      onChange={(e) => set('institutionId', e.target.value)}
+                      disabled={mode === 'edit'}
+                      className="w-full px-3 py-2 border border-sand-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 disabled:bg-sand-50 disabled:text-sand-500"
+                    >
+                      <option value="">— Select institution —</option>
+                      {institutions?.map((i) => (
+                        <option key={i.id} value={i.id}>{i.name}</option>
+                      ))}
+                    </select>
+                    {mode === 'edit' && (
+                      <span className="text-[10px] text-sand-400">Institution cannot be changed after creation.</span>
+                    )}
+                  </label>
+                )}
                 <label className="space-y-1 sm:col-span-2">
                   <span className="text-sand-700 font-medium">Vendor Name <span className="text-rose-600">*</span></span>
                   <input required value={form.name} onChange={(e) => set('name', e.target.value)}
@@ -281,6 +317,9 @@ export function VendorFormDialog({ open, mode, initial, institutionId, onClose, 
               <div className="space-y-4">
                 <p className="text-sand-600">Review the details below before {mode === 'edit' ? 'saving' : 'creating the vendor'}.</p>
                 <div className="rounded-lg border border-sand-200 divide-y divide-sand-100 text-sm">
+                  {showInstitutionPicker && (
+                    <Row k="Institution" v={institutions?.find(i => i.id === form.institutionId)?.name || form.institutionId || '—'} />
+                  )}
                   <Row k="Name" v={form.name} />
                   <Row k="Category" v={form.category} />
                   <Row k="Contact" v={`${form.contactName} · ${form.contactEmail}${form.contactPhone ? ' · ' + form.contactPhone : ''}`} />

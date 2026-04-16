@@ -2,15 +2,26 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { RefreshCw, Shield, Search } from 'lucide-react';
+import { RefreshCw, Shield, Search, Plus } from 'lucide-react';
+import { toast } from 'sonner';
 import { Card } from '@/components/shared/Card';
+import { useCan } from '@/lib/rbac/usePermission';
+import { Permission } from '@/lib/types/permissions';
 import { useServices } from '@/lib/hooks/useServices';
 import { VendorDirectory } from '@/components/b2b/vendors/VendorDirectory';
-import type { Vendor, Institution } from '@/lib/types';
+import { VendorFormDialog } from '@/components/b2b/vendors/VendorFormDialog';
+import { DeleteVendorDialog } from '@/components/b2b/vendors/DeleteVendorDialog';
+import { StatusChangeDialog } from '@/components/b2b/vendors/StatusChangeDialog';
+import type { Vendor, Institution, VendorStatus } from '@/lib/types';
+import type { CreateVendorInput } from '@/lib/services/interfaces/IVendorService';
 
 export default function AdminVendorsPage() {
   const router = useRouter();
   const services = useServices();
+  const { can } = useCan();
+
+  const canManage = can(Permission.WRITE, 'vendor');
+  const canDelete = can(Permission.DELETE, 'vendor');
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -18,6 +29,12 @@ export default function AdminVendorsPage() {
   const [institutions, setInstitutions] = useState<Institution[]>([]);
   const [search, setSearch] = useState('');
   const [institutionFilter, setInstitutionFilter] = useState<string>('All');
+
+  const [formOpen, setFormOpen] = useState(false);
+  const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
+  const [editTarget, setEditTarget] = useState<Vendor | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Vendor | null>(null);
+  const [statusTarget, setStatusTarget] = useState<Vendor | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -61,19 +78,76 @@ export default function AdminVendorsPage() {
     });
   }, [vendors, search, institutionFilter]);
 
+  const openCreate = () => {
+    setFormMode('create');
+    setEditTarget(null);
+    setFormOpen(true);
+  };
+
+  const openEdit = (v: Vendor) => {
+    setFormMode('edit');
+    setEditTarget(v);
+    setFormOpen(true);
+  };
+
+  const submitForm = async (input: CreateVendorInput) => {
+    if (formMode === 'edit' && editTarget) {
+      await services.vendor.updateVendor(editTarget.id, input);
+      toast.success('Vendor updated ✓');
+    } else {
+      await services.vendor.createVendor(input);
+      toast.success('Vendor created successfully ✓');
+    }
+    await load();
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    try {
+      await services.vendor.deleteVendor(deleteTarget.id);
+      toast.error(`Vendor "${deleteTarget.name}" deleted`);
+      await load();
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : 'Failed to delete vendor');
+      throw e;
+    }
+  };
+
+  const confirmStatus = async (next: VendorStatus) => {
+    if (!statusTarget) return;
+    try {
+      await services.vendor.updateVendorStatus(statusTarget.id, next);
+      toast.success(`Status changed to ${next} ✓`);
+      await load();
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : 'Failed to change status');
+      throw e;
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-serif font-medium text-rose-900">Platform Vendor Registry</h1>
           <p className="text-sm font-sans text-sand-600 mt-1">
-            Read-only view across all institutions ({vendors.length} vendors)
+            {canManage
+              ? `Manage vendors across all institutions (${vendors.length} total)`
+              : `Read-only view across all institutions (${vendors.length} vendors)`}
           </p>
         </div>
-        <button onClick={load} disabled={loading}
-          className="flex items-center gap-2 px-3 py-2 text-sm font-sans text-sand-700 bg-white border border-sand-200 rounded-lg hover:bg-sand-50 disabled:opacity-50">
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={load} disabled={loading}
+            className="flex items-center gap-2 px-3 py-2 text-sm font-sans text-sand-700 bg-white border border-sand-200 rounded-lg hover:bg-sand-50 disabled:opacity-50">
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
+          </button>
+          {canManage && (
+            <button onClick={openCreate}
+              className="flex items-center gap-2 px-4 py-2 bg-rose-900 text-white text-sm font-sans font-medium rounded-lg hover:bg-rose-800 transition-colors">
+              <Plus className="w-4 h-4" /> Add Vendor
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3">
@@ -126,13 +200,41 @@ export default function AdminVendorsPage() {
         <Card>
           <VendorDirectory
             vendors={filtered}
-            canManage={false}
+            canManage={canManage}
             canSeeContract={true}
             showInstitutionColumn
             institutionNameMap={institutionNameMap}
+            onEdit={openEdit}
+            onDelete={canDelete ? (v) => setDeleteTarget(v) : undefined}
+            onChangeStatus={(v) => setStatusTarget(v)}
           />
         </Card>
       )}
+
+      <VendorFormDialog
+        open={formOpen}
+        mode={formMode}
+        initial={editTarget}
+        institutionId={formMode === 'edit' ? editTarget?.institutionId : undefined}
+        institutions={institutions}
+        onClose={() => setFormOpen(false)}
+        onSubmit={submitForm}
+      />
+
+      <DeleteVendorDialog
+        open={!!deleteTarget}
+        vendorName={deleteTarget?.name ?? ''}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={confirmDelete}
+      />
+
+      <StatusChangeDialog
+        open={!!statusTarget}
+        vendorName={statusTarget?.name ?? ''}
+        currentStatus={statusTarget?.status ?? 'Under Review'}
+        onClose={() => setStatusTarget(null)}
+        onConfirm={confirmStatus}
+      />
     </div>
   );
 }

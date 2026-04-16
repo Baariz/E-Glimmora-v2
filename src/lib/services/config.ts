@@ -31,6 +31,7 @@ import { ApiHotelService } from './api/hotel.api';
 import { ApiPackageService } from './api/package.api';
 import { ApiBriefingService } from './api/briefing.api';
 import { ApiIntelligenceService } from './api/intelligence.api';
+import { ApiVendorService } from './api/vendor.api';
 
 import { MockJourneyService } from './mock/journey.mock';
 import { MockMemoryService } from './mock/memory.mock';
@@ -49,7 +50,6 @@ import { MockAuditService } from './mock/audit.mock';
 import { MockSystemHealthService } from './mock/system-health.mock';
 import { MockPredictiveService } from './mock/predictive.mock';
 import { MockCrisisService } from './mock/crisis.mock';
-import { MockVendorService } from './mock/vendor.mock';
 import { MockConflictService } from './mock/conflict.mock';
 import { MockIntegrationService } from './mock/integration.mock';
 
@@ -78,6 +78,7 @@ export const services = {
   package: new ApiPackageService(),
   briefing: new ApiBriefingService(),
   intelligence: new ApiIntelligenceService(),
+  vendor: new ApiVendorService(),
 
   // === Mock-only services (real API not yet implemented) ===
   memory: new MockMemoryService(),
@@ -89,7 +90,6 @@ export const services = {
   systemHealth: new MockSystemHealthService(),
   predictive: new MockPredictiveService(),
   crisis: new MockCrisisService(),
-  vendor: new MockVendorService(),
   conflict: new MockConflictService(),
   integration: new MockIntegrationService(),
   privacy: new MockPrivacyService(),

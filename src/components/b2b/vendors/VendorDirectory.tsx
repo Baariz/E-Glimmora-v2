@@ -1,19 +1,26 @@
 'use client';
 
-import { Card } from '@/components/shared/Card';
-import { Globe, FileCheck, DollarSign } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { FileCheck, Edit2, Trash2, RefreshCw } from 'lucide-react';
 import type { Vendor } from '@/lib/types';
 
 interface VendorDirectoryProps {
   vendors: Vendor[];
+  canManage?: boolean;
+  canSeeContract?: boolean;
+  showInstitutionColumn?: boolean;
+  institutionNameMap?: Record<string, string>;
+  onEdit?: (v: Vendor) => void;
+  onDelete?: (v: Vendor) => void;
+  onChangeStatus?: (v: Vendor) => void;
 }
 
 const statusColors: Record<string, string> = {
-  Active: 'bg-teal-100 text-teal-800',
+  Active: 'bg-emerald-100 text-emerald-800',
   'Under Review': 'bg-amber-100 text-amber-800',
   Suspended: 'bg-rose-100 text-rose-800',
   Approved: 'bg-blue-100 text-blue-800',
-  Rejected: 'bg-red-100 text-red-800',
+  Rejected: 'bg-gray-100 text-gray-700',
 };
 
 const categoryColors: Record<string, string> = {
@@ -33,10 +40,24 @@ function formatCurrency(value: number): string {
   return `$${value}`;
 }
 
-export function VendorDirectory({ vendors }: VendorDirectoryProps) {
+export function VendorDirectory({
+  vendors,
+  canManage = false,
+  canSeeContract = false,
+  showInstitutionColumn = false,
+  institutionNameMap = {},
+  onEdit,
+  onDelete,
+  onChangeStatus,
+}: VendorDirectoryProps) {
+  const router = useRouter();
+
   if (vendors.length === 0) {
     return <p className="text-center py-8 text-sm font-sans text-slate-500">No vendors in directory</p>;
   }
+
+  const rowClick = (v: Vendor) => router.push(`/b2b/vendors/${v.id}`);
+  const stop = (e: React.MouseEvent) => e.stopPropagation();
 
   return (
     <div className="overflow-x-auto">
@@ -46,15 +67,29 @@ export function VendorDirectory({ vendors }: VendorDirectoryProps) {
             <th className="text-left py-2 px-3 text-slate-500 font-medium">Vendor</th>
             <th className="text-left py-2 px-3 text-slate-500 font-medium">Category</th>
             <th className="text-center py-2 px-3 text-slate-500 font-medium">Status</th>
-            <th className="text-right py-2 px-3 text-slate-500 font-medium">Contract Value</th>
+            {canSeeContract && (
+              <th className="text-right py-2 px-3 text-slate-500 font-medium">Contract Value</th>
+            )}
             <th className="text-left py-2 px-3 text-slate-500 font-medium">Regions</th>
-            <th className="text-center py-2 px-3 text-slate-500 font-medium">NDA</th>
+            {canSeeContract && (
+              <th className="text-center py-2 px-3 text-slate-500 font-medium">NDA</th>
+            )}
             <th className="text-left py-2 px-3 text-slate-500 font-medium">HQ</th>
+            {showInstitutionColumn && (
+              <th className="text-left py-2 px-3 text-slate-500 font-medium">Institution</th>
+            )}
+            {canManage && (
+              <th className="text-right py-2 px-3 text-slate-500 font-medium">Actions</th>
+            )}
           </tr>
         </thead>
         <tbody>
-          {vendors.map(v => (
-            <tr key={v.id} className="border-b border-slate-100 hover:bg-slate-50">
+          {vendors.map((v) => (
+            <tr
+              key={v.id}
+              className="border-b border-slate-100 hover:bg-rose-50/40 cursor-pointer transition-colors"
+              onClick={() => rowClick(v)}
+            >
               <td className="py-2.5 px-3">
                 <p className="text-slate-900 font-medium">{v.name}</p>
                 <p className="text-[10px] text-slate-400">{v.contactName}</p>
@@ -69,16 +104,59 @@ export function VendorDirectory({ vendors }: VendorDirectoryProps) {
                   {v.status}
                 </span>
               </td>
-              <td className="py-2.5 px-3 text-right text-slate-900 font-medium">{formatCurrency(v.contractValue)}</td>
-              <td className="py-2.5 px-3 text-slate-600 max-w-[150px] truncate">{v.operatingRegions.join(', ')}</td>
-              <td className="py-2.5 px-3 text-center">
-                {v.ndaSigned ? (
-                  <FileCheck className="w-3.5 h-3.5 text-teal-500 mx-auto" />
-                ) : (
-                  <span className="text-[10px] text-rose-500">Pending</span>
-                )}
+              {canSeeContract && (
+                <td className="py-2.5 px-3 text-right text-slate-900 font-medium">
+                  {formatCurrency(v.contractValue)}
+                </td>
+              )}
+              <td className="py-2.5 px-3 text-slate-600 max-w-[150px] truncate">
+                {v.operatingRegions.join(', ')}
               </td>
+              {canSeeContract && (
+                <td className="py-2.5 px-3 text-center">
+                  {v.ndaSigned ? (
+                    <FileCheck className="w-3.5 h-3.5 text-teal-500 mx-auto" />
+                  ) : (
+                    <span className="text-[10px] text-rose-500">Pending</span>
+                  )}
+                </td>
+              )}
               <td className="py-2.5 px-3 text-slate-600">{v.headquartersCountry}</td>
+              {showInstitutionColumn && (
+                <td className="py-2.5 px-3 text-slate-500 text-[11px]">
+                  {institutionNameMap[v.institutionId] || v.institutionId}
+                </td>
+              )}
+              {canManage && (
+                <td className="py-2.5 px-3" onClick={stop}>
+                  <div className="flex items-center justify-end gap-1">
+                    <button
+                      onClick={() => onChangeStatus?.(v)}
+                      className="p-1.5 rounded hover:bg-sand-100 text-sand-600 hover:text-rose-900 transition-colors"
+                      aria-label="Change status"
+                      title="Change status"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => onEdit?.(v)}
+                      className="p-1.5 rounded hover:bg-sand-100 text-sand-600 hover:text-rose-900 transition-colors"
+                      aria-label="Edit"
+                      title="Edit"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => onDelete?.(v)}
+                      className="p-1.5 rounded hover:bg-rose-100 text-sand-600 hover:text-rose-700 transition-colors"
+                      aria-label="Delete"
+                      title="Delete"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>

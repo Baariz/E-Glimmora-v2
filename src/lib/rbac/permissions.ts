@@ -78,7 +78,7 @@ const B2B_PERMISSIONS: Partial<Record<B2BRole, Partial<Record<Resource, Permissi
     institution: [Permission.CONFIGURE],
     predictive: [Permission.READ, Permission.CONFIGURE],
     crisis: [Permission.READ, Permission.WRITE, Permission.APPROVE],
-    vendor: [Permission.READ, Permission.WRITE, Permission.APPROVE],
+    vendor: [Permission.READ],
     conflict: [Permission.READ],
     integration: [Permission.READ],
   },
@@ -90,7 +90,7 @@ const B2B_PERMISSIONS: Partial<Record<B2BRole, Partial<Record<Resource, Permissi
     audit: [Permission.READ, Permission.EXPORT],
     predictive: [Permission.READ],
     crisis: [Permission.READ, Permission.APPROVE],
-    vendor: [Permission.READ, Permission.APPROVE, Permission.EXPORT],
+    vendor: [Permission.READ, Permission.EXPORT],
     conflict: [Permission.READ, Permission.APPROVE],
     integration: [Permission.READ],
   },
@@ -126,6 +126,7 @@ const ADMIN_PERMISSIONS: Partial<Record<AdminRole, Partial<Record<Resource, Perm
     revenue: [Permission.READ],
     contract: [Permission.READ],
     integration: [Permission.READ, Permission.CONFIGURE],
+    vendor: [Permission.READ, Permission.EXPORT],
   },
 };
 

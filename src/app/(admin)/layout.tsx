@@ -26,6 +26,7 @@ function AdminNav() {
     { href: '/audit', label: 'Audit' },
     { href: '/hotels', label: 'Hotels' },
     { href: '/packages', label: 'Packages' },
+    { href: '/platform-vendors', label: 'Vendors' },
     { href: '/system', label: 'System' },
     { href: '/platform-revenue', label: 'Revenue' },
   ]

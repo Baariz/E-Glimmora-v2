@@ -1,56 +1,146 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import { Plus, Shield, RefreshCw } from 'lucide-react';
+import { toast } from 'sonner';
 import { Card } from '@/components/shared/Card';
 import { Tabs } from '@/components/shared/Tabs';
 import { useCan } from '@/lib/rbac/usePermission';
 import { Permission } from '@/lib/types/permissions';
 import { useServices } from '@/lib/hooks/useServices';
 import { useCurrentUser } from '@/lib/hooks/useCurrentUser';
-import { Shield } from 'lucide-react';
 import { StatsRow, StatCard } from '@/components/b2b/layouts/StatsRow';
 import { VendorDirectory } from '@/components/b2b/vendors/VendorDirectory';
 import { ScreeningDashboard } from '@/components/b2b/vendors/ScreeningDashboard';
 import { ScorecardDashboard } from '@/components/b2b/vendors/ScorecardDashboard';
 import { VendorAlertsList } from '@/components/b2b/vendors/VendorAlertsList';
-import type { Vendor, VendorScreening, VendorScorecard, VendorAlert } from '@/lib/types';
+import { VendorFormDialog } from '@/components/b2b/vendors/VendorFormDialog';
+import { DeleteVendorDialog } from '@/components/b2b/vendors/DeleteVendorDialog';
+import { StatusChangeDialog } from '@/components/b2b/vendors/StatusChangeDialog';
+import type { Vendor, VendorScreening, VendorScorecard, VendorAlert, VendorStatus } from '@/lib/types';
+import type { CreateVendorInput } from '@/lib/services/interfaces/IVendorService';
 
 export default function VendorGovernancePage() {
+  const router = useRouter();
   const { can } = useCan();
   const services = useServices();
   const { user: currentUser } = useCurrentUser();
+
+  const canManage = can(Permission.WRITE, 'vendor');
+  const canDelete = can(Permission.DELETE, 'vendor');
+  const canSeeContract = canManage;
+
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [screenings, setScreenings] = useState<VendorScreening[]>([]);
   const [scorecards, setScorecards] = useState<VendorScorecard[]>([]);
   const [alerts, setAlerts] = useState<VendorAlert[]>([]);
 
-  const loadData = async () => {
+  const [formOpen, setFormOpen] = useState(false);
+  const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
+  const [editTarget, setEditTarget] = useState<Vendor | null>(null);
+
+  const [deleteTarget, setDeleteTarget] = useState<Vendor | null>(null);
+  const [statusTarget, setStatusTarget] = useState<Vendor | null>(null);
+
+  const [institutionId, setInstitutionId] = useState<string>('');
+
+  const loadData = useCallback(async () => {
+    if (!currentUser?.id) return;
     setLoading(true);
+    setError(null);
     try {
+      const fullUser = await services.user.getUserById(currentUser.id);
+      const inst = fullUser?.institutionId ?? '';
+      setInstitutionId(inst);
+
+      if (!inst) {
+        setError('Your account is not associated with an institution. Contact your admin.');
+        setVendors([]); setScreenings([]); setScorecards([]); setAlerts([]);
+        return;
+      }
+
       const [vendorData, screeningData, scorecardData, alertData] = await Promise.all([
-        services.vendor.getVendors(currentUser?.institutionId ?? ''),
-        services.vendor.getScreenings(currentUser?.institutionId ?? ''),
-        services.vendor.getScorecards(currentUser?.institutionId ?? ''),
-        services.vendor.getVendorAlerts(currentUser?.institutionId ?? ''),
+        services.vendor.getVendors({ institutionId: inst }),
+        services.vendor.getScreenings(inst),
+        services.vendor.getScorecards(inst),
+        services.vendor.getVendorAlerts(inst),
       ]);
       setVendors(vendorData);
       setScreenings(screeningData);
       setScorecards(scorecardData);
       setAlerts(alertData);
-    } catch (error) {
-      console.error('Failed to load vendor data:', error);
+    } catch (e: unknown) {
+      const err = e as { status?: number; message?: string };
+      if (err.status === 401) {
+        router.push('/auth/signin');
+        return;
+      }
+      setError(err.message || 'Failed to load vendor data');
     } finally {
       setLoading(false);
     }
-  };
+  }, [services, currentUser, router]);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => { loadData(); }, [loadData]);
 
   const handleAcknowledgeAlert = async (alertId: string) => {
-    await services.vendor.acknowledgeVendorAlert(alertId);
+    try {
+      await services.vendor.acknowledgeVendorAlert(alertId);
+      toast.success('Alert acknowledged');
+      await loadData();
+    } catch {
+      toast.error('Failed to acknowledge alert');
+    }
+  };
+
+  const openCreate = () => {
+    setFormMode('create');
+    setEditTarget(null);
+    setFormOpen(true);
+  };
+
+  const openEdit = (v: Vendor) => {
+    setFormMode('edit');
+    setEditTarget(v);
+    setFormOpen(true);
+  };
+
+  const submitForm = async (input: CreateVendorInput) => {
+    if (formMode === 'edit' && editTarget) {
+      await services.vendor.updateVendor(editTarget.id, input);
+      toast.success('Vendor updated ✓');
+    } else {
+      await services.vendor.createVendor(input);
+      toast.success('Vendor created successfully ✓');
+    }
     await loadData();
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    try {
+      await services.vendor.deleteVendor(deleteTarget.id);
+      toast.error(`Vendor "${deleteTarget.name}" deleted`);
+      await loadData();
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : 'Failed to delete vendor');
+      throw e;
+    }
+  };
+
+  const confirmStatus = async (next: VendorStatus) => {
+    if (!statusTarget) return;
+    try {
+      await services.vendor.updateVendorStatus(statusTarget.id, next);
+      toast.success(`Status changed to ${next} ✓`);
+      await loadData();
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : 'Failed to change status');
+      throw e;
+    }
   };
 
   if (!can(Permission.READ, 'vendor')) {
@@ -83,24 +173,84 @@ export default function VendorGovernancePage() {
   ];
 
   const tabs = [
-    { value: 'directory', label: 'Directory', content: <VendorDirectory vendors={vendors} /> },
+    {
+      value: 'directory',
+      label: 'Directory',
+      content: (
+        <VendorDirectory
+          vendors={vendors}
+          canManage={canManage}
+          canSeeContract={canSeeContract}
+          onEdit={openEdit}
+          onDelete={canDelete ? (v) => setDeleteTarget(v) : undefined}
+          onChangeStatus={(v) => setStatusTarget(v)}
+        />
+      ),
+    },
     { value: 'screenings', label: 'Screenings', content: <ScreeningDashboard screenings={screenings} /> },
     { value: 'scorecards', label: 'Scorecards', content: <ScorecardDashboard scorecards={scorecards} /> },
-    { value: 'alerts', label: 'Alerts', content: <VendorAlertsList alerts={alerts} onAcknowledge={handleAcknowledgeAlert} /> },
+    ...(canManage
+      ? [{ value: 'alerts', label: 'Alerts', content: <VendorAlertsList alerts={alerts} onAcknowledge={handleAcknowledgeAlert} /> }]
+      : []),
   ];
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-serif text-slate-900">Vendor Governance</h1>
-        <p className="text-sm font-sans text-slate-600 mt-1">
-          Vendor directory, financial/security screening, and performance scorecards
-        </p>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-serif text-slate-900">Vendor Governance</h1>
+          <p className="text-sm font-sans text-slate-600 mt-1">
+            Vendor directory, financial/security screening, and performance scorecards
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={loadData}
+            disabled={loading}
+            className="flex items-center gap-2 px-3 py-2 text-sm font-sans text-sand-700 bg-white border border-sand-200 rounded-lg hover:bg-sand-50 disabled:opacity-50"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
+          {canManage && (
+            <button
+              onClick={openCreate}
+              className="flex items-center gap-2 px-4 py-2 bg-rose-900 text-white text-sm font-sans font-medium rounded-lg hover:bg-rose-800 transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              Add Vendor
+            </button>
+          )}
+        </div>
       </div>
 
-      {loading ? (
-        <div className="p-8 text-center text-slate-500 font-sans">Loading vendor data...</div>
-      ) : (
+      {loading && (
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="h-20 rounded-lg bg-sand-100 animate-pulse" />
+            ))}
+          </div>
+          <div className="h-64 rounded-lg bg-sand-100 animate-pulse" />
+        </div>
+      )}
+
+      {!loading && error && (
+        <Card className="bg-rose-50 border-rose-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Shield className="w-5 h-5 text-rose-600" />
+              <p className="text-sm text-rose-800 font-sans">{error}</p>
+            </div>
+            <button onClick={loadData}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-sans text-rose-700 bg-white rounded-md hover:bg-rose-100">
+              <RefreshCw className="w-3.5 h-3.5" /> Retry
+            </button>
+          </div>
+        </Card>
+      )}
+
+      {!loading && !error && (
         <>
           <StatsRow stats={stats} />
           <Card>
@@ -108,6 +258,30 @@ export default function VendorGovernancePage() {
           </Card>
         </>
       )}
+
+      <VendorFormDialog
+        open={formOpen}
+        mode={formMode}
+        initial={editTarget}
+        institutionId={institutionId}
+        onClose={() => setFormOpen(false)}
+        onSubmit={submitForm}
+      />
+
+      <DeleteVendorDialog
+        open={!!deleteTarget}
+        vendorName={deleteTarget?.name ?? ''}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={confirmDelete}
+      />
+
+      <StatusChangeDialog
+        open={!!statusTarget}
+        vendorName={statusTarget?.name ?? ''}
+        currentStatus={statusTarget?.status ?? 'Under Review'}
+        onClose={() => setStatusTarget(null)}
+        onConfirm={confirmStatus}
+      />
     </div>
   );
 }

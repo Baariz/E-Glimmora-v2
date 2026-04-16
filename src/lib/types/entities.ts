@@ -765,6 +765,30 @@ export interface VendorAlert {
   createdAt: string;
 }
 
+export type VendorNoteType = 'General' | 'Request' | 'Issue' | 'Follow-up';
+export type VendorNotePriority = 'Low' | 'Medium' | 'High';
+
+export interface VendorNote {
+  id: string;
+  vendorId: string;
+  institutionId: string;
+  authorId: string;
+  authorName: string;
+  type: VendorNoteType;
+  priority: VendorNotePriority;
+  text: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const VENDOR_STATUS_TRANSITIONS: Record<VendorStatus, VendorStatus[]> = {
+  'Under Review': ['Approved', 'Rejected'],
+  Approved: ['Active', 'Rejected'],
+  Active: ['Suspended'],
+  Suspended: ['Active'],
+  Rejected: [],
+};
+
 // ============================================================================
 // Cross-UHNI Conflict Detection
 // ============================================================================

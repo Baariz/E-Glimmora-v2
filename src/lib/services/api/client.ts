@@ -7,6 +7,8 @@
  * to avoid CORS issues.
  */
 
+import { logger } from '@/lib/utils/logger';
+
 const BACKEND_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || 'https://elan-glimmora-api.onrender.com';
 
@@ -131,18 +133,34 @@ export async function apiRequest<T>(
     ? path.replace('/api/', '/')
     : path;
   const url = `${API_BASE_URL}${adjustedPath}`;
+  const method = (options.method || 'GET').toUpperCase();
 
-  const response = await fetch(url, {
-    ...options,
-    headers,
-  });
+  const startedAt = logger.apiStart('API', method, path);
+
+  let response: Response;
+  try {
+    response = await fetch(url, { ...options, headers });
+  } catch (err) {
+    logger.apiError('API', method, path, startedAt, err, { stage: 'network' });
+    throw err;
+  }
 
   // Handle no-content responses
   if (response.status === 204) {
+    logger.apiSuccess('API', method, path, startedAt, { status: 204 });
     return undefined as T;
   }
 
-  const json: ApiResponse<T> = await response.json();
+  let json: ApiResponse<T>;
+  try {
+    json = await response.json();
+  } catch (err) {
+    logger.apiError('API', method, path, startedAt, err, {
+      stage: 'parse',
+      status: response.status,
+    });
+    throw err;
+  }
 
   if (!response.ok || !json.success) {
     const error = json.error || {
@@ -150,9 +168,15 @@ export async function apiRequest<T>(
       message: response.statusText,
       status: response.status,
     };
-    throw new ApiError(error.status || response.status, error.code, error.message);
+    const apiErr = new ApiError(error.status || response.status, error.code, error.message);
+    logger.apiError('API', method, path, startedAt, apiErr, {
+      status: response.status,
+      code: error.code,
+    });
+    throw apiErr;
   }
 
+  logger.apiSuccess('API', method, path, startedAt, { status: response.status });
   return json.data as T;
 }
 

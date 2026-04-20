@@ -14,6 +14,7 @@ import { useServices } from '@/lib/hooks/useServices';
 import { useCurrentUser } from '@/lib/hooks/useCurrentUser';
 import { ThreadList } from '@/components/b2c/messaging/ThreadList';
 import { NewThreadModal } from '@/components/b2c/messaging/NewThreadModal';
+import { logger } from '@/lib/utils/logger';
 
 import type { MessageThread, Message, User, Journey } from '@/lib/types/entities';
 
@@ -31,6 +32,7 @@ export default function MessagesPage() {
   const loadThreads = async () => {
     if (!currentUser) return;
     setIsLoading(true);
+    logger.info('Messages', 'load threads start', { userId: currentUser.id });
     try {
       const fetchedThreads = await services.message.getThreads(currentUser.id);
       fetchedThreads.sort(
@@ -83,18 +85,24 @@ export default function MessagesPage() {
       const journeys = await services.journey.getJourneys(currentUser.id, 'b2c');
       setAvailableJourneys(journeys);
 
-      // Fetch real users and filter for advisors (B2B roles)
+      // Recipient list — any user other than the current one.
+      // (Was previously filtered to users with a B2B role only.)
       try {
         const allUsers = await services.user.getUsers();
-        const advisorUsers = allUsers.filter(
-          (u) => u.roles?.b2b && u.id !== currentUser.id
-        );
-        setAdvisors(advisorUsers);
-      } catch {
+        const recipients = allUsers.filter((u) => u.id !== currentUser.id);
+        setAdvisors(recipients);
+      } catch (err) {
+        logger.warn('Messages', 'recipient list fetch failed', { err });
         setAdvisors([]);
       }
+      logger.info('Messages', 'load threads done', {
+        threadCount: fetchedThreads.length,
+        journeyCount: journeys.length,
+      });
     } catch (error) {
-      console.error('Failed to load threads:', error);
+      logger.error('Messages', 'load threads failed', error, {
+        userId: currentUser.id,
+      });
     } finally {
       setIsLoading(false);
     }

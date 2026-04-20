@@ -7,11 +7,16 @@
  * When a dedicated /api/notifications endpoint ships, swap the source.
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Bell, Plane, Hotel, MapPinned, Sparkles, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Bell, Plane, Hotel, MapPinned, Sparkles, AlertTriangle, CheckCircle2, MessageSquare } from 'lucide-react';
 import { useServices } from '@/lib/hooks/useServices';
 import type { TravelNotification, IntelligenceFeedItem } from '@/lib/types/entities';
+import {
+  messageNotificationsStore,
+  useMessageNotifications,
+} from '@/lib/stores/messageNotifications';
+import { logger } from '@/lib/utils/logger';
 
 interface NotificationBellProps {
   invert?: boolean;
@@ -61,6 +66,7 @@ export function NotificationBell({ invert = false }: NotificationBellProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const panelRef = useRef<HTMLDivElement | null>(null);
+  const messageNotifs = useMessageNotifications();
 
   useEffect(() => {
     if (!open) return;
@@ -68,13 +74,16 @@ export function NotificationBell({ invert = false }: NotificationBellProps) {
     (async () => {
       setLoading(true);
       setError(false);
+      logger.info('NotificationBell', 'feed fetch start');
       try {
         const feed = await services.briefing.getIntelligenceFeed();
         if (cancelled) return;
-        setItems((feed.items ?? []).slice(0, 15).map(mapFeedItem));
+        const mapped = (feed.items ?? []).slice(0, 15).map(mapFeedItem);
+        logger.info('NotificationBell', 'feed fetch done', { count: mapped.length });
+        setItems(mapped);
       } catch (err) {
         if (!cancelled) {
-          console.error('Failed to load notifications', err);
+          logger.error('NotificationBell', 'feed fetch failed', err);
           setError(true);
         }
       } finally {
@@ -95,14 +104,26 @@ export function NotificationBell({ invert = false }: NotificationBellProps) {
     return () => document.removeEventListener('mousedown', onClick);
   }, [open]);
 
-  const unread = items.filter((i) => !i.read).length;
+  const unreadMessages = useMemo(
+    () => messageNotifs.filter((m) => !m.read).length,
+    [messageNotifs]
+  );
+  const unread = items.filter((i) => !i.read).length + unreadMessages;
+
+  const handleToggle = () => {
+    setOpen((v) => {
+      const next = !v;
+      if (next) messageNotificationsStore.markAllRead();
+      return next;
+    });
+  };
 
   const bellCls = invert ? 'text-white/90 hover:text-white' : 'text-rose-900 hover:text-rose-700';
 
   return (
     <div className="relative" ref={panelRef}>
       <button
-        onClick={() => setOpen((v) => !v)}
+        onClick={handleToggle}
         className={`relative p-2 rounded-full transition-colors ${bellCls}`}
         aria-label="Notifications"
       >
@@ -124,13 +145,30 @@ export function NotificationBell({ invert = false }: NotificationBellProps) {
           </div>
 
           <div className="max-h-[420px] overflow-y-auto">
+            {messageNotifs.map((m) => (
+              <Link
+                key={m.id}
+                href={`/messages/${m.thread_id}`}
+                onClick={() => setOpen(false)}
+                className="flex items-start gap-3 px-4 py-3 hover:bg-sand-50 transition-colors border-b border-sand-100"
+              >
+                <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-rose-50 text-rose-700">
+                  <MessageSquare className="w-4 h-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-sans text-sm text-slate-800 font-medium truncate">New message</p>
+                  <p className="font-sans text-xs text-sand-600 line-clamp-2 mt-0.5">{m.preview}</p>
+                  <p className="font-sans text-[10px] text-sand-400 mt-1">{timeAgo(m.created_at)}</p>
+                </div>
+              </Link>
+            ))}
             {loading && (
               <div className="p-5 text-center text-sand-500 text-sm font-sans">Loading…</div>
             )}
             {error && !loading && (
               <div className="p-5 text-center text-rose-700 text-sm font-sans">Unable to load notifications.</div>
             )}
-            {!loading && !error && items.length === 0 && (
+            {!loading && !error && items.length === 0 && messageNotifs.length === 0 && (
               <div className="p-8 text-center">
                 <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
                 <p className="font-sans text-sm text-rose-900">All clear</p>

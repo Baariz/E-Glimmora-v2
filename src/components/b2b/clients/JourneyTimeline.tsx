@@ -16,6 +16,7 @@ import { StatusBadge } from '@/components/b2b/layouts/StatusBadge';
 import { MapPin, Calendar, Eye, List, Clock } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ColumnDef } from '@tanstack/react-table';
+import { logger } from '@/lib/utils/logger';
 
 interface JourneyTimelineProps {
   clientId: string;
@@ -36,10 +37,12 @@ export function JourneyTimeline({ clientId, userId }: JourneyTimelineProps) {
   async function loadJourneys() {
     try {
       setLoading(true);
+      logger.info('JourneyTimeline', 'load journeys start', { userId, clientId });
       const data = await services.journey.getJourneys(userId, 'b2b');
+      logger.info('JourneyTimeline', 'load journeys done', { count: data.length });
       setJourneys(data);
     } catch (error) {
-      console.error('Failed to load journeys:', error);
+      logger.error('JourneyTimeline', 'load journeys failed', error, { userId, clientId });
     } finally {
       setLoading(false);
     }
@@ -177,8 +180,16 @@ export function JourneyTimeline({ clientId, userId }: JourneyTimelineProps) {
                   )}`}
                 />
 
-                <button
+                <div
+                  role="button"
+                  tabIndex={0}
                   onClick={() => router.push(`/journeys/${journey.id}`)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      router.push(`/journeys/${journey.id}`);
+                    }
+                  }}
                   className="w-full text-left"
                 >
                   <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow">
@@ -208,7 +219,7 @@ export function JourneyTimeline({ clientId, userId }: JourneyTimelineProps) {
                       </Button>
                     </div>
                   </Card>
-                </button>
+                </div>
               </div>
             ))}
           </div>

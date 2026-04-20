@@ -2,13 +2,16 @@
 
 /**
  * Auth Provider with NextAuth SessionProvider
- * Wraps NextAuth session with domain context support (B2C/B2B/Admin switching)
+ * Wraps NextAuth session with domain context support (B2C/B2B/Admin switching),
+ * React Query for server-state caching, and WebSocket for real-time events.
  */
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { SessionProvider, useSession } from 'next-auth/react';
 import { DomainContext, UserRoles } from '@/lib/types';
 import { setAuthToken } from '@/lib/services/api/client';
+import { QueryProvider } from './QueryProvider';
+import { WebSocketProvider } from './WebSocketProvider';
 
 interface DomainContextValue {
   context: DomainContext;
@@ -67,9 +70,13 @@ interface AuthProviderProps {
 export function AuthProvider({ children }: AuthProviderProps) {
   return (
     <SessionProvider>
-      <DomainContextProvider>
-        {children}
-      </DomainContextProvider>
+      <QueryProvider>
+        <DomainContextProvider>
+          <WebSocketProvider>
+            {children}
+          </WebSocketProvider>
+        </DomainContextProvider>
+      </QueryProvider>
     </SessionProvider>
   );
 }

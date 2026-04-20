@@ -13,3 +13,6 @@ export * from './permissions';
 
 // Re-export all validation schemas and inferred types
 export * from './validation';
+
+// Re-export WebSocket types
+export * from './websocket';

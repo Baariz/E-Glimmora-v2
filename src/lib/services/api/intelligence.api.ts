@@ -10,6 +10,7 @@ import type {
 } from '@/lib/types/entities';
 import type { IIntelligenceService } from '../interfaces/IIntelligenceService';
 import { ApiError, ensureAuthToken } from './client';
+import { logger } from '@/lib/utils/logger';
 
 const isServer = typeof window === 'undefined';
 const BACKEND_URL =
@@ -29,39 +30,66 @@ async function request<T>(path: string, init: RequestInit): Promise<T> {
 
   const adjusted = !isServer && path.startsWith('/api/') ? path.replace('/api/', '/') : path;
   const url = `${API_BASE_URL}${adjusted}`;
+  const method = (init.method || 'GET').toUpperCase();
 
-  const res = await fetch(url, { ...init, headers });
-  if (res.status === 204) return undefined as T;
+  const startedAt = logger.apiStart('Intelligence', method, path);
+
+  let res: Response;
+  try {
+    res = await fetch(url, { ...init, headers });
+  } catch (err) {
+    logger.apiError('Intelligence', method, path, startedAt, err, { stage: 'network' });
+    throw err;
+  }
+
+  if (res.status === 204) {
+    logger.apiSuccess('Intelligence', method, path, startedAt, { status: 204 });
+    return undefined as T;
+  }
 
   const raw = await res.text();
   let body: unknown;
   try {
     body = raw ? JSON.parse(raw) : null;
   } catch {
-    throw new ApiError(res.status, 'INVALID_JSON', `Invalid JSON from ${path}`);
+    const parseErr = new ApiError(res.status, 'INVALID_JSON', `Invalid JSON from ${path}`);
+    logger.apiError('Intelligence', method, path, startedAt, parseErr, { stage: 'parse' });
+    throw parseErr;
   }
 
   if (!res.ok) {
     const err = (body as { error?: { code?: string; message?: string; status?: number } })?.error;
-    throw new ApiError(
+    const apiErr = new ApiError(
       err?.status ?? res.status,
       err?.code ?? 'HTTP_ERROR',
       err?.message ?? res.statusText ?? `Request failed: ${res.status}`,
     );
+    logger.apiError('Intelligence', method, path, startedAt, apiErr, {
+      status: res.status,
+      code: apiErr.code,
+    });
+    throw apiErr;
   }
 
   if (body && typeof body === 'object' && 'success' in body) {
     const envelope = body as { success: boolean; data?: T; error?: { code?: string; message?: string; status?: number } };
     if (!envelope.success) {
-      throw new ApiError(
+      const apiErr = new ApiError(
         envelope.error?.status ?? res.status,
         envelope.error?.code ?? 'UNKNOWN_ERROR',
         envelope.error?.message ?? 'Request failed',
       );
+      logger.apiError('Intelligence', method, path, startedAt, apiErr, {
+        status: res.status,
+        code: apiErr.code,
+      });
+      throw apiErr;
     }
+    logger.apiSuccess('Intelligence', method, path, startedAt, { status: res.status });
     return envelope.data as T;
   }
 
+  logger.apiSuccess('Intelligence', method, path, startedAt, { status: res.status, shape: 'raw' });
   return body as T;
 }
 

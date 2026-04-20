@@ -14,6 +14,7 @@ import type {
 } from '@/lib/types/entities';
 import type { IBriefingService } from '../interfaces/IBriefingService';
 import { ApiError, ensureAuthToken } from './client';
+import { logger } from '@/lib/utils/logger';
 
 const isServer = typeof window === 'undefined';
 const BACKEND_URL =
@@ -31,42 +32,67 @@ async function fetchBriefing<T>(path: string): Promise<T> {
     : path;
   const url = `${API_BASE_URL}${adjusted}`;
 
-  const res = await fetch(url, { method: 'GET', headers });
+  const startedAt = logger.apiStart('Briefing', 'GET', path);
 
-  if (res.status === 204) return undefined as T;
+  let res: Response;
+  try {
+    res = await fetch(url, { method: 'GET', headers });
+  } catch (err) {
+    logger.apiError('Briefing', 'GET', path, startedAt, err, { stage: 'network' });
+    throw err;
+  }
+
+  if (res.status === 204) {
+    logger.apiSuccess('Briefing', 'GET', path, startedAt, { status: 204 });
+    return undefined as T;
+  }
 
   const raw = await res.text();
   let body: unknown;
   try {
     body = raw ? JSON.parse(raw) : null;
   } catch {
-    throw new ApiError(res.status, 'INVALID_JSON', `Invalid JSON from ${path}`);
+    const parseErr = new ApiError(res.status, 'INVALID_JSON', `Invalid JSON from ${path}`);
+    logger.apiError('Briefing', 'GET', path, startedAt, parseErr, { stage: 'parse' });
+    throw parseErr;
   }
 
   // Error cases
   if (!res.ok) {
     const err = (body as { error?: { code?: string; message?: string; status?: number } })?.error;
-    throw new ApiError(
+    const apiErr = new ApiError(
       err?.status ?? res.status,
       err?.code ?? 'HTTP_ERROR',
       err?.message ?? res.statusText ?? `Request failed: ${res.status}`
     );
+    logger.apiError('Briefing', 'GET', path, startedAt, apiErr, {
+      status: res.status,
+      code: apiErr.code,
+    });
+    throw apiErr;
   }
 
   // Wrapped envelope — { success: true, data: {...} }
   if (body && typeof body === 'object' && 'success' in body) {
     const envelope = body as { success: boolean; data?: T; error?: { code?: string; message?: string; status?: number } };
     if (!envelope.success) {
-      throw new ApiError(
+      const apiErr = new ApiError(
         envelope.error?.status ?? res.status,
         envelope.error?.code ?? 'UNKNOWN_ERROR',
         envelope.error?.message ?? 'Request failed'
       );
+      logger.apiError('Briefing', 'GET', path, startedAt, apiErr, {
+        status: res.status,
+        code: apiErr.code,
+      });
+      throw apiErr;
     }
+    logger.apiSuccess('Briefing', 'GET', path, startedAt, { status: res.status });
     return envelope.data as T;
   }
 
   // Raw payload — return as-is
+  logger.apiSuccess('Briefing', 'GET', path, startedAt, { status: res.status, shape: 'raw' });
   return body as T;
 }
 

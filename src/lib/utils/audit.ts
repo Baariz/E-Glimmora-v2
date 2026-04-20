@@ -43,9 +43,24 @@ export class AuditService implements IAuditService {
       ...event,
     };
 
-    const events = this.getAll();
+    const events = this.readAllSync();
     events.push(auditEvent);
     this.saveEvents(events);
+  }
+
+  private readAllSync(): AuditEvent[] {
+    if (typeof window === 'undefined') return [];
+    try {
+      const data = localStorage.getItem(STORAGE_KEY);
+      if (!data) return [];
+      const events = JSON.parse(data) as AuditEvent[];
+      return events.sort(
+        (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      );
+    } catch (error) {
+      console.error('Failed to retrieve audit events:', error);
+      return [];
+    }
   }
 
   // ============================================================================
@@ -55,33 +70,15 @@ export class AuditService implements IAuditService {
   /**
    * Get all audit events, newest first
    */
-  getAll(): AuditEvent[] {
-    if (typeof window === 'undefined') {
-      return [];
-    }
-
-    try {
-      const data = localStorage.getItem(STORAGE_KEY);
-      if (!data) {
-        return [];
-      }
-
-      const events = JSON.parse(data) as AuditEvent[];
-      // Return newest first
-      return events.sort((a, b) =>
-        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-      );
-    } catch (error) {
-      console.error('Failed to retrieve audit events:', error);
-      return [];
-    }
+  async getAll(): Promise<AuditEvent[]> {
+    return this.readAllSync();
   }
 
   /**
    * Get audit events for a specific resource
    */
-  getByResource(resourceType: string, resourceId: string): AuditEvent[] {
-    return this.getAll().filter(
+  async getByResource(resourceType: string, resourceId: string): Promise<AuditEvent[]> {
+    return this.readAllSync().filter(
       event => event.resourceType === resourceType && event.resourceId === resourceId
     );
   }
@@ -89,15 +86,15 @@ export class AuditService implements IAuditService {
   /**
    * Get audit events for a specific user
    */
-  getByUser(userId: string): AuditEvent[] {
-    return this.getAll().filter(event => event.userId === userId);
+  async getByUser(userId: string): Promise<AuditEvent[]> {
+    return this.readAllSync().filter(event => event.userId === userId);
   }
 
   /**
    * Get audit events for a specific domain context
    */
-  getByContext(context: DomainContext): AuditEvent[] {
-    return this.getAll().filter(event => event.context === context);
+  async getByContext(context: DomainContext): Promise<AuditEvent[]> {
+    return this.readAllSync().filter(event => event.context === context);
   }
 
   /**
@@ -105,7 +102,7 @@ export class AuditService implements IAuditService {
    * @param eventType - Event type (e.g., 'journey.created', 'vault.locked')
    */
   getByEvent(eventType: string): AuditEvent[] {
-    return this.getAll().filter(event => event.event === eventType);
+    return this.readAllSync().filter(event => event.event === eventType);
   }
 
   /**
@@ -117,7 +114,7 @@ export class AuditService implements IAuditService {
     const startTime = new Date(start).getTime();
     const endTime = new Date(end).getTime();
 
-    return this.getAll().filter(event => {
+    return this.readAllSync().filter(event => {
       const eventTime = new Date(event.timestamp).getTime();
       return eventTime >= startTime && eventTime <= endTime;
     });
@@ -134,7 +131,7 @@ export class AuditService implements IAuditService {
     startDate?: string;
     endDate?: string;
   }): AuditEvent[] {
-    let results = this.getAll();
+    let results = this.readAllSync();
 
     if (filters.userId) {
       results = results.filter(event => event.userId === filters.userId);
@@ -173,12 +170,12 @@ export class AuditService implements IAuditService {
    * This is the ONLY mutation allowed on audit data (legal requirement)
    * Replaces userId with REDACTED_<uuid>
    */
-  anonymizeUser(userId: string): void {
+  async anonymizeUser(userId: string): Promise<void> {
     if (typeof window === 'undefined') {
       return;
     }
 
-    const events = this.getAll();
+    const events = this.readAllSync();
     const redactedId = `REDACTED_${this.generateId()}`;
     const timestamp = new Date().toISOString();
 

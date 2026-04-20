@@ -3,9 +3,15 @@
  * Implements IMemoryService against the Elan Glimmora backend API
  */
 
-import type { MemoryItem, MemoryType, CreateMemoryInput } from '@/lib/types';
+import type {
+  MemoryItem,
+  MemoryType,
+  CreateMemoryInput,
+  VaultSharingRole,
+} from '@/lib/types';
 import type { IMemoryService } from '../interfaces/IMemoryService';
 import { api, apiRequest } from './client';
+import { logger } from '@/lib/utils/logger';
 
 const BACKEND_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || 'https://elan-glimmora-api.onrender.com';
@@ -23,6 +29,7 @@ interface ApiMemoryItem {
   emotional_tags: string[];
   linked_journeys: string[];
   sharing_permissions: string[];
+  sharing_roles?: string[] | null;
   is_locked: boolean;
   unlock_condition?: string | null;
   is_milestone: boolean;
@@ -55,6 +62,7 @@ function toMemoryItem(raw: ApiMemoryItem): MemoryItem {
     emotionalTags: raw.emotional_tags || [],
     linkedJourneys: raw.linked_journeys || [],
     sharingPermissions: raw.sharing_permissions || [],
+    sharingRoles: (raw.sharing_roles || []) as VaultSharingRole[],
     isLocked: raw.is_locked ?? false,
     unlockCondition: raw.unlock_condition || undefined,
     isMilestone: raw.is_milestone ?? false,
@@ -70,6 +78,7 @@ function toApiUpdateBody(data: Partial<MemoryItem>): Record<string, unknown> {
   if (data.emotionalTags !== undefined) body.emotional_tags = data.emotionalTags;
   if (data.linkedJourneys !== undefined) body.linked_journeys = data.linkedJourneys;
   if (data.sharingPermissions !== undefined) body.sharing_permissions = data.sharingPermissions;
+  if (data.sharingRoles !== undefined) body.sharing_roles = data.sharingRoles;
   if (data.isMilestone !== undefined) body.is_milestone = data.isMilestone;
   return body;
 }
@@ -119,6 +128,10 @@ export class ApiMemoryService implements IMemoryService {
   }
 
   async updateMemory(id: string, data: Partial<MemoryItem>): Promise<MemoryItem> {
+    logger.info('Memory', 'updateMemory', {
+      id,
+      hasSharingRoles: data.sharingRoles !== undefined,
+    });
     const raw = await api.patch<ApiMemoryItem>(
       `/api/vault/${id}`,
       toApiUpdateBody(data)

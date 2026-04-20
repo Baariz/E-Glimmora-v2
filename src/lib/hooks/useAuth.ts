@@ -16,6 +16,9 @@ interface UseAuthReturn {
     name: string;
     roles: UserRoles;
     mfaEnabled?: boolean;
+    /** UHNI this user is linked to — only non-null for Spouse/LegacyHeir (§9). */
+    linkedUhniId?: string | null;
+    institutionId?: string | null;
   } | null;
   context: DomainContext;
   setContext: (context: DomainContext) => void;
@@ -35,6 +38,8 @@ export function useAuth(): UseAuthReturn {
     name: session.user.name!,
     roles: (session.user as any).roles as UserRoles,
     mfaEnabled: (session.user as any).mfaEnabled,
+    linkedUhniId: (session.user as any).linkedUhniId ?? null,
+    institutionId: (session.user as any).institutionId ?? null,
   } : null;
 
   const isAuthenticated = status === 'authenticated';

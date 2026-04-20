@@ -25,7 +25,7 @@ export function RegistryLogs() {
   const loadLogs = async () => {
     try {
       setLoading(true);
-      const events = audit.getByContext('b2b');
+      const events = await audit.getByContext('b2b');
       setLogs(events);
     } catch (error) {
       console.error('Failed to load access logs:', error);

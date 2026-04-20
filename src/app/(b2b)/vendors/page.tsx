@@ -20,6 +20,7 @@ import { DeleteVendorDialog } from '@/components/b2b/vendors/DeleteVendorDialog'
 import { StatusChangeDialog } from '@/components/b2b/vendors/StatusChangeDialog';
 import type { Vendor, VendorScreening, VendorScorecard, VendorAlert, VendorStatus } from '@/lib/types';
 import type { CreateVendorInput } from '@/lib/services/interfaces/IVendorService';
+import { logger } from '@/lib/utils/logger';
 
 export default function VendorGovernancePage() {
   const router = useRouter();
@@ -62,16 +63,42 @@ export default function VendorGovernancePage() {
         return;
       }
 
-      const [vendorData, screeningData, scorecardData, alertData] = await Promise.all([
-        services.vendor.getVendors({ institutionId: inst }),
-        services.vendor.getScreenings(inst),
-        services.vendor.getScorecards(inst),
-        services.vendor.getVendorAlerts(inst),
-      ]);
+      // Fetch vendors first, then fan out per-vendor screenings/scorecards/alerts.
+      // Backend only exposes /api/vendors/{id}/(screenings|scorecards|alerts) per
+      // Frontend_Integration_Guide §5.3 — the flat-list paths returned 500s.
+      const vendorData = await services.vendor.getVendors({ institutionId: inst });
       setVendors(vendorData);
-      setScreenings(screeningData);
-      setScorecards(scorecardData);
-      setAlerts(alertData);
+
+      const ids = vendorData.map((v) => v.id);
+      logger.info('Vendors', 'fan-out vendor sub-resources', {
+        institutionId: inst,
+        vendorCount: ids.length,
+      });
+
+      const [screeningResults, scorecardResults, alertResults] = await Promise.all([
+        Promise.allSettled(ids.map((id) => services.vendor.getScreeningsByVendor(id))),
+        Promise.allSettled(ids.map((id) => services.vendor.getScorecardsByVendor(id))),
+        Promise.allSettled(ids.map((id) => services.vendor.getAlertsByVendor(id))),
+      ]);
+
+      const flatten = <T,>(res: PromiseSettledResult<T[]>[], kind: string): T[] => {
+        const out: T[] = [];
+        res.forEach((r, i) => {
+          if (r.status === 'fulfilled') {
+            out.push(...r.value);
+          } else {
+            logger.warn('Vendors', `${kind} fetch failed`, {
+              vendorId: ids[i],
+              err: r.reason instanceof Error ? r.reason.message : String(r.reason),
+            });
+          }
+        });
+        return out;
+      };
+
+      setScreenings(flatten<VendorScreening>(screeningResults, 'screening'));
+      setScorecards(flatten<VendorScorecard>(scorecardResults, 'scorecard'));
+      setAlerts(flatten<VendorAlert>(alertResults, 'alert'));
     } catch (e: unknown) {
       const err = e as { status?: number; message?: string };
       if (err.status === 401) {

@@ -1,43 +1,52 @@
 'use client';
 
 /**
- * Family Sharing Panel (VALT-04)
- * Toggle visibility for Spouse and Legacy Heir per memory entry.
+ * Family Sharing Panel (Frontend_Integration_Guide.docx §5.7)
+ * Toggle role-based vault sharing for Spouse and Legacy Heir per memory entry.
+ * Writes to MemoryItem.sharingRoles (PATCH /api/vault/:id body field sharing_roles).
  * Disabled when memory is locked.
- * Plain language explanations.
  */
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import type { MemoryItem } from '@/lib/types/entities';
+import type { MemoryItem, VaultSharingRole } from '@/lib/types/entities';
 import { Users, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
+import { logger } from '@/lib/utils/logger';
 
 interface FamilySharingPanelProps {
   memory: MemoryItem;
-  onUpdate: (sharingPermissions: string[]) => Promise<void>;
+  onUpdate: (sharingRoles: VaultSharingRole[]) => Promise<void>;
 }
 
 export function FamilySharingPanel({ memory, onUpdate }: FamilySharingPanelProps) {
   const [isUpdating, setIsUpdating] = useState(false);
 
-  const isSharedWithSpouse = memory.sharingPermissions.includes('spouse');
-  const isSharedWithHeir = memory.sharingPermissions.includes('heir');
+  const current: VaultSharingRole[] = memory.sharingRoles ?? [];
+  const isSharedWithSpouse = current.includes('spouse');
+  const isSharedWithHeir = current.includes('heir');
 
-  const handleToggle = async (role: 'spouse' | 'heir') => {
-    if (memory.isLocked) return;
+  const handleToggle = async (role: VaultSharingRole) => {
+    if (memory.isLocked || isUpdating) return;
 
     setIsUpdating(true);
+    logger.action('Vault', 'toggle sharing role', {
+      memoryId: memory.id,
+      role,
+      currentlyShared: current.includes(role),
+    });
 
     try {
-      const current = memory.sharingPermissions;
-      const updated = current.includes(role)
+      const updated: VaultSharingRole[] = current.includes(role)
         ? current.filter((r) => r !== role)
         : [...current, role];
 
       await onUpdate(updated);
     } catch (error) {
-      console.error('Failed to update sharing permissions:', error);
+      logger.error('Vault', 'sharing role update failed', error, {
+        memoryId: memory.id,
+        role,
+      });
     } finally {
       setIsUpdating(false);
     }

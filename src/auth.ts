@@ -37,6 +37,9 @@ interface AuthApiResponse {
       mfaVerified: boolean;
       institutionId?: string | null;
       institution_id?: string | null;
+      /** UHNI this user belongs to — null for non-Spouse/Heir users (§9). */
+      linkedUhniId?: string | null;
+      linked_uhni_id?: string | null;
     };
   };
   error?: {
@@ -115,19 +118,25 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
           const { user, access_token } = result.data;
 
-          // Hydrate institution_id from the backend user record (login response omits it)
+          // Hydrate institution_id + linked_uhni_id from the backend user record
+          // (login response may omit these — Frontend_Integration_Guide §9).
           let institutionId: string | null =
             user.institutionId ?? user.institution_id ?? null;
-          if (!institutionId) {
+          let linkedUhniId: string | null =
+            user.linkedUhniId ?? user.linked_uhni_id ?? null;
+          if (!institutionId || linkedUhniId === null) {
             try {
               const profileRes = await fetch(`${API_BASE_URL}/api/users/${user.id}`, {
                 headers: { Authorization: `Bearer ${access_token}` },
               });
               const profileJson = await profileRes.json();
               const profile = profileJson?.data ?? profileJson;
-              institutionId = profile?.institution_id ?? profile?.institutionId ?? null;
+              institutionId =
+                institutionId ?? profile?.institution_id ?? profile?.institutionId ?? null;
+              linkedUhniId =
+                linkedUhniId ?? profile?.linked_uhni_id ?? profile?.linkedUhniId ?? null;
             } catch {
-              // non-fatal — session just won't have institutionId
+              // non-fatal — session just won't have institutionId / linkedUhniId
             }
           }
 
@@ -139,6 +148,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             mfaEnabled: user.mfaEnabled,
             mfaVerified: user.mfaVerified,
             institutionId,
+            linkedUhniId,
             // Store the API token so it can be propagated to the session
             apiToken: access_token,
           };
@@ -166,6 +176,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           mfaVerified?: boolean;
           apiToken?: string;
           institutionId?: string | null;
+          linkedUhniId?: string | null;
         };
         if (userWithRoles.roles) {
           token.userId = user.id!;
@@ -174,6 +185,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           token.mfaVerified = userWithRoles.mfaVerified ?? true;
         }
         token.institutionId = userWithRoles.institutionId ?? null;
+        token.linkedUhniId = userWithRoles.linkedUhniId ?? null;
         // Store the API JWT in the NextAuth token
         if (userWithRoles.apiToken) {
           token.apiToken = userWithRoles.apiToken;
@@ -195,6 +207,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         (session.user as any).mfaEnabled = token.mfaEnabled;
         (session.user as any).mfaVerified = token.mfaVerified;
         (session.user as any).institutionId = token.institutionId ?? null;
+        (session.user as any).linkedUhniId = token.linkedUhniId ?? null;
         // Expose API token to client so it can be used for direct API calls
         (session as any).apiToken = token.apiToken;
       }

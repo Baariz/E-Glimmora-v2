@@ -312,9 +312,15 @@ export class ApiVendorService implements IVendorService {
   }
 
   async getScreenings(institutionId: string): Promise<VendorScreening[]> {
-    const qs = institutionId ? `?institution_id=${encodeURIComponent(institutionId)}` : '';
-    const raw = await apiRequest<ApiScreening[]>(`/api/vendors/screenings${qs}`, { method: 'GET' });
-    return (raw || []).map(toScreening);
+    // Backend has no flat-list endpoint per Frontend_Integration_Guide §5.3 —
+    // fan out across the institution's vendors.
+    const vendors = await this.getVendors({ institutionId });
+    const results = await Promise.allSettled(
+      vendors.map((v) => this.getScreeningsByVendor(v.id))
+    );
+    const out: VendorScreening[] = [];
+    results.forEach((r) => r.status === 'fulfilled' && out.push(...r.value));
+    return out;
   }
 
   async getScreeningByVendor(vendorId: string): Promise<VendorScreening | null> {
@@ -336,12 +342,13 @@ export class ApiVendorService implements IVendorService {
   }
 
   async getScorecards(institutionId: string, period?: string): Promise<VendorScorecard[]> {
-    const qs = new URLSearchParams();
-    if (institutionId) qs.set('institution_id', institutionId);
-    if (period) qs.set('period', period);
-    const suffix = qs.toString() ? `?${qs.toString()}` : '';
-    const raw = await apiRequest<ApiScorecard[]>(`/api/vendors/scorecards${suffix}`, { method: 'GET' });
-    return (raw || []).map(toScorecard);
+    const vendors = await this.getVendors({ institutionId });
+    const results = await Promise.allSettled(
+      vendors.map((v) => this.getScorecardsByVendor(v.id))
+    );
+    const out: VendorScorecard[] = [];
+    results.forEach((r) => r.status === 'fulfilled' && out.push(...r.value));
+    return period ? out.filter((s) => s.period === period) : out;
   }
 
   async getScorecardsByVendor(vendorId: string): Promise<VendorScorecard[]> {
@@ -350,9 +357,13 @@ export class ApiVendorService implements IVendorService {
   }
 
   async getVendorAlerts(institutionId: string): Promise<VendorAlert[]> {
-    const qs = institutionId ? `?institution_id=${encodeURIComponent(institutionId)}` : '';
-    const raw = await apiRequest<ApiAlert[]>(`/api/vendors/alerts${qs}`, { method: 'GET' });
-    return (raw || []).map(toAlert);
+    const vendors = await this.getVendors({ institutionId });
+    const results = await Promise.allSettled(
+      vendors.map((v) => this.getAlertsByVendor(v.id))
+    );
+    const out: VendorAlert[] = [];
+    results.forEach((r) => r.status === 'fulfilled' && out.push(...r.value));
+    return out;
   }
 
   async getAlertsByVendor(vendorId: string): Promise<VendorAlert[]> {

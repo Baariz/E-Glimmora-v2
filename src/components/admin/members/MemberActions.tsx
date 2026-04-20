@@ -6,11 +6,12 @@
  */
 
 import { useState } from 'react';
-import { CheckCircle, XCircle, PlayCircle, Trash2 } from 'lucide-react';
+import { CheckCircle, XCircle, PlayCircle, Trash2, UserCog } from 'lucide-react';
 import { useServices } from '@/lib/hooks/useServices';
 import { useCurrentUser } from '@/lib/hooks/useCurrentUser';
 import type { User } from '@/lib/types';
 import { toast } from 'sonner';
+import { EditRolesDialog } from './EditRolesDialog';
 
 interface MemberActionsProps {
   user: User;
@@ -21,6 +22,7 @@ export function MemberActions({ user, onAction }: MemberActionsProps) {
   const services = useServices();
   const { user: currentUser } = useCurrentUser();
   const [loading, setLoading] = useState(false);
+  const [editRolesOpen, setEditRolesOpen] = useState(false);
 
   // Determine user state
   const roleValues = Object.values(user.roles).filter(Boolean);
@@ -165,6 +167,18 @@ export function MemberActions({ user, onAction }: MemberActionsProps) {
 
   return (
     <div className="flex items-center gap-2">
+      {/* Edit Roles — available whenever the user isn't removed (§5.4). */}
+      {!isRemoved && (
+        <button
+          onClick={() => setEditRolesOpen(true)}
+          disabled={loading}
+          className="flex items-center gap-2 px-3 py-1.5 bg-rose-900 text-white text-sm font-sans rounded-md hover:bg-rose-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          <UserCog size={16} />
+          Edit Roles
+        </button>
+      )}
+
       {isPending && (
         <button
           onClick={handleApprove}
@@ -208,6 +222,13 @@ export function MemberActions({ user, onAction }: MemberActionsProps) {
           Remove
         </button>
       )}
+
+      <EditRolesDialog
+        open={editRolesOpen}
+        user={user}
+        onClose={() => setEditRolesOpen(false)}
+        onSaved={onAction}
+      />
     </div>
   );
 }

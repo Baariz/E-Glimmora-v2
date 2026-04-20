@@ -3,9 +3,10 @@
  * Implements IUserService against the Elan Glimmora backend API
  */
 
-import type { User, CreateUserInput } from '@/lib/types';
+import type { User, CreateUserInput, UserRoles } from '@/lib/types';
 import type { IUserService } from '../interfaces/IUserService';
 import { api } from './client';
+import { logger } from '@/lib/utils/logger';
 
 /** Backend role object shape */
 interface ApiRoleEntry {
@@ -130,6 +131,19 @@ export class ApiUserService implements IUserService {
   async updateUserStatus(id: string, status: 'active' | 'suspended' | 'removed'): Promise<User> {
     const raw = await api.patch<ApiUser>(`/api/users/${id}/status`, { status });
     return toUser(raw);
+  }
+
+  async updateUserRoles(id: string, roles: Partial<UserRoles>): Promise<User> {
+    logger.warn('User', 'updateUserRoles', { id, domains: Object.keys(roles) });
+    const raw = await api.patch<ApiUser>(`/api/users/${id}/roles`, {
+      roles: toApiRoles(roles as Record<string, string | undefined>),
+    });
+    return toUser(raw);
+  }
+
+  async removeFromCircle(id: string): Promise<void> {
+    logger.warn('User', 'removeFromCircle', { id });
+    await api.delete<unknown>(`/api/users/${id}/circle`);
   }
 
   async deleteUser(id: string): Promise<boolean> {

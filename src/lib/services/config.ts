@@ -26,6 +26,7 @@ import { IHotelService } from './interfaces/IHotelService';
 import { IPackageService } from './interfaces/IPackageService';
 import { IBriefingService } from './interfaces/IBriefingService';
 import { IIntelligenceService } from './interfaces/IIntelligenceService';
+import { IApprovalChainService } from './interfaces/IApprovalChainService';
 
 import { MockJourneyService } from './mock/journey.mock';
 import { MockMessageService } from './mock/message.mock';
@@ -44,14 +45,15 @@ import { ApiBriefingService } from './api/briefing.api';
 import { ApiIntelligenceService } from './api/intelligence.api';
 import { ApiVendorService } from './api/vendor.api';
 import { ApiClientService } from './api/client.api';
-import { MockRiskService } from './mock/risk.mock';
-import { MockContractService } from './mock/contract.mock';
-import { MockAuditService } from './mock/audit.mock';
-import { MockSystemHealthService } from './mock/system-health.mock';
-import { MockPredictiveService } from './mock/predictive.mock';
-import { MockCrisisService } from './mock/crisis.mock';
-import { MockConflictService } from './mock/conflict.mock';
-import { MockIntegrationService } from './mock/integration.mock';
+import { ApiRiskService } from './api/risk.api';
+import { ApiContractService } from './api/contract.api';
+import { ApiCrisisService } from './api/crisis.api';
+import { ApiConflictService } from './api/conflict.api';
+import { ApiPredictiveService } from './api/predictive.api';
+import { ApiAuditService } from './api/audit.api';
+import { ApiIntegrationService } from './api/integration.api';
+import { ApiSystemHealthService } from './api/system-health.api';
+import { ApiApprovalChainService } from './api/approval-chain.api';
 
 /**
  * Environment variable to control mock vs real API usage
@@ -84,15 +86,16 @@ export const services = {
   vendor: new ApiVendorService(),
   client: new ApiClientService(),
 
-  // === Mock-only services (real API not yet implemented) ===
-  risk: new MockRiskService(),
-  contract: new MockContractService(),
-  audit: new MockAuditService(),
-  systemHealth: new MockSystemHealthService(),
-  predictive: new MockPredictiveService(),
-  crisis: new MockCrisisService(),
-  conflict: new MockConflictService(),
-  integration: new MockIntegrationService(),
+  // === Wired in Frontend_Integration_Guide.docx rollout (§4.3–§4.12) ===
+  risk: new ApiRiskService(),
+  contract: new ApiContractService(),
+  audit: new ApiAuditService(),
+  systemHealth: new ApiSystemHealthService(),
+  predictive: new ApiPredictiveService(),
+  crisis: new ApiCrisisService(),
+  conflict: new ApiConflictService(),
+  integration: new ApiIntegrationService(),
+  approvalChain: new ApiApprovalChainService(),
 } as {
   journey: IJourneyService;
   memory: IMemoryService;
@@ -117,6 +120,7 @@ export const services = {
   package: IPackageService;
   briefing: IBriefingService;
   intelligence: IIntelligenceService;
+  approvalChain: IApprovalChainService;
 };
 
 /**

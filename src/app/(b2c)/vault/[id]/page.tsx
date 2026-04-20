@@ -16,7 +16,7 @@ import { MemoryDetail } from '@/components/b2c/vault/MemoryDetail';
 import { MemoryActions } from '@/components/b2c/vault/MemoryActions';
 import { FamilySharingPanel } from '@/components/b2c/vault/FamilySharingPanel';
 
-import type { MemoryItem } from '@/lib/types/entities';
+import type { MemoryItem, VaultSharingRole } from '@/lib/types/entities';
 
 export default function MemoryDetailPage() {
   const params = useParams();
@@ -84,10 +84,10 @@ export default function MemoryDetailPage() {
     await services.memory.deleteMemory(memory.id);
   };
 
-  const handleUpdateSharing = async (sharingPermissions: string[]) => {
+  const handleUpdateSharing = async (sharingRoles: VaultSharingRole[]) => {
     if (!memory) return;
     const updatedMemory = await services.memory.updateMemory(memory.id, {
-      sharingPermissions,
+      sharingRoles,
     });
     setMemory(updatedMemory);
   };

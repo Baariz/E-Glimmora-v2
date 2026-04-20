@@ -118,6 +118,8 @@ export interface Journey {
   emotionalObjective?: string;
   strategicReasoning?: string;
   packageId?: string | null;
+  /** Approval chain governing this journey (§5.6). Null = platform default. */
+  approvalChainId?: string | null;
   preDepartureBrief?: PreDepartureBrief | null;
   /** Narrative generation source — 'ai' when POST /api/journeys/generate used an LLM, 'template' for fallback */
   source?: 'ai' | 'template';
@@ -241,6 +243,13 @@ export interface TravelMonitor {
 
 export type MemoryType = 'Document' | 'Photo' | 'Video' | 'Note' | 'Audio';
 
+/**
+ * Role-based vault sharing per Frontend_Integration_Guide.docx §5.7.
+ * Empty array = shared with nobody. Backend filters Spouse/Heir visibility
+ * using this + the UHNI's linkedUhniId relationship.
+ */
+export type VaultSharingRole = 'spouse' | 'heir' | 'advisor';
+
 export interface MemoryItem {
   id: string;
   userId: string;
@@ -252,6 +261,7 @@ export interface MemoryItem {
   emotionalTags: string[];
   linkedJourneys: string[];
   sharingPermissions: string[];
+  sharingRoles?: VaultSharingRole[];
   isLocked: boolean;
   unlockCondition?: string;
   isMilestone: boolean;
@@ -1309,4 +1319,37 @@ export interface TravelNotification {
 export interface JourneySuggestionsResponse {
   suggestions: JourneySuggestion[];
   source: IntelligenceSource;
+}
+
+// ============================================================================
+// Approval Chains (Frontend_Integration_Guide.docx §5.6)
+// ============================================================================
+
+export interface ApprovalChainStep {
+  role: string; // Role name, e.g. 'RelationshipManager'
+  order: number;
+  required: boolean;
+  parallel: boolean;
+}
+
+export interface ApprovalChain {
+  id: string;
+  name: string;
+  institutionId?: string | null; // null = platform default
+  steps: ApprovalChainStep[];
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateApprovalChainInput {
+  name: string;
+  institutionId?: string | null;
+  steps: ApprovalChainStep[];
+}
+
+export interface UpdateApprovalChainInput {
+  name?: string;
+  steps?: ApprovalChainStep[];
+  isActive?: boolean;
 }

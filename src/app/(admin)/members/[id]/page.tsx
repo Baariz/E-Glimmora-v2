@@ -38,7 +38,7 @@ export default function MemberDetailPage() {
       setUser(userData);
 
       // Load audit history for this user
-      const audit = services.audit.getByUser(userId);
+      const audit = await services.audit.getByUser(userId);
       setAuditHistory(audit.sort((a, b) =>
         new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
       ));

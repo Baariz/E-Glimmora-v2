@@ -316,6 +316,27 @@ export class MockUserService extends BaseMockService implements IUserService {
     return true;
   }
 
+  async updateUserRoles(id: string, roles: Partial<User['roles']>): Promise<User> {
+    await this.delay();
+    const users = this.getUsers_();
+    const index = users.findIndex(u => u.id === id);
+    if (index === -1) throw new Error('User not found');
+    const existing = users[index] as User;
+    const updated: User = {
+      ...existing,
+      roles: { ...(roles as User['roles']) },
+      updatedAt: this.now(),
+    };
+    users[index] = updated;
+    this.saveUsers(users);
+    return updated;
+  }
+
+  async removeFromCircle(id: string): Promise<void> {
+    await this.delay();
+    await this.updateUserStatus(id, 'removed');
+  }
+
   async eraseUserData(id: string): Promise<void> {
     await this.delay();
 

@@ -49,7 +49,7 @@ export default function InstitutionDetailPage() {
       });
 
       // Load audit history
-      const audit = services.audit.getByResource('institution', institutionId);
+      const audit = await services.audit.getByResource('institution', institutionId);
       setAuditHistory(
         audit.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
       );

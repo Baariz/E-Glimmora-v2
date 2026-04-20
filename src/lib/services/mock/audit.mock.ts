@@ -223,21 +223,21 @@ export class MockAuditService extends BaseMockService implements IAuditService {
     this.setInStorage(this.STORAGE_KEY, events);
   }
 
-  getAll(): AuditEvent[] {
+  async getAll(): Promise<AuditEvent[]> {
     return this.getFromStorage<AuditEvent>(this.STORAGE_KEY);
   }
 
-  getByResource(resourceType: string, resourceId: string): AuditEvent[] {
+  async getByResource(resourceType: string, resourceId: string): Promise<AuditEvent[]> {
     const events = this.getFromStorage<AuditEvent>(this.STORAGE_KEY);
     return events.filter(e => e.resourceType === resourceType && e.resourceId === resourceId);
   }
 
-  getByUser(userId: string): AuditEvent[] {
+  async getByUser(userId: string): Promise<AuditEvent[]> {
     const events = this.getFromStorage<AuditEvent>(this.STORAGE_KEY);
     return events.filter(e => e.userId === userId);
   }
 
-  getByContext(context: DomainContext): AuditEvent[] {
+  async getByContext(context: DomainContext): Promise<AuditEvent[]> {
     const events = this.getFromStorage<AuditEvent>(this.STORAGE_KEY);
     return events.filter(e => e.context === context);
   }
@@ -245,7 +245,7 @@ export class MockAuditService extends BaseMockService implements IAuditService {
   /**
    * Anonymize all audit events for a user (GDPR compliance)
    */
-  anonymizeUser(userId: string): void {
+  async anonymizeUser(userId: string): Promise<void> {
     const events = this.getFromStorage<AuditEvent>(this.STORAGE_KEY);
     const anonymized = events.map(event =>
       event.userId === userId

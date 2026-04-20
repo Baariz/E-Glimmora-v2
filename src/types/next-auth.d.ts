@@ -9,6 +9,8 @@ declare module 'next-auth' {
       roles: UserRoles;
       mfaEnabled?: boolean;
       mfaVerified?: boolean;
+      institutionId?: string | null;
+      linkedUhniId?: string | null;
     } & DefaultSession['user'];
     apiToken?: string;
   }
@@ -18,6 +20,8 @@ declare module 'next-auth' {
     mfaEnabled?: boolean;
     mfaVerified?: boolean;
     apiToken?: string;
+    institutionId?: string | null;
+    linkedUhniId?: string | null;
   }
 }
 
@@ -28,5 +32,7 @@ declare module 'next-auth/jwt' {
     mfaEnabled?: boolean;
     mfaVerified?: boolean;
     apiToken?: string;
+    institutionId?: string | null;
+    linkedUhniId?: string | null;
   }
 }

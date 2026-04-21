@@ -9,7 +9,7 @@ import type {
   SystemMetrics,
   HealthTimePoint,
 } from '../interfaces/ISystemHealthService';
-import { api } from './client';
+import { api, ApiError } from './client';
 import { logger } from '@/lib/utils/logger';
 
 // ── Backend shapes ───────────────────────────────────────────────────
@@ -73,7 +73,22 @@ export class ApiSystemHealthService implements ISystemHealthService {
 
   async getHealthTimeline(hours = 24): Promise<HealthTimePoint[]> {
     logger.info('SystemHealth', 'getHealthTimeline', { hours });
-    const raw = await api.get<unknown>(`/api/system/health-history?hours=${hours}`);
-    return toList<ApiHealthPoint>(raw).map(toPoint);
+    try {
+      // Backend may not have the health-history endpoint deployed yet
+      // (Frontend_Integration_Guide.docx §4.12 describes it; /api/system/metrics
+      // exists, this one 404s). Flag 404 as expected so the shared client
+      // logs at warn level instead of spamming console.error.
+      const raw = await api.get<unknown>(
+        `/api/system/health-history?hours=${hours}`,
+        { silentStatuses: [404] }
+      );
+      return toList<ApiHealthPoint>(raw).map(toPoint);
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 404) {
+        logger.debug('SystemHealth', 'health-history not deployed — empty timeline');
+        return [];
+      }
+      throw err;
+    }
   }
 }

@@ -23,6 +23,7 @@ import { Card } from '@/components/shared/Card';
 import { useServices } from '@/lib/hooks/useServices';
 import type { SystemMetrics, HealthTimePoint } from '@/lib/services/interfaces/ISystemHealthService';
 import { toast } from 'sonner';
+import { logger } from '@/lib/utils/logger';
 
 /**
  * System Health Monitoring Page
@@ -34,26 +35,48 @@ export default function SystemHealthPage() {
   const [metrics, setMetrics] = useState<SystemMetrics | null>(null);
   const [timeline, setTimeline] = useState<HealthTimePoint[]>([]);
 
-  const loadHealthData = async () => {
-    setLoading(true);
-    try {
-      const [currentMetrics, healthTimeline] = await Promise.all([
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadHealthData = async () => {
+      setLoading(true);
+      logger.info('SystemHealth', 'page load start');
+      // Metrics and timeline are fetched independently so a missing timeline
+      // endpoint doesn't blank out the metrics tiles.
+      const [metricsResult, timelineResult] = await Promise.allSettled([
         services.systemHealth.getCurrentMetrics(),
         services.systemHealth.getHealthTimeline(24),
       ]);
-      setMetrics(currentMetrics);
-      setTimeline(healthTimeline);
-    } catch (error) {
-      console.error('Failed to load system health:', error);
-      toast.error('Failed to load system health data');
-    } finally {
-      setLoading(false);
-    }
-  };
+      if (cancelled) return;
 
-  useEffect(() => {
+      if (metricsResult.status === 'fulfilled') {
+        setMetrics(metricsResult.value);
+      } else {
+        logger.error('SystemHealth', 'metrics load failed', metricsResult.reason);
+        toast.error('Failed to load system metrics');
+      }
+
+      if (timelineResult.status === 'fulfilled') {
+        setTimeline(timelineResult.value);
+      } else {
+        logger.warn('SystemHealth', 'timeline unavailable', {
+          err: timelineResult.reason,
+        });
+      }
+
+      logger.info('SystemHealth', 'page load done', {
+        hasMetrics: metricsResult.status === 'fulfilled',
+        timelinePoints:
+          timelineResult.status === 'fulfilled' ? timelineResult.value.length : 0,
+      });
+      setLoading(false);
+    };
+
     loadHealthData();
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [services]);
 
   // Determine status color based on thresholds
   const getUptimeColor = (uptime: number) => {

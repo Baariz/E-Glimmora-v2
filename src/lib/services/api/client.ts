@@ -105,17 +105,28 @@ interface ApiResponse<T> {
   };
 }
 
+export interface ApiRequestOptions extends RequestInit {
+  /**
+   * Status codes the caller treats as expected (e.g. 404 on an endpoint
+   * the backend may not have deployed yet). These are logged at warn
+   * level instead of error, and still throw an ApiError so callers can
+   * catch and degrade gracefully.
+   */
+  silentStatuses?: number[];
+}
+
 /**
  * Make an authenticated API request to the backend.
  */
 export async function apiRequest<T>(
   path: string,
-  options: RequestInit = {}
+  options: ApiRequestOptions = {}
 ): Promise<T> {
+  const { silentStatuses, ...fetchOptions } = options;
   const token = await ensureAuthToken();
   const headers: Record<string, string> = {
     'Accept': 'application/json',
-    ...(options.headers as Record<string, string> || {}),
+    ...(fetchOptions.headers as Record<string, string> || {}),
   };
 
   if (token) {
@@ -123,7 +134,7 @@ export async function apiRequest<T>(
   }
 
   // Only set Content-Type for JSON bodies (not FormData)
-  if (options.body && !(options.body instanceof FormData)) {
+  if (fetchOptions.body && !(fetchOptions.body instanceof FormData)) {
     headers['Content-Type'] = 'application/json';
   }
 
@@ -133,13 +144,13 @@ export async function apiRequest<T>(
     ? path.replace('/api/', '/')
     : path;
   const url = `${API_BASE_URL}${adjustedPath}`;
-  const method = (options.method || 'GET').toUpperCase();
+  const method = (fetchOptions.method || 'GET').toUpperCase();
 
   const startedAt = logger.apiStart('API', method, path);
 
   let response: Response;
   try {
-    response = await fetch(url, { ...options, headers });
+    response = await fetch(url, { ...fetchOptions, headers });
   } catch (err) {
     logger.apiError('API', method, path, startedAt, err, { stage: 'network' });
     throw err;
@@ -169,10 +180,20 @@ export async function apiRequest<T>(
       status: response.status,
     };
     const apiErr = new ApiError(error.status || response.status, error.code, error.message);
-    logger.apiError('API', method, path, startedAt, apiErr, {
-      status: response.status,
-      code: error.code,
-    });
+    const expected = silentStatuses?.includes(response.status) ?? false;
+    if (expected) {
+      // Caller flagged this status as expected — drop to warn so devtools
+      // doesn't redline; still throw so the caller can fall back.
+      logger.warn('API', `${method} ${path} (${response.status} expected)`, {
+        status: response.status,
+        code: error.code,
+      });
+    } else {
+      logger.apiError('API', method, path, startedAt, apiErr, {
+        status: response.status,
+        code: error.code,
+      });
+    }
     throw apiErr;
   }
 
@@ -181,22 +202,29 @@ export async function apiRequest<T>(
 }
 
 /**
- * Convenience methods
+ * Convenience methods. Pass { silentStatuses: [404, ...] } when a non-2xx
+ * response is expected and shouldn't show as a red error in devtools.
  */
-export const api = {
-  get: <T>(path: string) => apiRequest<T>(path, { method: 'GET' }),
+type ReqOpts = Pick<ApiRequestOptions, 'silentStatuses'>;
 
-  post: <T>(path: string, body?: unknown) =>
+export const api = {
+  get: <T>(path: string, opts: ReqOpts = {}) =>
+    apiRequest<T>(path, { method: 'GET', ...opts }),
+
+  post: <T>(path: string, body?: unknown, opts: ReqOpts = {}) =>
     apiRequest<T>(path, {
       method: 'POST',
       body: body ? JSON.stringify(body) : undefined,
+      ...opts,
     }),
 
-  patch: <T>(path: string, body?: unknown) =>
+  patch: <T>(path: string, body?: unknown, opts: ReqOpts = {}) =>
     apiRequest<T>(path, {
       method: 'PATCH',
       body: body ? JSON.stringify(body) : undefined,
+      ...opts,
     }),
 
-  delete: <T>(path: string) => apiRequest<T>(path, { method: 'DELETE' }),
+  delete: <T>(path: string, opts: ReqOpts = {}) =>
+    apiRequest<T>(path, { method: 'DELETE', ...opts }),
 };

@@ -14,6 +14,7 @@ import { AviationDisruptionForecast } from '@/components/b2b/crisis/AviationDisr
 import { ExtractionProtocolList } from '@/components/b2b/crisis/ExtractionProtocolList';
 import { CrisisResources } from '@/components/b2b/crisis/CrisisResources';
 import type { AviationDisruption, ExtractionProtocol, SafeHouse, EmergencyContact } from '@/lib/types';
+import { logger } from '@/lib/utils/logger';
 
 export default function CrisisResponsePage() {
   const { can } = useCan();
@@ -25,29 +26,51 @@ export default function CrisisResponsePage() {
   const [safeHouses, setSafeHouses] = useState<SafeHouse[]>([]);
   const [contacts, setContacts] = useState<EmergencyContact[]>([]);
 
-  const loadData = async () => {
-    if (!currentUser) return;
-    setLoading(true);
-    try {
-      const [disruptionData, protocolData, safeHouseData, contactData] = await Promise.all([
-        services.crisis.getDisruptions(currentUser?.institutionId ?? ''),
-        services.crisis.getProtocols(currentUser?.institutionId ?? ''),
-        services.crisis.getSafeHouses(),
-        services.crisis.getEmergencyContacts(),
-      ]);
-      setDisruptions(disruptionData);
-      setProtocols(protocolData);
-      setSafeHouses(safeHouseData);
-      setContacts(contactData);
-    } catch (error) {
-      console.error('Failed to load crisis data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const userId = currentUser?.id;
+  const institutionId = currentUser?.institutionId ?? '';
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { loadData(); }, [currentUser]);
+  useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+
+    const loadData = async () => {
+      setLoading(true);
+      logger.info('Crisis', 'load start', { institutionId });
+      try {
+        const [disruptionData, protocolData, safeHouseData] = await Promise.all([
+          services.crisis.getDisruptions(institutionId),
+          services.crisis.getProtocols(institutionId),
+          services.crisis.getSafeHouses(),
+        ]);
+        if (cancelled) return;
+        setDisruptions(disruptionData);
+        setProtocols(protocolData);
+        setSafeHouses(safeHouseData);
+        // Emergency contacts live on the ExtractionProtocol objects per
+        // the Frontend Integration Guide §4.5; flatten + dedupe here.
+        const flattened = new Map<string, EmergencyContact>();
+        for (const p of protocolData) {
+          for (const c of p.emergencyContacts ?? []) flattened.set(c.id, c);
+        }
+        setContacts(Array.from(flattened.values()));
+        logger.info('Crisis', 'load done', {
+          disruptionCount: disruptionData.length,
+          protocolCount: protocolData.length,
+          safeHouseCount: safeHouseData.length,
+          contactCount: flattened.size,
+        });
+      } catch (error) {
+        if (!cancelled) logger.error('Crisis', 'load failed', error, { institutionId });
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    loadData();
+    return () => {
+      cancelled = true;
+    };
+  }, [services, userId, institutionId]);
 
   if (!can(Permission.READ, 'crisis')) {
     return (

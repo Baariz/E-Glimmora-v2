@@ -3,9 +3,13 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { format } from 'date-fns';
-import { ArrowRight, Shield, Mail, Archive, Sparkles, FileText, Loader2 } from 'lucide-react';
+import { ArrowRight, Shield, Mail, Archive, Sparkles, FileText, Loader2, Lock } from 'lucide-react';
 import { useServices } from '@/lib/hooks/useServices';
+import { useAuth } from '@/lib/hooks/useAuth';
+import { B2CRole } from '@/lib/types/roles';
 import type { UhniBriefing } from '@/lib/types/entities';
+import { ApiError } from '@/lib/services/api/client';
+import { logger } from '@/lib/utils/logger';
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -16,28 +20,80 @@ function getGreeting() {
 
 export default function BriefingPage() {
   const services = useServices();
+  const { currentRole, isLoading: authLoading } = useAuth();
   const [data, setData] = useState<UhniBriefing | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Frontend Integration Guide §7.3: Briefing is UHNI-only.
+  // Spouse / LegacyHeir should never reach this endpoint — they'd 403.
+  const isRestrictedRole =
+    currentRole === B2CRole.Spouse || currentRole === B2CRole.LegacyHeir;
+
   const load = async () => {
     setLoading(true);
     setError(null);
+    logger.info('Briefing', 'load start', { role: currentRole });
     try {
       const res = await services.briefing.getUhniBriefing();
       setData(res);
+      logger.info('Briefing', 'load done');
     } catch (err) {
-      console.error('Failed to load briefing', err);
-      setError(err instanceof Error ? err.message : 'Failed to load your briefing');
+      const isForbidden = err instanceof ApiError && err.status === 403;
+      logger.error('Briefing', 'load failed', err, {
+        role: currentRole,
+        status: err instanceof ApiError ? err.status : undefined,
+      });
+      setError(
+        isForbidden
+          ? 'Your role does not have access to this briefing.'
+          : err instanceof Error
+          ? err.message
+          : 'Failed to load your briefing'
+      );
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
+    // Wait for the session to resolve so we know the role before fetching.
+    if (authLoading) return;
+    if (isRestrictedRole) {
+      logger.info('Briefing', 'restricted role — skipping fetch', {
+        role: currentRole,
+      });
+      setLoading(false);
+      return;
+    }
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [authLoading, isRestrictedRole]);
+
+  // Restricted roles: never hit the endpoint, show a calm access panel.
+  if (isRestrictedRole) {
+    return (
+      <div className="max-w-2xl mx-auto px-6 py-20 text-center">
+        <div className="w-14 h-14 rounded-full bg-rose-50 border border-rose-200/60 flex items-center justify-center mx-auto mb-5">
+          <Lock className="w-6 h-6 text-rose-400" />
+        </div>
+        <h2 className="font-serif text-2xl text-stone-900 mb-3">
+          Reserved for the Account Holder
+        </h2>
+        <p className="text-stone-500 font-sans text-sm leading-[1.75] tracking-wide max-w-md mx-auto mb-7">
+          The daily briefing is visible only to the primary account holder. You
+          have access to shared journeys and memories.
+        </p>
+        <Link
+          href="/journeys"
+          className="inline-flex items-center gap-2 px-6 py-3 bg-rose-900 text-white font-sans text-sm font-medium rounded-full hover:bg-rose-800 transition-colors"
+        >
+          Go to Shared Journeys
+          <ArrowRight size={14} />
+        </Link>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

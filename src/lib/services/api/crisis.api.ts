@@ -301,16 +301,13 @@ export class ApiCrisisService implements ICrisisService {
     return toList<ApiSafeHouse>(raw).map(toSafeHouse);
   }
 
-  async getEmergencyContacts(region?: string): Promise<EmergencyContact[]> {
-    logger.info('Crisis', 'getEmergencyContacts', { region });
-    // Guide does not document this endpoint; fall back to empty list if missing.
-    try {
-      const qs = region ? `?region=${encodeURIComponent(region)}` : '';
-      const raw = await api.get<unknown>(`/api/crisis/emergency-contacts${qs}`);
-      return toList<ApiEmergencyContact>(raw).map(toEmergencyContact);
-    } catch (err) {
-      logger.warn('Crisis', 'getEmergencyContacts unavailable', { err });
-      return [];
-    }
+  async getEmergencyContacts(_region?: string): Promise<EmergencyContact[]> {
+    // The Frontend Integration Guide §4.5 lists no standalone emergency-contacts
+    // endpoint — contacts are surfaced via ExtractionProtocol.emergencyContacts
+    // instead. Calling /api/crisis/emergency-contacts consistently 404s, so we
+    // skip the request entirely and let callers merge contacts out of the
+    // already-loaded protocols.
+    logger.debug('Crisis', 'getEmergencyContacts skipped — not in spec');
+    return [];
   }
 }

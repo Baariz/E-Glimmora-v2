@@ -242,6 +242,7 @@ export default function JourneyDetailPage() {
             <PrivateConfirmation
               journeyTitle={journey.title}
               journeyId={journey.id}
+              preDepartureBrief={journey.preDepartureBrief}
               onConfirmed={handleRefreshJourney}
             />
           </motion.div>

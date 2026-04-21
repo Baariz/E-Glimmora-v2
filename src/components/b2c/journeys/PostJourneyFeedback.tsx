@@ -6,12 +6,13 @@
  * Simple, calm, unhurried — like a private journal entry
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, KeyboardEvent } from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles, Loader2 } from 'lucide-react';
+import { Sparkles, Loader2, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils/cn';
 import { useServices } from '@/lib/hooks/useServices';
+import { logger } from '@/lib/utils/logger';
 
 const MOODS = [
   { emoji: '\uD83D\uDE14', label: 'Disappointing', value: 1 },
@@ -32,6 +33,8 @@ export function PostJourneyFeedback({ journeyId, canSubmit = true, onSubmitted }
   const services = useServices();
   const [selectedMood, setSelectedMood] = useState<number | null>(null);
   const [reflection, setReflection] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagDraft, setTagDraft] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -44,10 +47,11 @@ export function PostJourneyFeedback({ journeyId, canSubmit = true, onSubmitted }
         if (!cancelled && existing) {
           setSelectedMood(existing.mood);
           setReflection(existing.reflection ?? '');
+          setTags(existing.emotionalTags ?? []);
           setSubmitted(true);
         }
       } catch (err) {
-        console.error('Failed to load existing feedback', err);
+        logger.warn('Feedback', 'load existing failed', { journeyId, err });
       } finally {
         if (!cancelled) setInitialLoading(false);
       }
@@ -55,25 +59,51 @@ export function PostJourneyFeedback({ journeyId, canSubmit = true, onSubmitted }
     return () => { cancelled = true; };
   }, [services, journeyId]);
 
+  const addTag = (raw: string) => {
+    const t = raw.trim().toLowerCase();
+    if (!t || tags.includes(t) || tags.length >= 8) return;
+    setTags((prev) => [...prev, t]);
+    setTagDraft('');
+  };
+
+  const removeTag = (t: string) => setTags((prev) => prev.filter((x) => x !== t));
+
+  const onTagKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      addTag(tagDraft);
+    } else if (e.key === 'Backspace' && !tagDraft && tags.length) {
+      setTags((prev) => prev.slice(0, -1));
+    }
+  };
+
   const handleSubmit = async () => {
     if (!selectedMood || !canSubmit) return;
     setSubmitting(true);
+    logger.action('Feedback', 'submit', {
+      journeyId,
+      mood: selectedMood,
+      tagCount: tags.length,
+    });
     try {
       await services.journey.submitFeedback(journeyId, {
         mood: selectedMood,
         reflection: reflection || undefined,
+        emotional_tags: tags.length ? tags : undefined,
       });
-      // State-machine transition: EXECUTED → ARCHIVED via SUBMIT_FEEDBACK
+      // Backend auto-archives on feedback submit for EXECUTED journeys (Phase 4 §4.1),
+      // but we still fire the explicit SUBMIT_FEEDBACK transition for mock-mode parity.
       try {
         await services.journey.transitionJourney(journeyId, 'SUBMIT_FEEDBACK');
       } catch (transitionErr) {
-        // If already archived, ignore
-        console.warn('SUBMIT_FEEDBACK transition skipped', transitionErr);
+        logger.debug('Feedback', 'transition skipped (likely auto-archived)', {
+          journeyId,
+        });
       }
       setSubmitted(true);
       onSubmitted?.();
     } catch (err) {
-      console.error('Failed to submit feedback', err);
+      logger.error('Feedback', 'submit failed', err, { journeyId });
       toast.error('Unable to submit your reflection. Please try again.');
     } finally {
       setSubmitting(false);
@@ -162,6 +192,40 @@ export function PostJourneyFeedback({ journeyId, canSubmit = true, onSubmitted }
           rows={3}
           className="w-full px-5 py-4 rounded-xl border border-sand-200/60 bg-sand-50 text-stone-700 font-sans text-sm placeholder-stone-300 resize-none focus:outline-none focus:ring-2 focus:ring-rose-300/50 focus:border-rose-300 transition-all leading-[1.8] tracking-wide"
         />
+      </div>
+
+      {/* Emotional tags (Phase 4 §4.1) */}
+      <div className="mb-7">
+        <label className="block text-[10px] font-sans uppercase tracking-[4px] text-stone-400 mb-2.5">
+          Emotional Tags <span className="text-stone-300 normal-case tracking-normal">(optional, up to 8)</span>
+        </label>
+        <div className="flex flex-wrap items-center gap-1.5 px-3 py-2 rounded-xl border border-sand-200/60 bg-sand-50 min-h-[44px]">
+          {tags.map((t) => (
+            <span
+              key={t}
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-50 border border-rose-200/60 text-rose-700 text-[11px] font-sans tracking-wide"
+            >
+              {t}
+              <button
+                type="button"
+                onClick={() => removeTag(t)}
+                className="text-rose-400 hover:text-rose-700"
+                aria-label={`Remove tag ${t}`}
+              >
+                <X size={10} />
+              </button>
+            </span>
+          ))}
+          <input
+            value={tagDraft}
+            onChange={(e) => setTagDraft(e.target.value)}
+            onKeyDown={onTagKeyDown}
+            onBlur={() => tagDraft && addTag(tagDraft)}
+            placeholder={tags.length ? '' : 'profound, stillness, gratitude...'}
+            disabled={tags.length >= 8}
+            className="flex-1 min-w-[120px] bg-transparent text-stone-700 font-sans text-sm placeholder-stone-300 focus:outline-none tracking-wide"
+          />
+        </div>
       </div>
 
       <button

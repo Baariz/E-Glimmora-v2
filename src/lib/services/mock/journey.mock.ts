@@ -406,4 +406,8 @@ export class MockJourneyService extends BaseMockService implements IJourneyServi
   async getFeedback(): Promise<null> {
     return null;
   }
+
+  async assignPackage(): Promise<Journey> {
+    throw new Error('assignPackage is not available in mock mode');
+  }
 }

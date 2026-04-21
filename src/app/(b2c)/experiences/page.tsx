@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils/cn';
 import { ArrowRight, MapPin, Moon, Sparkles, Loader2 } from 'lucide-react';
 import { IMAGES } from '@/lib/constants/imagery';
 import { ParallaxSection } from '@/components/ui/ParallaxSection';
+import { logger } from '@/lib/utils/logger';
 
 const HOTEL_IMAGES: Record<string, string> = {
   'hotel-001': IMAGES.heroVenice,
@@ -29,6 +30,7 @@ export default function ExperiencesPage() {
     (async () => {
       setLoading(true);
       setError(null);
+      logger.info('Experiences', 'load start');
       try {
         const pkgs = await services.package.getActivePackages();
         if (cancelled) return;
@@ -44,7 +46,12 @@ export default function ExperiencesPage() {
           if (h) map[h.id] = h;
         });
         setHotelMap(map);
-      } catch {
+        logger.info('Experiences', 'load done', {
+          packageCount: pkgs.length,
+          hotelCount: Object.keys(map).length,
+        });
+      } catch (err) {
+        logger.error('Experiences', 'load failed', err);
         if (!cancelled) setError('Unable to load experiences. Please try again.');
       } finally {
         if (!cancelled) setLoading(false);

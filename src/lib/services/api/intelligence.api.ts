@@ -95,23 +95,49 @@ async function request<T>(path: string, init: RequestInit): Promise<T> {
 
 export class ApiIntelligenceService implements IIntelligenceService {
   async scoreHotels(userId: string): Promise<HotelScoringResponse> {
-    return request<HotelScoringResponse>('/api/intelligence/hotel-scoring', {
-      method: 'POST',
-      body: JSON.stringify({ user_id: userId }),
+    logger.info('Intelligence', 'scoreHotels', { userId });
+    const resp = await request<HotelScoringResponse>(
+      '/api/intelligence/hotel-scoring',
+      {
+        method: 'POST',
+        body: JSON.stringify({ user_id: userId }),
+      },
+    );
+    logger.info('Intelligence', 'scoreHotels done', {
+      count: resp?.scores?.length ?? 0,
+      source: resp?.source,
     });
+    return resp;
   }
 
   async matchPackages(userId: string, hotelId?: string): Promise<PackageMatchingResponse> {
-    return request<PackageMatchingResponse>('/api/intelligence/package-matching', {
-      method: 'POST',
-      body: JSON.stringify(hotelId ? { user_id: userId, hotel_id: hotelId } : { user_id: userId }),
+    logger.info('Intelligence', 'matchPackages', { userId, hotelId });
+    const resp = await request<PackageMatchingResponse>(
+      '/api/intelligence/package-matching',
+      {
+        method: 'POST',
+        body: JSON.stringify(
+          hotelId ? { user_id: userId, hotel_id: hotelId } : { user_id: userId },
+        ),
+      },
+    );
+    logger.info('Intelligence', 'matchPackages done', {
+      count: resp?.matches?.length ?? 0,
+      source: resp?.source,
     });
+    return resp;
   }
 
   async getSuggestions(userId: string): Promise<JourneySuggestionsResponse> {
-    return request<JourneySuggestionsResponse>(
+    logger.info('Intelligence', 'getSuggestions', { userId });
+    const resp = await request<JourneySuggestionsResponse>(
       `/api/intelligence/suggestions/${encodeURIComponent(userId)}`,
       { method: 'GET' },
     );
+    logger.info('Intelligence', 'getSuggestions done', {
+      count: resp?.suggestions?.length ?? 0,
+      source: resp?.source,
+    });
+    return resp;
   }
 }

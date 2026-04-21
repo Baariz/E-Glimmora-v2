@@ -6,6 +6,7 @@
 import type { Hotel, HotelAmenity, HotelRegion, HotelTier } from '@/lib/types/entities';
 import type { IHotelService, HotelQuery } from '../interfaces/IHotelService';
 import { apiRequest } from './client';
+import { logger } from '@/lib/utils/logger';
 
 // ── Backend shape (snake_case) ───────────────────────────────────────────────
 
@@ -75,23 +76,34 @@ function toApiBody(data: Partial<Hotel>): Record<string, unknown> {
 
 export class ApiHotelService implements IHotelService {
   async getHotels(query?: HotelQuery): Promise<Hotel[]> {
+    logger.info('Hotels', 'getHotels', {
+      region: query?.region,
+      tier: query?.tier,
+      active: query?.active,
+    });
     const qs = new URLSearchParams();
+    if (query?.region) qs.set('region', query.region);
+    if (query?.tier) qs.set('tier', query.tier);
     if (query?.active !== undefined) qs.set('active', String(query.active));
     const suffix = qs.toString() ? `?${qs.toString()}` : '';
     const raw = await apiRequest<ApiHotel[]>(`/api/hotels${suffix}`, { method: 'GET' });
+    logger.info('Hotels', 'getHotels done', { count: raw.length });
     return raw.map(toHotel);
   }
 
   async getHotelById(id: string): Promise<Hotel | null> {
+    logger.info('Hotels', 'getHotelById', { id });
     try {
       const raw = await apiRequest<ApiHotel>(`/api/hotels/${id}`, { method: 'GET' });
       return toHotel(raw);
-    } catch {
+    } catch (err) {
+      logger.warn('Hotels', 'getHotelById not found', { id, err });
       return null;
     }
   }
 
   async createHotel(data: Partial<Hotel>): Promise<Hotel> {
+    logger.warn('Hotels', 'createHotel (admin)', { name: data.name, region: data.region });
     const raw = await apiRequest<ApiHotel>('/api/hotels', {
       method: 'POST',
       body: JSON.stringify(toApiBody(data)),
@@ -100,6 +112,7 @@ export class ApiHotelService implements IHotelService {
   }
 
   async updateHotel(id: string, data: Partial<Hotel>): Promise<Hotel> {
+    logger.info('Hotels', 'updateHotel', { id, fields: Object.keys(data) });
     const raw = await apiRequest<ApiHotel>(`/api/hotels/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(toApiBody(data)),
@@ -108,12 +121,15 @@ export class ApiHotelService implements IHotelService {
   }
 
   async deleteHotel(id: string): Promise<boolean> {
+    logger.warn('Hotels', 'deleteHotel (hard delete — prefer toggleActive)', { id });
     await apiRequest(`/api/hotels/${id}`, { method: 'DELETE' });
     return true;
   }
 
   async toggleActive(id: string): Promise<Hotel> {
+    logger.info('Hotels', 'toggleActive', { id });
     const raw = await apiRequest<ApiHotel>(`/api/hotels/${id}/toggle-active`, { method: 'POST' });
+    logger.info('Hotels', 'toggleActive done', { id, isActive: raw.is_active });
     return toHotel(raw);
   }
 }

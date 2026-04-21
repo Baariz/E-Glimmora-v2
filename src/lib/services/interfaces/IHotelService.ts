@@ -5,7 +5,13 @@
 
 import { Hotel } from '@/lib/types/entities';
 
+/**
+ * Hotel list filters per Hotels/Packages Frontend Integration Guide §4.1.
+ * All query params are optional.
+ */
 export interface HotelQuery {
+  region?: string;
+  tier?: string;
   active?: boolean;
 }
 

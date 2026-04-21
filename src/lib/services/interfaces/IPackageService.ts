@@ -5,8 +5,14 @@
 
 import { Package } from '@/lib/types/entities';
 
+/**
+ * Package list filters per Hotels/Packages Frontend Integration Guide §5.1.
+ * All query params are optional.
+ */
 export interface PackageQuery {
   hotel_id?: string;
+  category?: string;
+  region?: string;
   active?: boolean;
 }
 

@@ -6,6 +6,7 @@
 import type { Package, ItineraryDay, HotelRegion } from '@/lib/types/entities';
 import type { IPackageService, PackageQuery } from '../interfaces/IPackageService';
 import { apiRequest } from './client';
+import { logger } from '@/lib/utils/logger';
 
 // ── Backend shape (snake_case) ───────────────────────────────────────────────
 
@@ -69,29 +70,47 @@ function toApiBody(data: Partial<Package>): Record<string, unknown> {
 
 export class ApiPackageService implements IPackageService {
   async getPackages(query?: PackageQuery): Promise<Package[]> {
+    logger.info('Packages', 'getPackages', {
+      hotel_id: query?.hotel_id,
+      category: query?.category,
+      region: query?.region,
+      active: query?.active,
+    });
     const qs = new URLSearchParams();
     if (query?.hotel_id) qs.set('hotel_id', query.hotel_id);
+    if (query?.category) qs.set('category', query.category);
+    if (query?.region) qs.set('region', query.region);
     if (query?.active !== undefined) qs.set('active', String(query.active));
     const suffix = qs.toString() ? `?${qs.toString()}` : '';
     const raw = await apiRequest<ApiPackage[]>(`/api/packages${suffix}`, { method: 'GET' });
+    logger.info('Packages', 'getPackages done', { count: raw.length });
     return raw.map(toPackage);
   }
 
   async getActivePackages(): Promise<Package[]> {
+    logger.info('Packages', 'getActivePackages');
     const raw = await apiRequest<ApiPackage[]>('/api/packages?active=true', { method: 'GET' });
     return raw.map(toPackage).filter((p) => p.isActive);
   }
 
   async getPackageById(id: string): Promise<Package | null> {
+    logger.info('Packages', 'getPackageById', { id });
     try {
       const raw = await apiRequest<ApiPackage>(`/api/packages/${id}`, { method: 'GET' });
       return toPackage(raw);
-    } catch {
+    } catch (err) {
+      logger.warn('Packages', 'getPackageById not found', { id, err });
       return null;
     }
   }
 
   async createPackage(data: Partial<Package>): Promise<Package> {
+    logger.warn('Packages', 'createPackage (admin)', {
+      name: data.name,
+      hotelId: data.hotelId,
+      category: data.category,
+      itineraryDays: data.itinerary?.length ?? 0,
+    });
     const raw = await apiRequest<ApiPackage>('/api/packages', {
       method: 'POST',
       body: JSON.stringify(toApiBody(data)),
@@ -100,6 +119,7 @@ export class ApiPackageService implements IPackageService {
   }
 
   async updatePackage(id: string, data: Partial<Package>): Promise<Package> {
+    logger.info('Packages', 'updatePackage', { id, fields: Object.keys(data) });
     const raw = await apiRequest<ApiPackage>(`/api/packages/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(toApiBody(data)),
@@ -108,12 +128,15 @@ export class ApiPackageService implements IPackageService {
   }
 
   async deletePackage(id: string): Promise<boolean> {
+    logger.warn('Packages', 'deletePackage (hard delete — prefer toggleActive)', { id });
     await apiRequest(`/api/packages/${id}`, { method: 'DELETE' });
     return true;
   }
 
   async toggleActive(id: string): Promise<Package> {
+    logger.info('Packages', 'toggleActive', { id });
     const raw = await apiRequest<ApiPackage>(`/api/packages/${id}/toggle-active`, { method: 'POST' });
+    logger.info('Packages', 'toggleActive done', { id, isActive: raw.is_active });
     return toPackage(raw);
   }
 }

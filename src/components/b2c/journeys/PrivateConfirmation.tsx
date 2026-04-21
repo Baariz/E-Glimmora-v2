@@ -9,20 +9,31 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Lock, CheckCircle, Landmark, KeyRound } from 'lucide-react';
+import { Shield, Lock, CheckCircle, Landmark, KeyRound, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 import { useServices } from '@/lib/hooks/useServices';
-import { JourneyStatus } from '@/lib/types/entities';
+import { JourneyStatus, type PreDepartureBrief } from '@/lib/types/entities';
+import { logger } from '@/lib/utils/logger';
 
 type ConfirmationMethod = 'wealth_account' | 'secure_link' | null;
 
 interface PrivateConfirmationProps {
   journeyTitle: string;
   journeyId: string;
+  /**
+   * Pre-departure brief from the journey. Phase 4 §6 — UHNI may see
+   * `summary` and `logistics`, but NEVER `advisorNotes`.
+   */
+  preDepartureBrief?: PreDepartureBrief | null;
   onConfirmed?: () => void;
 }
 
-export function PrivateConfirmation({ journeyTitle, journeyId, onConfirmed }: PrivateConfirmationProps) {
+export function PrivateConfirmation({
+  journeyTitle,
+  journeyId,
+  preDepartureBrief,
+  onConfirmed,
+}: PrivateConfirmationProps) {
   const services = useServices();
   const [method, setMethod] = useState<ConfirmationMethod>(null);
   const [confirmed, setConfirmed] = useState(false);
@@ -31,23 +42,31 @@ export function PrivateConfirmation({ journeyTitle, journeyId, onConfirmed }: Pr
   const handleConfirm = async () => {
     if (!method) return;
     setIsProcessing(true);
+    logger.action('PrivateConfirmation', 'confirm journey', { journeyId, method });
 
     // Simulate payment processing delay — 1.5 seconds for demo feel
     await new Promise(resolve => setTimeout(resolve, 1500));
 
     try {
-      // Move journey to EXECUTED after payment confirmed
+      // Move journey to EXECUTED after payment confirmed (Phase 4 Step 7)
       await services.journey.updateJourney(journeyId, {
         status: JourneyStatus.EXECUTED,
       });
     } catch (error) {
-      console.error('Failed to update journey status:', error);
+      logger.error('PrivateConfirmation', 'status update failed', error, { journeyId });
     }
 
     setIsProcessing(false);
     setConfirmed(true);
     onConfirmed?.();
   };
+
+  // Safe logistics extraction — Phase 4 §10: UHNI may see summary + transfer/duration/contact.
+  const logistics = preDepartureBrief?.logistics as
+    | { transfer?: string; duration?: string; contact?: string }
+    | null
+    | undefined;
+  const hasBrief = Boolean(preDepartureBrief?.summary);
 
   if (confirmed) {
     return (
@@ -91,6 +110,56 @@ export function PrivateConfirmation({ journeyTitle, journeyId, onConfirmed }: Pr
           Your experience has been secured. A private confirmation is all that remains.
         </p>
       </div>
+
+      {/* Pre-Departure Brief (Phase 4 §6) — UHNI sees summary + logistics only. */}
+      {hasBrief && (
+        <div className="px-7 sm:px-8 py-6 border-b border-sand-200/60 bg-gradient-to-br from-rose-50/30 to-amber-50/20">
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+            <p className="text-amber-600 text-[10px] font-sans uppercase tracking-[4px]">
+              Your Experience Brief
+            </p>
+          </div>
+          <p className="text-stone-700 font-sans text-sm leading-[1.75] tracking-wide whitespace-pre-wrap mb-4">
+            {preDepartureBrief!.summary}
+          </p>
+
+          {logistics && (logistics.transfer || logistics.duration || logistics.contact) && (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-sand-200/40">
+              {logistics.transfer && (
+                <div>
+                  <p className="text-[9px] text-stone-400 uppercase tracking-[3px] font-sans mb-1">
+                    Transfer
+                  </p>
+                  <p className="text-stone-700 font-sans text-xs leading-relaxed">
+                    {logistics.transfer}
+                  </p>
+                </div>
+              )}
+              {logistics.duration && (
+                <div>
+                  <p className="text-[9px] text-stone-400 uppercase tracking-[3px] font-sans mb-1">
+                    Duration
+                  </p>
+                  <p className="text-stone-700 font-sans text-xs leading-relaxed">
+                    {logistics.duration}
+                  </p>
+                </div>
+              )}
+              {logistics.contact && (
+                <div>
+                  <p className="text-[9px] text-stone-400 uppercase tracking-[3px] font-sans mb-1">
+                    Contact
+                  </p>
+                  <p className="text-stone-700 font-sans text-xs leading-relaxed">
+                    {logistics.contact}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Content */}
       <div className="px-7 sm:px-8 py-7 sm:py-8">

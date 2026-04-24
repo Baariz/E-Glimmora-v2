@@ -1,10 +1,11 @@
 /**
  * Real API InviteCode Service
- * Implements IInviteCodeService against the Elan Glimmora backend API
+ * Implements IInviteCodeService against the Elan Glimmora backend API.
+ * See FRONTEND_EMAIL_INTEGRATION.docx §3.1, §4.1 for recipient_email/resend.
  */
 
-import type { InviteCode, CreateInviteCodeInput } from '@/lib/types';
-import type { IInviteCodeService } from '../interfaces/IInviteCodeService';
+import type { InviteCode, CreateInviteCodeInput, ResendInviteInput } from '@/lib/types';
+import type { IInviteCodeService, ResendInviteResult } from '../interfaces/IInviteCodeService';
 import { api } from './client';
 
 /** Shape returned by the backend */
@@ -71,10 +72,32 @@ export class ApiInviteCodeService implements IInviteCodeService {
       created_by: data.createdBy,
       assigned_roles: data.assignedRoles,
       institution_id: data.institutionId || null,
+      linked_uhni_id: data.linkedUhniId || null,
       max_uses: data.maxUses,
       expires_at: data.expiresAt || null,
+      recipient_email: data.recipientEmail || null,
+      recipient_name: data.recipientName || null,
     });
     return toInviteCode(raw);
+  }
+
+  async resendInvite(
+    id: string,
+    input: ResendInviteInput
+  ): Promise<ResendInviteResult> {
+    const raw = await api.post<{
+      resent: boolean;
+      delivered: boolean;
+      invite: ApiInviteCode;
+    }>(`/api/invites/${id}/resend`, {
+      recipient_email: input.recipientEmail,
+      recipient_name: input.recipientName || null,
+    });
+    return {
+      resent: !!raw.resent,
+      delivered: !!raw.delivered,
+      invite: toInviteCode(raw.invite),
+    };
   }
 
   async updateInviteCode(id: string, data: Partial<InviteCode>): Promise<InviteCode> {

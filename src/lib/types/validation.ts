@@ -170,11 +170,32 @@ export const CreateInviteCodeSchema = z.object({
     admin: z.enum(['SuperAdmin']).optional()
   }),
   institutionId: z.string().uuid().optional(),
+  linkedUhniId: z.string().uuid().optional(),
   maxUses: z.number().min(1),
-  expiresAt: z.string().datetime().optional()
+  expiresAt: z.string().datetime().optional(),
+  recipientEmail: z.string().email('Invalid recipient email').optional(),
+  recipientName: z.string().min(1).max(120).optional(),
 });
 
 export type CreateInviteCodeInput = z.infer<typeof CreateInviteCodeSchema>;
+
+export const ResendInviteSchema = z.object({
+  recipientEmail: z.string().email('Invalid recipient email'),
+  recipientName: z.string().min(1).max(120).optional(),
+});
+
+export type ResendInviteInput = z.infer<typeof ResendInviteSchema>;
+
+export const CreatePredictiveAlertSchema = z.object({
+  clientId: z.string().uuid('Invalid client ID'),
+  institutionId: z.string().uuid('Invalid institution ID'),
+  type: z.enum(['travel_fatigue', 'family_drift']),
+  severity: z.enum(['low', 'medium', 'high', 'critical']),
+  confidence: z.number().int().min(0).max(100).optional(),
+  actionRequired: z.string().min(1).max(2000).optional(),
+});
+
+export type CreatePredictiveAlertInput = z.infer<typeof CreatePredictiveAlertSchema>;
 
 // ============================================================================
 // Client Record Schemas

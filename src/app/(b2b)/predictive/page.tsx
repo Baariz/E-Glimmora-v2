@@ -7,12 +7,13 @@ import { useCan } from '@/lib/rbac/usePermission';
 import { Permission } from '@/lib/types/permissions';
 import { useServices } from '@/lib/hooks/useServices';
 import { useCurrentUser } from '@/lib/hooks/useCurrentUser';
-import { Shield } from 'lucide-react';
+import { Plus, Shield } from 'lucide-react';
 import { StatsRow, StatCard } from '@/components/b2b/layouts/StatsRow';
 import { TravelFatigueDashboard } from '@/components/b2b/intelligence/TravelFatigueDashboard';
 import { FamilyAlignmentDashboard } from '@/components/b2b/intelligence/FamilyAlignmentDashboard';
 import { PredictiveAlertsList } from '@/components/b2b/intelligence/PredictiveAlertsList';
 import { PredictiveTrends } from '@/components/b2b/intelligence/PredictiveTrends';
+import { CreatePredictiveAlertModal } from '@/components/b2b/intelligence/CreatePredictiveAlertModal';
 import type { TravelFatigueAssessment, FamilyAlignmentAssessment, PredictiveAlert } from '@/lib/types';
 
 export default function PredictiveIntelligencePage() {
@@ -23,6 +24,7 @@ export default function PredictiveIntelligencePage() {
   const [fatigueData, setFatigueData] = useState<TravelFatigueAssessment[]>([]);
   const [alignmentData, setAlignmentData] = useState<FamilyAlignmentAssessment[]>([]);
   const [alerts, setAlerts] = useState<PredictiveAlert[]>([]);
+  const [createAlertOpen, setCreateAlertOpen] = useState(false);
 
   const loadData = async () => {
     if (!currentUser) return;
@@ -87,13 +89,26 @@ export default function PredictiveIntelligencePage() {
     { value: 'trends', label: 'Trends', content: <PredictiveTrends fatigueAssessments={fatigueData} alignmentAssessments={alignmentData} /> },
   ];
 
+  const canCreateAlert = can(Permission.WRITE, 'predictive');
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-serif text-slate-900">Predictive Intelligence</h1>
-        <p className="text-sm font-sans text-slate-600 mt-1">
-          Travel fatigue detection, family alignment monitoring, and predictive alerts
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-serif text-slate-900">Predictive Intelligence</h1>
+          <p className="text-sm font-sans text-slate-600 mt-1">
+            Travel fatigue detection, family alignment monitoring, and predictive alerts
+          </p>
+        </div>
+        {canCreateAlert && (
+          <button
+            onClick={() => setCreateAlertOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-rose-600 text-white text-sm font-sans rounded-md hover:bg-rose-700 transition-colors shadow-sm"
+          >
+            <Plus size={16} />
+            Create Alert
+          </button>
+        )}
       </div>
 
       {loading ? (
@@ -106,6 +121,12 @@ export default function PredictiveIntelligencePage() {
           </Card>
         </>
       )}
+
+      <CreatePredictiveAlertModal
+        open={createAlertOpen}
+        onOpenChange={setCreateAlertOpen}
+        onCreated={loadData}
+      />
     </div>
   );
 }

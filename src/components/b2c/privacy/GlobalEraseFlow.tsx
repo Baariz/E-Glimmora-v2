@@ -247,7 +247,7 @@ export function GlobalEraseFlow({ userId }: GlobalEraseFlowProps) {
           </motion.div>
         )}
 
-        {/* Complete State */}
+        {/* Complete State — FRONTEND_EMAIL_INTEGRATION §4.8 */}
         {currentStep === 'complete' && (
           <motion.div
             key="complete"
@@ -259,9 +259,11 @@ export function GlobalEraseFlow({ userId }: GlobalEraseFlowProps) {
             <div className="w-16 h-16 bg-emerald-50 border border-emerald-200/60 rounded-full flex items-center justify-center mx-auto mb-5">
               <Check size={24} className="text-emerald-600" />
             </div>
-            <h3 className="font-serif text-2xl text-stone-900 mb-2">Data Erased</h3>
-            <p className="text-stone-400 font-sans text-sm tracking-wide">
-              All your data has been permanently deleted. You will be logged out shortly.
+            <h3 className="font-serif text-2xl text-stone-900 mb-2">Your data has been erased</h3>
+            <p className="text-stone-500 font-sans text-sm tracking-wide max-w-sm mx-auto leading-[1.7]">
+              All your personal data has been permanently deleted. A final
+              confirmation email has been sent to your address. You will be
+              logged out shortly.
             </p>
           </motion.div>
         )}

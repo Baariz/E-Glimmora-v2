@@ -1,18 +1,22 @@
 'use client'
 
+import { useState } from 'react'
 import { formatDistanceToNow } from 'date-fns'
-import { Copy, XCircle } from 'lucide-react'
+import { Copy, Send, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { useServices } from '@/lib/hooks/useServices'
 import type { InviteCode } from '@/lib/types'
 import { StatusBadge } from '@/components/b2b/layouts/StatusBadge'
+import { ResendInviteModal } from './ResendInviteModal'
 
 interface InviteCodeDetailProps {
   inviteCode: InviteCode
   onRevoke?: () => void
+  onResent?: () => void
 }
 
-export function InviteCodeDetail({ inviteCode, onRevoke }: InviteCodeDetailProps) {
+export function InviteCodeDetail({ inviteCode, onRevoke, onResent }: InviteCodeDetailProps) {
+  const [resendOpen, setResendOpen] = useState(false)
   const services = useServices()
 
   const handleCopyCode = async () => {
@@ -146,6 +150,17 @@ export function InviteCodeDetail({ inviteCode, onRevoke }: InviteCodeDetailProps
       {/* Actions */}
       {inviteCode.status === 'active' && (
         <div className="flex gap-3 pt-4 border-t border-gray-200">
+          {inviteCode.usedCount < inviteCode.maxUses &&
+            (!inviteCode.expiresAt ||
+              new Date(inviteCode.expiresAt).getTime() > Date.now()) && (
+              <button
+                onClick={() => setResendOpen(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-sm font-sans rounded-md hover:bg-gray-800 transition-colors"
+              >
+                <Send size={16} />
+                Resend Invitation
+              </button>
+            )}
           <button
             onClick={handleRevoke}
             className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white text-sm font-sans rounded-md hover:bg-red-700 transition-colors"
@@ -155,6 +170,13 @@ export function InviteCodeDetail({ inviteCode, onRevoke }: InviteCodeDetailProps
           </button>
         </div>
       )}
+
+      <ResendInviteModal
+        open={resendOpen}
+        onOpenChange={setResendOpen}
+        invite={inviteCode}
+        onResent={onResent}
+      />
     </div>
   )
 }

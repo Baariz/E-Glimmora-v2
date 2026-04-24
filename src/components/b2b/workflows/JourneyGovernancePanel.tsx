@@ -97,7 +97,30 @@ export function JourneyGovernancePanel({ journey, onStateChange }: JourneyGovern
         },
       });
 
-      toast.success(`Journey ${getTransitionLabel(event).toLowerCase()} successfully`);
+      // FRONTEND_EMAIL_INTEGRATION §4.4 — surface what the backend emailer
+      // does so users know who's been notified.
+      const successMessage = (() => {
+        switch (event) {
+          case 'SUBMIT_FOR_REVIEW':
+            return 'Submitted for review. Approvers notified.';
+          case 'APPROVE':
+            // Compliance APPROVE → APPROVED (no email); RM APPROVE → COMPLIANCE_REVIEW (compliance notified).
+            return nextState === JourneyStatus.COMPLIANCE_REVIEW
+              ? 'Approved. Compliance team notified.'
+              : 'Approved successfully.';
+          case 'PRESENT_TO_CLIENT':
+            return 'Presented to client. Notification sent.';
+          case 'BEGIN_EXECUTION':
+            return 'Journey activated. Confirmation sent to client and team.';
+          case 'REQUEST_CHANGES':
+            return 'Changes requested. Author notified.';
+          case 'REJECT':
+            return 'Rejected. Author notified.';
+          default:
+            return `Journey ${getTransitionLabel(event).toLowerCase()} successfully`;
+        }
+      })();
+      toast.success(successMessage);
       onStateChange();
     } catch (error) {
       console.error('Failed to execute transition:', error);

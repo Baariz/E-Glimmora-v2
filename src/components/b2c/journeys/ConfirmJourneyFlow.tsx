@@ -11,6 +11,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, X, Sparkles } from 'lucide-react';
+import { toast } from 'sonner';
 
 import { useServices } from '@/lib/hooks/useServices';
 import { useCurrentUser } from '@/lib/hooks/useCurrentUser';
@@ -59,6 +60,10 @@ export function ConfirmJourneyFlow({
 
       // Create system messages in all threads linked to this journey (COLB-04)
       await createSystemMessagesForJourney(journey.id, JourneyStatus.APPROVED);
+
+      // FRONTEND_EMAIL_INTEGRATION §4.4b — backend sends client-facing email
+      // to UHNI + Spouse + LegacyHeir on PRESENTED transition.
+      toast.success('Presented to client. Notification sent.');
 
       // Show success state
       setShowSuccess(true);

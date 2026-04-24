@@ -4,8 +4,8 @@
  */
 
 import { BaseMockService } from './base.mock';
-import { IInviteCodeService } from '../interfaces/IInviteCodeService';
-import { InviteCode, CreateInviteCodeInput, B2CRole, B2BRole, AdminRole } from '@/lib/types';
+import { IInviteCodeService, ResendInviteResult } from '../interfaces/IInviteCodeService';
+import { InviteCode, CreateInviteCodeInput, ResendInviteInput, B2CRole, B2BRole, AdminRole } from '@/lib/types';
 
 export class MockInviteCodeService extends BaseMockService implements IInviteCodeService {
   private readonly STORAGE_KEY = 'invite_codes';
@@ -301,5 +301,16 @@ export class MockInviteCodeService extends BaseMockService implements IInviteCod
     this.saveCodes(codes);
 
     return code;
+  }
+
+  async resendInvite(id: string, _input: ResendInviteInput): Promise<ResendInviteResult> {
+    await this.delay();
+    const codes = this.getCodes();
+    const found = codes.find(c => c.id === id);
+    if (!found) throw new Error(`Invite code ${id} not found`);
+    if (found.status !== 'active' || found.usedCount >= found.maxUses) {
+      throw new Error('Invite is no longer active');
+    }
+    return { resent: true, delivered: false, invite: found };
   }
 }

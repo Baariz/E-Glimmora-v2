@@ -160,6 +160,19 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
           queryKey: ['predictive', 'alerts'],
         });
       },
+
+      [WS_EVENTS.PREDICTIVE_ALERT_CREATED]: ({ severity, type }) => {
+        if (!isAdvisor) {
+          logger.debug('Predictive', 'alert created dropped — non-advisor');
+          return;
+        }
+        logger.info('Predictive', 'alert created', { severity, type });
+        queryClient.invalidateQueries({
+          queryKey: ['predictive', 'alerts'],
+        });
+        const kind = type === 'travel_fatigue' ? 'Travel fatigue' : 'Family alignment';
+        toast(`New ${severity} alert: ${kind}`);
+      },
     }),
     [queryClient, isAdvisor, currentUserId]
   );

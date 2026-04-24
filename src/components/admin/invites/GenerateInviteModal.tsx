@@ -28,6 +28,11 @@ export function GenerateInviteModal({ open, onOpenChange, onSuccess }: GenerateI
   const [maxUses, setMaxUses] = useState(1)
   const [expiresIn, setExpiresIn] = useState<string>('30')
   const [institutionId, setInstitutionId] = useState('')
+  // FRONTEND_EMAIL_INTEGRATION §3.1 — optional recipient fields
+  const [recipientEmail, setRecipientEmail] = useState('')
+  const [recipientName, setRecipientName] = useState('')
+  const [sendEmail, setSendEmail] = useState(true)
+  const [sentTo, setSentTo] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -53,6 +58,10 @@ export function GenerateInviteModal({ open, onOpenChange, onSuccess }: GenerateI
         assignedRoles = { admin: 'SuperAdmin' }
       }
 
+      const trimmedEmail = recipientEmail.trim()
+      const trimmedName = recipientName.trim()
+      const willSendEmail = sendEmail && trimmedEmail.length > 0
+
       const inviteCode = await services.inviteCode.createInviteCode({
         type: inviteType,
         createdBy: currentUser?.id ?? '',
@@ -60,10 +69,18 @@ export function GenerateInviteModal({ open, onOpenChange, onSuccess }: GenerateI
         maxUses,
         expiresAt,
         institutionId: inviteType === 'b2b' && institutionId ? institutionId : undefined,
+        recipientEmail: willSendEmail ? trimmedEmail : undefined,
+        recipientName: willSendEmail && trimmedName ? trimmedName : undefined,
       })
 
       setGeneratedCode(inviteCode.code)
-      toast.success('Invite code generated successfully')
+      setSentTo(willSendEmail ? trimmedEmail : null)
+      // Email is best-effort — don't claim delivery success.
+      toast.success(
+        willSendEmail
+          ? `Invitation created. We've sent it to ${trimmedEmail}.`
+          : `Invitation created. Code: ${inviteCode.code}`
+      )
     } catch (error) {
       console.error('Failed to generate invite code:', error)
       toast.error('Failed to generate invite code')
@@ -85,11 +102,15 @@ export function GenerateInviteModal({ open, onOpenChange, onSuccess }: GenerateI
 
   const handleClose = () => {
     setGeneratedCode(null)
+    setSentTo(null)
     setInviteType('b2c')
     setB2bRole(B2BRole.RelationshipManager)
     setMaxUses(1)
     setExpiresIn('30')
     setInstitutionId('')
+    setRecipientEmail('')
+    setRecipientName('')
+    setSendEmail(true)
     onOpenChange(false)
     if (generatedCode && onSuccess) {
       onSuccess()
@@ -110,6 +131,12 @@ export function GenerateInviteModal({ open, onOpenChange, onSuccess }: GenerateI
       {generatedCode ? (
         // Success view
         <div className="space-y-6">
+          {sentTo && (
+            <div className="px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-md text-sm font-sans text-emerald-800">
+              We&apos;ve sent the invitation to <strong>{sentTo}</strong>. Email
+              delivery is best-effort — share the code below as a fallback.
+            </div>
+          )}
           <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
             <p className="text-xs font-sans text-gray-600 mb-2 uppercase tracking-wide">
               Invite Code
@@ -223,6 +250,51 @@ export function GenerateInviteModal({ open, onOpenChange, onSuccess }: GenerateI
               <option value="90">90 days</option>
               <option value="never">Never</option>
             </select>
+          </div>
+
+          {/* Email delivery (FRONTEND_EMAIL_INTEGRATION §3.1) */}
+          <div className="rounded-md border border-gray-200 bg-gray-50/50 p-4 space-y-3">
+            <label className="flex items-center gap-2 text-sm font-sans text-gray-700">
+              <input
+                type="checkbox"
+                checked={sendEmail}
+                onChange={(e) => setSendEmail(e.target.checked)}
+                className="rounded border-gray-300"
+              />
+              Send the invite by email
+            </label>
+            {sendEmail && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-sans font-medium text-gray-700 mb-1.5">
+                    Recipient Email
+                  </label>
+                  <input
+                    type="email"
+                    value={recipientEmail}
+                    onChange={(e) => setRecipientEmail(e.target.value)}
+                    placeholder="robert@privatebank.com"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md font-sans text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-sans font-medium text-gray-700 mb-1.5">
+                    Recipient Name <span className="text-gray-400">(optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={recipientName}
+                    onChange={(e) => setRecipientName(e.target.value)}
+                    placeholder="Robert Chambers"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md font-sans text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+            )}
+            <p className="text-xs font-sans text-gray-500">
+              Leave email blank to skip sending — the code is always shown so you
+              can share it manually.
+            </p>
           </div>
 
           {/* Actions */}

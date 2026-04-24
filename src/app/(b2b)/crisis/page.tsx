@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Card } from '@/components/shared/Card';
 import { Tabs } from '@/components/shared/Tabs';
 import { useCan } from '@/lib/rbac/usePermission';
@@ -29,48 +29,42 @@ export default function CrisisResponsePage() {
   const userId = currentUser?.id;
   const institutionId = currentUser?.institutionId ?? '';
 
-  useEffect(() => {
+  const loadCrisisData = useCallback(async () => {
     if (!userId) return;
-    let cancelled = false;
-
-    const loadData = async () => {
-      setLoading(true);
-      logger.info('Crisis', 'load start', { institutionId });
-      try {
-        const [disruptionData, protocolData, safeHouseData] = await Promise.all([
-          services.crisis.getDisruptions(institutionId),
-          services.crisis.getProtocols(institutionId),
-          services.crisis.getSafeHouses(),
-        ]);
-        if (cancelled) return;
-        setDisruptions(disruptionData);
-        setProtocols(protocolData);
-        setSafeHouses(safeHouseData);
-        // Emergency contacts live on the ExtractionProtocol objects per
-        // the Frontend Integration Guide §4.5; flatten + dedupe here.
-        const flattened = new Map<string, EmergencyContact>();
-        for (const p of protocolData) {
-          for (const c of p.emergencyContacts ?? []) flattened.set(c.id, c);
-        }
-        setContacts(Array.from(flattened.values()));
-        logger.info('Crisis', 'load done', {
-          disruptionCount: disruptionData.length,
-          protocolCount: protocolData.length,
-          safeHouseCount: safeHouseData.length,
-          contactCount: flattened.size,
-        });
-      } catch (error) {
-        if (!cancelled) logger.error('Crisis', 'load failed', error, { institutionId });
-      } finally {
-        if (!cancelled) setLoading(false);
+    setLoading(true);
+    logger.info('Crisis', 'load start', { institutionId });
+    try {
+      const [disruptionData, protocolData, safeHouseData] = await Promise.all([
+        services.crisis.getDisruptions(institutionId),
+        services.crisis.getProtocols(institutionId),
+        services.crisis.getSafeHouses(),
+      ]);
+      setDisruptions(disruptionData);
+      setProtocols(protocolData);
+      setSafeHouses(safeHouseData);
+      // Emergency contacts live on the ExtractionProtocol objects per
+      // the Frontend Integration Guide §4.5; flatten + dedupe here.
+      const flattened = new Map<string, EmergencyContact>();
+      for (const p of protocolData) {
+        for (const c of p.emergencyContacts ?? []) flattened.set(c.id, c);
       }
-    };
-
-    loadData();
-    return () => {
-      cancelled = true;
-    };
+      setContacts(Array.from(flattened.values()));
+      logger.info('Crisis', 'load done', {
+        disruptionCount: disruptionData.length,
+        protocolCount: protocolData.length,
+        safeHouseCount: safeHouseData.length,
+        contactCount: flattened.size,
+      });
+    } catch (error) {
+      logger.error('Crisis', 'load failed', error, { institutionId });
+    } finally {
+      setLoading(false);
+    }
   }, [services, userId, institutionId]);
+
+  useEffect(() => {
+    void loadCrisisData();
+  }, [loadCrisisData]);
 
   if (!can(Permission.READ, 'crisis')) {
     return (
@@ -103,7 +97,7 @@ export default function CrisisResponsePage() {
   const tabs = [
     { value: 'crises', label: 'Active Crises', content: <ActiveCrisesDashboard disruptions={disruptions} /> },
     { value: 'forecast', label: 'Aviation Forecast', content: <AviationDisruptionForecast disruptions={disruptions} /> },
-    { value: 'protocols', label: 'Extraction Protocols', content: <ExtractionProtocolList protocols={protocols} /> },
+    { value: 'protocols', label: 'Extraction Protocols', content: <ExtractionProtocolList protocols={protocols} onActivated={loadCrisisData} /> },
     { value: 'resources', label: 'Resources', content: <CrisisResources safeHouses={safeHouses} contacts={contacts} /> },
   ];
 

@@ -8,6 +8,7 @@ import type {
   FamilyAlignmentAssessment,
   PredictiveAlert,
   TravelSegment,
+  CreatePredictiveAlertInput,
 } from '@/lib/types';
 
 export interface IPredictiveService {
@@ -23,4 +24,6 @@ export interface IPredictiveService {
   // Alerts
   getPredictiveAlerts(institutionId: string): Promise<PredictiveAlert[]>;
   acknowledgeAlert(alertId: string): Promise<void>;
+  /** Create a new predictive alert (FRONTEND_EMAIL_INTEGRATION §4.6) */
+  createPredictiveAlert(input: CreatePredictiveAlertInput): Promise<PredictiveAlert>;
 }

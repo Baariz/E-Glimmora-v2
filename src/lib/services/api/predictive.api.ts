@@ -11,9 +11,11 @@ import type {
   FamilyMemberPreference,
   DriftSeverity,
   PredictiveAlert,
+  PredictiveAlertSeverity,
   PredictionConfidence,
   TravelSegment,
   RiskTolerance,
+  CreatePredictiveAlertInput,
 } from '@/lib/types';
 import type { IPredictiveService } from '../interfaces/IPredictiveService';
 import { api } from './client';
@@ -85,14 +87,18 @@ interface ApiAlignmentAlert {
 interface ApiPredictiveAlert {
   id: string;
   client_id: string;
-  client_name: string;
+  client_name?: string | null;
   institution_id: string;
   type: string;
   severity: string;
-  title: string;
-  message: string;
-  confidence: string;
-  action_required: boolean;
+  /** Legacy GET responses include title; the new POST response omits it. */
+  title?: string | null;
+  /** Legacy GET responses include message; the new POST response omits it. */
+  message?: string | null;
+  /** GET returns string ('Low' | ...); POST returns number (0-100). */
+  confidence: string | number | null;
+  /** GET returns boolean; POST returns action text. */
+  action_required: boolean | string | null;
   acknowledged: boolean;
   created_at: string;
   expires_at?: string | null;
@@ -185,18 +191,41 @@ function toAlignment(r: ApiFamilyAlignment): FamilyAlignmentAssessment {
   };
 }
 
+/**
+ * Derive a human-readable title when the backend POST response omits it
+ * (FRONTEND_EMAIL_INTEGRATION §4.6 — the create response only carries
+ * type/severity/action_required, not title/message).
+ */
+function deriveTitle(type: string, severity: string): string {
+  const kind = type === 'travel_fatigue' ? 'Travel Fatigue' : 'Family Alignment Drift';
+  const cap = severity ? severity.charAt(0).toUpperCase() + severity.slice(1) : 'Alert';
+  return `${kind} — ${cap}`;
+}
+
 function toAlert(r: ApiPredictiveAlert): PredictiveAlert {
+  const action = r.action_required;
+  const actionText =
+    typeof action === 'string' && action.trim().length > 0 ? action : null;
+
   return {
     id: r.id,
     clientId: r.client_id,
-    clientName: r.client_name,
+    clientName: r.client_name || '',
     institutionId: r.institution_id,
     type: r.type as PredictiveAlert['type'],
-    severity: r.severity as PredictiveAlert['severity'],
-    title: r.title,
-    message: r.message,
-    confidence: r.confidence as PredictionConfidence,
-    actionRequired: r.action_required,
+    severity: (r.severity || 'info') as PredictiveAlertSeverity,
+    title: r.title || deriveTitle(r.type, r.severity),
+    message: r.message || actionText || '',
+    confidence:
+      typeof r.confidence === 'number'
+        ? r.confidence
+        : ((r.confidence as PredictionConfidence) || 'Medium'),
+    actionRequired:
+      actionText !== null
+        ? actionText
+        : typeof action === 'boolean'
+          ? action
+          : false,
     acknowledged: r.acknowledged,
     createdAt: r.created_at,
     expiresAt: r.expires_at || undefined,
@@ -282,5 +311,28 @@ export class ApiPredictiveService implements IPredictiveService {
   async acknowledgeAlert(alertId: string): Promise<void> {
     logger.info('Predictive', 'acknowledgeAlert', { alertId });
     await api.post<unknown>(`/api/predictive/alerts/${alertId}/acknowledge`);
+  }
+
+  async createPredictiveAlert(
+    input: CreatePredictiveAlertInput
+  ): Promise<PredictiveAlert> {
+    logger.info('Predictive', 'createPredictiveAlert', {
+      clientId: input.clientId,
+      type: input.type,
+      severity: input.severity,
+    });
+    const body: Record<string, unknown> = {
+      client_id: input.clientId,
+      institution_id: input.institutionId,
+      type: input.type,
+      severity: input.severity,
+    };
+    if (input.confidence !== undefined) body.confidence = input.confidence;
+    if (input.actionRequired) body.action_required = input.actionRequired;
+    const raw = await api.post<ApiPredictiveAlert>(
+      '/api/predictive/alerts',
+      body
+    );
+    return toAlert(raw);
   }
 }

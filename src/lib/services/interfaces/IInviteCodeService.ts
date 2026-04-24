@@ -3,7 +3,13 @@
  * Manages invite codes for invite-only registration
  */
 
-import { InviteCode, CreateInviteCodeInput } from '@/lib/types';
+import { InviteCode, CreateInviteCodeInput, ResendInviteInput } from '@/lib/types';
+
+export interface ResendInviteResult {
+  resent: boolean;
+  delivered: boolean;
+  invite: InviteCode;
+}
 
 export interface IInviteCodeService {
   getInviteCodes(): Promise<InviteCode[]>;
@@ -13,4 +19,5 @@ export interface IInviteCodeService {
   updateInviteCode(id: string, data: Partial<InviteCode>): Promise<InviteCode>;
   markAsUsed(id: string, usedByUserId: string): Promise<InviteCode>;
   revokeInviteCode(id: string): Promise<InviteCode>;
+  resendInvite(id: string, input: ResendInviteInput): Promise<ResendInviteResult>;
 }

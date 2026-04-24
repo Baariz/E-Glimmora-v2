@@ -7,6 +7,7 @@ import { z } from 'zod'
 import { useRouter } from 'next/navigation'
 import { signIn } from 'next-auth/react'
 import { motion } from 'framer-motion'
+import { toast } from 'sonner'
 import { User, Mail, Lock, Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/shared/Button/Button'
 import { Input } from '@/components/shared/Input/Input'
@@ -129,6 +130,15 @@ export default function RegisterPage() {
 
         // Show brief success message
         setError(null)
+
+        // FRONTEND_EMAIL_INTEGRATION §4.2 — backend sends a welcome email.
+        toast.success(
+          `Account created. We've sent a welcome email to ${data.email}.`,
+          {
+            description: "Check your spam folder if you don't see it within a few minutes.",
+            duration: 7000,
+          }
+        )
 
         // Redirect based on invite type
         setTimeout(() => {

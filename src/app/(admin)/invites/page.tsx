@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from 'react'
 import { formatDistanceToNow } from 'date-fns'
-import { Copy, Plus } from 'lucide-react'
+import { Copy, Plus, Send } from 'lucide-react'
 import { ColumnDef } from '@tanstack/react-table'
 import { DataTable } from '@/components/b2b/tables/DataTable'
 import { StatsRow, StatCard } from '@/components/b2b/layouts/StatsRow'
 import { StatusBadge } from '@/components/b2b/layouts/StatusBadge'
 import { GenerateInviteModal } from '@/components/admin/invites/GenerateInviteModal'
 import { InviteCodeDetail } from '@/components/admin/invites/InviteCodeDetail'
+import { ResendInviteModal } from '@/components/admin/invites/ResendInviteModal'
 import { useServices } from '@/lib/hooks/useServices'
 import type { InviteCode } from '@/lib/types'
 import { toast } from 'sonner'
@@ -23,6 +24,15 @@ export default function InvitesPage() {
   const [inviteCodes, setInviteCodes] = useState<InviteCode[]>([])
   const [selectedCode, setSelectedCode] = useState<InviteCode | null>(null)
   const [generateModalOpen, setGenerateModalOpen] = useState(false)
+  const [resendingInvite, setResendingInvite] = useState<InviteCode | null>(null)
+
+  // FRONTEND_EMAIL_INTEGRATION §4.1 — only show resend on truly active invites.
+  const canResend = (c: InviteCode): boolean => {
+    if (c.status !== 'active') return false
+    if (c.usedCount >= c.maxUses) return false
+    if (c.expiresAt && new Date(c.expiresAt).getTime() <= Date.now()) return false
+    return true
+  }
 
   const loadInviteCodes = async () => {
     setLoading(true)
@@ -179,6 +189,24 @@ export default function InvitesPage() {
         </span>
       ),
     },
+    {
+      id: 'actions',
+      header: '',
+      cell: ({ row }) =>
+        canResend(row.original) ? (
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              setResendingInvite(row.original)
+            }}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-sans text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+            title="Resend invitation by email"
+          >
+            <Send size={12} />
+            Resend
+          </button>
+        ) : null,
+    },
   ]
 
   if (loading) {
@@ -231,7 +259,11 @@ export default function InvitesPage() {
       {/* Expandable detail panel */}
       {selectedCode && (
         <div className="animate-fade-in">
-          <InviteCodeDetail inviteCode={selectedCode} onRevoke={handleRevoke} />
+          <InviteCodeDetail
+            inviteCode={selectedCode}
+            onRevoke={handleRevoke}
+            onResent={loadInviteCodes}
+          />
         </div>
       )}
 
@@ -240,6 +272,16 @@ export default function InvitesPage() {
         open={generateModalOpen}
         onOpenChange={setGenerateModalOpen}
         onSuccess={handleGenerateSuccess}
+      />
+
+      {/* Resend modal — FRONTEND_EMAIL_INTEGRATION §4.1 */}
+      <ResendInviteModal
+        open={Boolean(resendingInvite)}
+        onOpenChange={(open) => {
+          if (!open) setResendingInvite(null)
+        }}
+        invite={resendingInvite}
+        onResent={loadInviteCodes}
       />
     </div>
   )

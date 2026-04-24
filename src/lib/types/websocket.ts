@@ -82,6 +82,17 @@ export interface PredictiveAlertAcknowledgedPayload {
   acknowledged_by: string;
 }
 
+/**
+ * Broadcast on POST /api/predictive/alerts (FRONTEND_EMAIL_INTEGRATION §4.6).
+ */
+export interface PredictiveAlertCreatedPayload {
+  alert_id: string;
+  client_id: string;
+  institution_id: string;
+  type: 'travel_fatigue' | 'family_drift';
+  severity: 'low' | 'medium' | 'high' | 'critical';
+}
+
 // ── Event type constants ────────────────────────────────────────────
 
 export const WS_EVENTS = {
@@ -98,6 +109,7 @@ export const WS_EVENTS = {
   CRISIS_DISRUPTION_STATUS: 'crisis.disruption_status',
   CRISIS_PROTOCOL_ACTIVATED: 'crisis.protocol_activated',
   PREDICTIVE_ALERT_ACKNOWLEDGED: 'predictive.alert_acknowledged',
+  PREDICTIVE_ALERT_CREATED: 'predictive.alert_created',
 } as const;
 
 export type WSEventType = (typeof WS_EVENTS)[keyof typeof WS_EVENTS];
@@ -119,6 +131,7 @@ export type WSHandlers = {
   [WS_EVENTS.CRISIS_DISRUPTION_STATUS]?: WSEventHandler<CrisisDisruptionStatusPayload>;
   [WS_EVENTS.CRISIS_PROTOCOL_ACTIVATED]?: WSEventHandler<CrisisProtocolActivatedPayload>;
   [WS_EVENTS.PREDICTIVE_ALERT_ACKNOWLEDGED]?: WSEventHandler<PredictiveAlertAcknowledgedPayload>;
+  [WS_EVENTS.PREDICTIVE_ALERT_CREATED]?: WSEventHandler<PredictiveAlertCreatedPayload>;
 };
 
 // ── Close codes ─────────────────────────────────────────────────────

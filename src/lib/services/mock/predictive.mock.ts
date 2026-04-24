@@ -10,6 +10,7 @@ import type {
   FamilyAlignmentAssessment,
   PredictiveAlert,
   TravelSegment,
+  CreatePredictiveAlertInput,
 } from '@/lib/types';
 
 const FATIGUE_KEY = 'predictive_fatigue';
@@ -492,5 +493,32 @@ export class MockPredictiveService extends BaseMockService implements IPredictiv
       alert.acknowledged = true;
       this.setInStorage(ALERTS_KEY, alerts);
     }
+  }
+
+  async createPredictiveAlert(
+    input: CreatePredictiveAlertInput
+  ): Promise<PredictiveAlert> {
+    await this.delay();
+    const alerts = this.getFromStorage<PredictiveAlert>(ALERTS_KEY);
+    const titleKind =
+      input.type === 'travel_fatigue' ? 'Travel Fatigue' : 'Family Alignment Drift';
+    const cap = input.severity.charAt(0).toUpperCase() + input.severity.slice(1);
+    const alert: PredictiveAlert = {
+      id: this.generateId(),
+      clientId: input.clientId,
+      clientName: '',
+      institutionId: input.institutionId,
+      type: input.type,
+      severity: input.severity,
+      title: `${titleKind} — ${cap}`,
+      message: input.actionRequired || '',
+      confidence: input.confidence ?? 75,
+      actionRequired: input.actionRequired || false,
+      acknowledged: false,
+      createdAt: this.now(),
+    };
+    alerts.unshift(alert);
+    this.setInStorage(ALERTS_KEY, alerts);
+    return alert;
   }
 }

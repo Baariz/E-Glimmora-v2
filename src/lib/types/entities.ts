@@ -579,17 +579,32 @@ export interface FamilyAlignmentAssessment {
   nextReviewDate: string;
 }
 
+/**
+ * Severity union covers the legacy GET shape ('info' | 'warning' | 'critical')
+ * as well as the new POST /api/predictive/alerts shape
+ * ('low' | 'medium' | 'high' | 'critical') from FRONTEND_EMAIL_INTEGRATION §4.6.
+ */
+export type PredictiveAlertSeverity =
+  | 'info'
+  | 'low'
+  | 'warning'
+  | 'medium'
+  | 'high'
+  | 'critical';
+
 export interface PredictiveAlert {
   id: string;
   clientId: string;
   clientName: string;
   institutionId: string;
   type: 'travel_fatigue' | 'family_drift';
-  severity: 'info' | 'warning' | 'critical';
+  severity: PredictiveAlertSeverity;
   title: string;
   message: string;
-  confidence: PredictionConfidence;
-  actionRequired: boolean;
+  /** GET endpoint returns 'Low' | 'Medium' | 'High'; POST returns 0-100. */
+  confidence: PredictionConfidence | number;
+  /** GET returns boolean; POST returns the action text. */
+  actionRequired: boolean | string;
   acknowledged: boolean;
   createdAt: string;
   expiresAt?: string;

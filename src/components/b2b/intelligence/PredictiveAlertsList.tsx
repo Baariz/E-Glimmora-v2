@@ -11,15 +11,25 @@ interface PredictiveAlertsListProps {
 
 const severityConfig: Record<string, { icon: typeof AlertTriangle; bg: string; border: string; text: string }> = {
   critical: { icon: AlertTriangle, bg: 'bg-rose-50', border: 'border-rose-200', text: 'text-rose-700' },
+  high: { icon: AlertTriangle, bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-700' },
   warning: { icon: AlertCircle, bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700' },
+  medium: { icon: AlertCircle, bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700' },
   info: { icon: Info, bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700' },
+  low: { icon: Info, bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700' },
 };
 
 export function PredictiveAlertsList({ alerts, onAcknowledge }: PredictiveAlertsListProps) {
+  const SEVERITY_ORDER: Record<string, number> = {
+    critical: 0,
+    high: 1,
+    warning: 2,
+    medium: 2,
+    low: 3,
+    info: 3,
+  };
   const sorted = [...alerts].sort((a, b) => {
-    const order = { critical: 0, warning: 1, info: 2 };
     if (a.acknowledged !== b.acknowledged) return a.acknowledged ? 1 : -1;
-    return (order[a.severity] ?? 2) - (order[b.severity] ?? 2);
+    return (SEVERITY_ORDER[a.severity] ?? 4) - (SEVERITY_ORDER[b.severity] ?? 4);
   });
 
   if (sorted.length === 0) {
@@ -52,7 +62,7 @@ export function PredictiveAlertsList({ alerts, onAcknowledge }: PredictiveAlerts
                 <div className="flex items-center gap-3 mt-2">
                   <span className="font-sans text-[10px] text-slate-400">{alert.clientName}</span>
                   <span className="font-sans text-[10px] text-slate-400">
-                    Confidence: {alert.confidence}%
+                    Confidence: {typeof alert.confidence === 'number' ? `${alert.confidence}%` : alert.confidence}
                   </span>
                   <span className="font-sans text-[10px] text-slate-400">
                     {new Date(alert.createdAt).toLocaleDateString()}
